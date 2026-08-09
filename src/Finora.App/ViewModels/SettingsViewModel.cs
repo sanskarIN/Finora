@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 
 namespace Finora.App;
 
@@ -28,7 +29,24 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public SettingsViewModel(IAppSettingsService settings, IFinanceStore store)
     {
-        _settings = settings; _store = store; _privacyMode = settings.PrivacyMode; _hideAmounts = settings.HideAmountsOnLaunch; _reducedMotion = settings.ReducedMotion; _backupReminders = settings.BackupRemindersEnabled; _notificationsEnabled = settings.NotificationsEnabled; _biometricUnlock = settings.BiometricUnlockEnabled; _sensitiveScreenProtection = settings.SensitiveScreenProtectionEnabled; _largerInterface = settings.LargerInterface; _theme = settings.Theme; _currency = settings.DefaultCurrency; _locale = settings.Locale; _monthStartDay = settings.FinancialMonthStartDay; _autoLockMinutes = settings.AutoLockMinutes; _receiptImageQuality = settings.ReceiptImageQuality; _localPremiumDemoEnabled = settings.LocalPremiumDemoEnabled; _defaultTransactionType = settings.DefaultTransactionType;
+        _settings = settings;
+        _store = store;
+        _privacyMode = settings.PrivacyMode;
+        _hideAmounts = settings.HideAmountsOnLaunch;
+        _reducedMotion = settings.ReducedMotion;
+        _backupReminders = settings.BackupRemindersEnabled;
+        _notificationsEnabled = settings.NotificationsEnabled;
+        _biometricUnlock = settings.BiometricUnlockEnabled;
+        _sensitiveScreenProtection = settings.SensitiveScreenProtectionEnabled;
+        _largerInterface = settings.LargerInterface;
+        _theme = settings.Theme;
+        _currency = settings.DefaultCurrency;
+        _locale = CultureSettings.NormalizeOrFallback(settings.Locale);
+        _monthStartDay = settings.FinancialMonthStartDay;
+        _autoLockMinutes = settings.AutoLockMinutes;
+        _receiptImageQuality = settings.ReceiptImageQuality;
+        _localPremiumDemoEnabled = settings.LocalPremiumDemoEnabled;
+        _defaultTransactionType = settings.DefaultTransactionType;
         LoadCommand = new AsyncCommand(LoadAsync);
     }
 
@@ -44,8 +62,33 @@ public sealed class SettingsViewModel : ViewModelBase
     public bool SensitiveScreenProtection { get => _sensitiveScreenProtection; set { if (SetProperty(ref _sensitiveScreenProtection, value)) _settings.SensitiveScreenProtectionEnabled = value; } }
     public bool LargerInterface { get => _largerInterface; set { if (SetProperty(ref _largerInterface, value)) { _settings.LargerInterface = value; ApplyLargerInterface(value); } } }
     public ThemePreference Theme { get => _theme; set { if (SetProperty(ref _theme, value)) { _settings.Theme = value; ApplyTheme(value); } } }
-    public string Currency { get => _currency; set { var normalized = (value ?? string.Empty).Trim().ToUpperInvariant(); if (normalized.Length is >= 3 and <= 8 && SetProperty(ref _currency, normalized)) _settings.DefaultCurrency = normalized; } }
-    public string Locale { get => _locale; set { var normalized = (value ?? string.Empty).Trim(); if (normalized.Length is >= 2 and <= 20 && SetProperty(ref _locale, normalized)) _settings.Locale = normalized; } }
+
+    public string Currency
+    {
+        get => _currency;
+        set
+        {
+            var normalized = (value ?? string.Empty).Trim().ToUpperInvariant();
+            try { DomainRules.ValidateCurrency(normalized); }
+            catch (ArgumentException) { return; }
+            if (SetProperty(ref _currency, normalized)) _settings.DefaultCurrency = normalized;
+        }
+    }
+
+    public string Locale
+    {
+        get => _locale;
+        set
+        {
+            var normalized = CultureSettings.NormalizeOrFallback(value, _locale);
+            if (!SetProperty(ref _locale, normalized)) return;
+            _settings.Locale = normalized;
+            CultureSettings.TryApply(normalized);
+            OnPropertyChanged(nameof(NumberFormatPreview));
+        }
+    }
+
+    public string NumberFormatPreview => $"{new Money(1234567, Currency).Format()} · {DateTime.Today.ToString("d", System.Globalization.CultureInfo.CurrentCulture)}";
     public int MonthStartDay { get => _monthStartDay; set { var clamped = Math.Clamp(value, 1, 28); if (SetProperty(ref _monthStartDay, clamped)) _settings.FinancialMonthStartDay = clamped; } }
     public int AutoLockMinutes { get => _autoLockMinutes; set { var clamped = Math.Clamp(value, 1, 60); if (SetProperty(ref _autoLockMinutes, clamped)) _settings.AutoLockMinutes = clamped; } }
     public int ReceiptImageQuality { get => _receiptImageQuality; set { var clamped = Math.Clamp(value, 40, 100); if (SetProperty(ref _receiptImageQuality, clamped)) _settings.ReceiptImageQuality = clamped; } }
@@ -54,7 +97,29 @@ public sealed class SettingsViewModel : ViewModelBase
     public TransactionType DefaultTransactionType { get => _defaultTransactionType; set { if (SetProperty(ref _defaultTransactionType, value)) _settings.DefaultTransactionType = value; } }
     public System.Windows.Input.ICommand LoadCommand { get; }
 
-    public Task LoadAsync() => RunAsync(async () => { Accounts.Clear(); foreach (var account in await _store.GetAccountsAsync()) Accounts.Add(account); DefaultAccount = Accounts.FirstOrDefault(x => x.Id == _settings.DefaultAccountId) ?? Accounts.FirstOrDefault(); });
-    public static void ApplyTheme(ThemePreference theme) { if (Application.Current is null) return; Application.Current.UserAppTheme = theme switch { ThemePreference.Light => AppTheme.Light, ThemePreference.Dark => AppTheme.Dark, _ => AppTheme.Unspecified }; }
-    public static void ApplyLargerInterface(bool enabled) { if (Application.Current?.Resources is null) return; Application.Current.Resources["FinoraBodyFontSize"] = enabled ? 18d : 14d; Application.Current.Resources["FinoraControlHeight"] = enabled ? 56d : 48d; }
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        Accounts.Clear();
+        foreach (var account in await _store.GetAccountsAsync()) Accounts.Add(account);
+        DefaultAccount = Accounts.FirstOrDefault(x => x.Id == _settings.DefaultAccountId) ?? Accounts.FirstOrDefault();
+        OnPropertyChanged(nameof(NumberFormatPreview));
+    });
+
+    public static void ApplyTheme(ThemePreference theme)
+    {
+        if (Application.Current is null) return;
+        Application.Current.UserAppTheme = theme switch
+        {
+            ThemePreference.Light => AppTheme.Light,
+            ThemePreference.Dark => AppTheme.Dark,
+            _ => AppTheme.Unspecified
+        };
+    }
+
+    public static void ApplyLargerInterface(bool enabled)
+    {
+        if (Application.Current?.Resources is null) return;
+        Application.Current.Resources["FinoraBodyFontSize"] = enabled ? 18d : 14d;
+        Application.Current.Resources["FinoraControlHeight"] = enabled ? 56d : 48d;
+    }
 }
