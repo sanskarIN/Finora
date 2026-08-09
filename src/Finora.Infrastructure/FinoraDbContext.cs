@@ -25,6 +25,19 @@ public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) :
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
     public DbSet<BackupMetadata> BackupMetadata => Set<BackupMetadata>();
 
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        ValidateTrackedFinanceEntries();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ValidateTrackedFinanceEntries();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Account>().HasIndex(x => new { x.State, x.Name });
@@ -54,5 +67,21 @@ public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) :
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Kind).HasMaxLength(64);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Title).HasMaxLength(160);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Body).HasMaxLength(500);
+    }
+
+    private void ValidateTrackedFinanceEntries()
+    {
+        foreach (var entry in ChangeTracker.Entries<Account>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.Name = entry.Entity.Name.Trim();
+            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateAccount(entry.Entity);
+        }
+
+        foreach (var entry in ChangeTracker.Entries<FinanceTransaction>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateTransaction(entry.Entity);
+        }
     }
 }
