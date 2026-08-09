@@ -3,18 +3,44 @@
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Transactions" Style="{StaticResource Title}" />
     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><SearchBar Placeholder="Search merchant, note, account or category" Text="{Binding SearchText}" SearchCommand="{Binding SearchCommand}" /><Button Grid.Column="1" Text="Search" Command="{Binding SearchCommand}" /></Grid>
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><Button Text="Advanced filters" Command="{Binding ToggleFiltersCommand}" /><Button Grid.Column="1" Text="Clear filters" Command="{Binding ClearFiltersCommand}" /></Grid>
+    <Border Style="{StaticResource Card}" IsVisible="{Binding ShowAdvancedFilters}"><VerticalStackLayout Spacing="8">
+      <Label Text="Advanced filters" Style="{StaticResource SectionTitle}" />
+      <Picker Title="Account: all" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding FilterAccount}" />
+      <Picker Title="Category: all" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding FilterCategory}" />
+      <Picker Title="Transaction type" ItemsSource="{Binding FilterTypes}" SelectedItem="{Binding FilterType}" />
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><VerticalStackLayout><Label Text="From" /><DatePicker Date="{Binding FilterFromDate}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="Through" /><DatePicker Date="{Binding FilterToDate}" /></VerticalStackLayout></Grid>
+      <Button Text="Apply filters" Command="{Binding SearchCommand}" />
+    </VerticalStackLayout></Border>
+    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8"><Button Text="Import CSV" Clicked="OnImportClicked" /><Button Grid.Column="1" Text="Tools" Clicked="OnToolsClicked" /><Button Grid.Column="2" Text="Categories &amp; tags" Clicked="OnCategoriesClicked" /></Grid>
+
     <Label Text="Quick add" Style="{StaticResource SectionTitle}" />
     <Picker Title="Type" ItemsSource="{Binding TransactionTypes}" SelectedItem="{Binding Type}" />
     <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedAccount}" />
     <Picker Title="Category (optional)" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedCategory}" />
-    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><VerticalStackLayout><Label Text="Date" /><DatePicker Date="{Binding OccurredDate}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="Time" /><TimePicker Time="{Binding OccurredTime}" /></VerticalStackLayout></Grid>
+    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" SemanticProperties.Description="Transaction amount in major currency units" />
+    <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="6">
+      <Label Text="Calculator keypad" Style="{StaticResource SectionTitle}" />
+      <Label Text="{Binding CalculatorExpression, StringFormat='Expression: {0}'}" LineBreakMode="TailTruncation" />
+      <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,*,*,*" RowSpacing="5" ColumnSpacing="5">
+        <Button Text="7" Clicked="OnCalculatorToken" /><Button Grid.Column="1" Text="8" Clicked="OnCalculatorToken" /><Button Grid.Column="2" Text="9" Clicked="OnCalculatorToken" /><Button Grid.Column="3" Text="÷" Clicked="OnCalculatorToken" />
+        <Button Grid.Row="1" Text="4" Clicked="OnCalculatorToken" /><Button Grid.Row="1" Grid.Column="1" Text="5" Clicked="OnCalculatorToken" /><Button Grid.Row="1" Grid.Column="2" Text="6" Clicked="OnCalculatorToken" /><Button Grid.Row="1" Grid.Column="3" Text="×" Clicked="OnCalculatorToken" />
+        <Button Grid.Row="2" Text="1" Clicked="OnCalculatorToken" /><Button Grid.Row="2" Grid.Column="1" Text="2" Clicked="OnCalculatorToken" /><Button Grid.Row="2" Grid.Column="2" Text="3" Clicked="OnCalculatorToken" /><Button Grid.Row="2" Grid.Column="3" Text="-" Clicked="OnCalculatorToken" />
+        <Button Grid.Row="3" Text="0" Clicked="OnCalculatorToken" /><Button Grid.Row="3" Grid.Column="1" Text="." Clicked="OnCalculatorToken" /><Button Grid.Row="3" Grid.Column="2" Text="⌫" Clicked="OnCalculatorBackspace" /><Button Grid.Row="3" Grid.Column="3" Text="+" Clicked="OnCalculatorToken" />
+        <Button Grid.Row="4" Grid.ColumnSpan="2" Text="Clear" Clicked="OnCalculatorClear" /><Button Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Text="= Use result" Clicked="OnCalculatorEquals" />
+      </Grid>
+    </VerticalStackLayout></Border>
     <Entry Placeholder="Merchant or payee" Text="{Binding Merchant}" />
+    <Entry Placeholder="Payment method (optional)" Text="{Binding PaymentMethod}" />
+    <Entry Placeholder="Location (optional, manually entered only)" Text="{Binding ManualLocation}" />
     <Editor Placeholder="Note" AutoSize="TextChanges" Text="{Binding Note}" />
     <Button Text="Save transaction" Command="{Binding AddCommand}" />
+
     <Label Text="History" Style="{StaticResource SectionTitle}" />
-    <CollectionView ItemsSource="{Binding Transactions}" EmptyView="No matching transactions." HeightRequest="420">
-      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding Note}" FontSize="12" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Type}" HorizontalTextAlignment="End" /><Label Text="{Binding Currency}" HorizontalTextAlignment="End" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" HorizontalTextAlignment="End" /></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
+    <CollectionView ItemsSource="{Binding Transactions}" SelectionMode="Single" SelectionChanged="OnTransactionSelected" EmptyView="No matching transactions." HeightRequest="460">
+      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding Note}" FontSize="12" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /><Label Text="Tap to edit, split, tag, attach receipts, or inspect revision history." FontSize="11" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Type}" HorizontalTextAlignment="End" /><Label Text="{Binding Currency}" HorizontalTextAlignment="End" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" HorizontalTextAlignment="End" /></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
