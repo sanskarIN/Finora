@@ -1,4 +1,5 @@
 using System.Text;
+using Finora.Application;
 using Finora.Domain;
 using Finora.Infrastructure;
 using Microsoft.EntityFrameworkCore;
