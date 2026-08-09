@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Finora.Domain\Finora.Domain.csproj" />
     <ProjectReference Include="..\..\src\Finora.Application\Finora.Application.csproj" />
+    <Compile Include="..\..\src\Finora.App\ViewModels\ViewModelBase.cs" Link="Production\ViewModelBase.cs" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets></PackageReference>
