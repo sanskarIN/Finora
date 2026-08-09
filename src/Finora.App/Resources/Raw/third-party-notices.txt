@@ -1,1 +1,13 @@
-Finora currently depends on Microsoft .NET, .NET MAUI, Entity Framework Core, and SQLite-related components. Review the restored NuGet graph and all transitive licenses before each public release.
+FINORA THIRD-PARTY NOTICES
+
+Finora is built using Microsoft .NET and .NET MAUI and uses Microsoft Entity Framework Core with SQLite support. Its test projects use xUnit and Microsoft.NET.Test.Sdk.
+
+The exact restored dependency graph, including transitive packages and license metadata, must be reviewed as part of every release build. The repository intentionally does not copy third-party license texts whose exact restored versions have not been verified in this execution environment.
+
+Primary upstream projects:
+- .NET / .NET MAUI: https://github.com/dotnet
+- Entity Framework Core: https://github.com/dotnet/efcore
+- SQLite: https://www.sqlite.org/
+- xUnit.net: https://github.com/xunit/xunit
+
+See Directory.Packages.props and generated NuGet restore assets for the exact package versions used by a particular build.

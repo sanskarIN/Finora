@@ -1,0 +1,12 @@
+FINORA TERMS SUMMARY
+
+Finora is personal organization software. It is not financial, investment, tax, legal, or accounting advice. Users are responsible for checking the accuracy of their records, imports, reports, exports, and backups.
+
+The open-source Finora code is provided under the Apache License 2.0. Third-party components remain subject to their respective licenses.
+
+Local-only premium/demo feature flags are development capabilities and are not secure commercial entitlement enforcement.
+
+The software is provided without warranties to the extent permitted by applicable law. Keep independent backups of important records.
+
+Full repository terms: https://github.com/sanskarIN/Finora/blob/main/TERMS.md
+License: https://github.com/sanskarIN/Finora/blob/main/LICENSE

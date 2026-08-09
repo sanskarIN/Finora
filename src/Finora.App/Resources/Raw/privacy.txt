@@ -1,0 +1,23 @@
+FINORA PRIVACY SUMMARY
+
+Finora is local-first. This release requires no login and has no required cloud account. Financial records are stored in the app's private local storage on the device. Finora does not automatically upload financial data, backups, attachments, or diagnostic logs.
+
+Location: Finora never collects location in the background. A transaction location exists only when the user manually types it.
+
+Attachments: Receipt and document attachments are copied into app-private storage. They remain local unless the user explicitly exports, backs up, or shares data.
+
+Backups: Encrypted backup files are created only after an explicit user action. Finora does not automatically upload backup files. A backup password cannot be recovered by Finora.
+
+Diagnostics: Diagnostic logging is designed to omit transaction amounts, merchant/payee names, notes, and account names by default. Sanitized logs are exported only after an explicit user action.
+
+Notifications: Local reminders are opt-in and permission-gated. Reminder text is intentionally generic and avoids transaction details.
+
+Security: Optional PIN and biometric/Windows Hello unlock use platform-supported secure facilities where available. Screenshot/capture blocking is best-effort and platform-dependent.
+
+Deletion and uninstall: Full finance-data deletion is available from Settings. Uninstalling the app may remove app-private data. Create and safely store an encrypted backup first if the data must be preserved.
+
+Finora contains no analytics or advertising SDK by design in this release.
+
+Repository privacy documentation: https://github.com/sanskarIN/Finora/blob/main/PRIVACY.md
+Support: supportramsandesh@gmail.com
+Business/security contact: sanskarin@outlook.in
