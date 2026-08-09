@@ -3,7 +3,17 @@ using Finora.Shared;
 
 namespace Finora.Application;
 
-public sealed record RecurrenceOccurrenceInfo(Guid Id, Guid RuleId, string RuleName, DateOnly DueOn, OccurrenceStatus Status, long AmountMinor, string Currency, long? PaidAmountMinor, DateOnly? PostponedTo, Guid? GeneratedTransactionId);
+public sealed record RecurrenceOccurrenceInfo(
+    Guid Id,
+    Guid RuleId,
+    string RuleName,
+    DateOnly DueOn,
+    OccurrenceStatus Status,
+    long AmountMinor,
+    string Currency,
+    long? PaidAmountMinor,
+    DateOnly? PostponedTo,
+    Guid? GeneratedTransactionId);
 
 public interface IRecurringWorkflowService
 {
@@ -12,4 +22,5 @@ public interface IRecurringWorkflowService
     Task<Result> MarkPaidAsync(Guid occurrenceId, long? paidAmountMinor = null, CancellationToken cancellationToken = default);
     Task<Result> SkipAsync(Guid occurrenceId, CancellationToken cancellationToken = default);
     Task<Result> PostponeAsync(Guid occurrenceId, DateOnly newDate, CancellationToken cancellationToken = default);
+    Task<Result> ReopenAsync(Guid occurrenceId, CancellationToken cancellationToken = default);
 }
