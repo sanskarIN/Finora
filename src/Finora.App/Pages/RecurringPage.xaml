@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.RecurringPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Recurring">
+  <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="Recurring items" Style="{StaticResource Title}" />
+    <Button Text="Process due items now" Command="{Binding ProcessNowCommand}" />
+    <Label Text="{Binding ProcessingResult}" />
+    <CollectionView ItemsSource="{Binding Rules}" EmptyView="No recurring items." HeightRequest="260">
+      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Frequency}" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" /><Label Text="{Binding NextDueOn, StringFormat='Next: {0}'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
+    </CollectionView>
+    <Label Text="Create recurring item" Style="{StaticResource SectionTitle}" />
+    <Entry Placeholder="Name" Text="{Binding Name}" />
+    <Picker Title="Type" ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" />
+    <Picker Title="Frequency" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" />
+    <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Account}" />
+    <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Category}" />
+    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" />
+    <Button Text="Save recurring item" Command="{Binding AddCommand}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

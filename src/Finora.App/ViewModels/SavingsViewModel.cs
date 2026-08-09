@@ -1,0 +1,14 @@
+using System.Collections.ObjectModel;
+using Finora.Application;
+using Finora.Domain;
+namespace Finora.App;
+public sealed class SavingsViewModel:ViewModelBase
+{
+ private readonly IFinanceStore _store;private readonly IAppSettingsService _settings;private string _name="",_target="",_starting="0",_contribution="";private DateTime _targetDate=DateTime.Today.AddMonths(6);private SavingsGoalSnapshot? _selectedGoal;
+ public SavingsViewModel(IFinanceStore store,IAppSettingsService settings){_store=store;_settings=settings;RefreshCommand=new AsyncCommand(LoadAsync);AddGoalCommand=new AsyncCommand(AddGoalAsync);ContributeCommand=new AsyncCommand(ContributeAsync);}
+ public ObservableCollection<SavingsGoalSnapshot> Goals{get;}=[];public string Name{get=>_name;set=>SetProperty(ref _name,value);}public string Target{get=>_target;set=>SetProperty(ref _target,value);}public string Starting{get=>_starting;set=>SetProperty(ref _starting,value);}public DateTime TargetDate{get=>_targetDate;set=>SetProperty(ref _targetDate,value);}public SavingsGoalSnapshot? SelectedGoal{get=>_selectedGoal;set=>SetProperty(ref _selectedGoal,value);}public string Contribution{get=>_contribution;set=>SetProperty(ref _contribution,value);}public System.Windows.Input.ICommand RefreshCommand{get;}public System.Windows.Input.ICommand AddGoalCommand{get;}public System.Windows.Input.ICommand ContributeCommand{get;}
+ public Task LoadAsync()=>RunAsync(LoadCoreAsync);
+ private Task AddGoalAsync()=>RunAsync(async()=>{if(string.IsNullOrWhiteSpace(Name))throw new InvalidOperationException("Goal name is required.");if(!decimal.TryParse(Target,out var target)||target<=0)throw new InvalidOperationException("Enter a positive target.");if(!decimal.TryParse(Starting,out var starting)||starting<0)throw new InvalidOperationException("Starting amount cannot be negative.");await _store.SaveSavingsGoalAsync(new SavingsGoal{Name=Name.Trim(),TargetMinor=Money.FromMajorUnits(target,_settings.DefaultCurrency).MinorUnits,StartingMinor=Money.FromMajorUnits(starting,_settings.DefaultCurrency).MinorUnits,Currency=_settings.DefaultCurrency,TargetDate=DateOnly.FromDateTime(TargetDate)});Name=Target="";Starting="0";await LoadCoreAsync();});
+ private Task ContributeAsync()=>RunAsync(async()=>{if(SelectedGoal is null)throw new InvalidOperationException("Choose a savings goal.");if(!decimal.TryParse(Contribution,out var major)||major==0)throw new InvalidOperationException("Enter a non-zero contribution or withdrawal.");await _store.AddGoalContributionAsync(new GoalContribution{SavingsGoalId=SelectedGoal.Id,AmountMinor=Money.FromMajorUnits(major,SelectedGoal.Currency).MinorUnits,OccurredAtUtc=DateTimeOffset.UtcNow});Contribution="";await LoadCoreAsync();});
+ private async Task LoadCoreAsync(){Goals.Clear();foreach(var g in await _store.GetSavingsGoalsAsync())Goals.Add(g);}
+}

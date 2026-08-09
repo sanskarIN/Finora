@@ -1,0 +1,1 @@
+namespace Finora.App;public partial class AppShell:Shell{public AppShell(){InitializeComponent();Routing.RegisterRoute(nameof(AccountsPage),typeof(AccountsPage));Routing.RegisterRoute(nameof(ReportsPage),typeof(ReportsPage));Routing.RegisterRoute(nameof(RecurringPage),typeof(RecurringPage));}}

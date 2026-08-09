@@ -1,0 +1,1 @@
+Finora currently depends on Microsoft .NET, .NET MAUI, Entity Framework Core, and SQLite-related components. Review the restored NuGet graph and all transitive licenses before each public release.

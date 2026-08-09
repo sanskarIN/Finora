@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.DashboardPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Dashboard">
+  <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsBusy}">
+    <ScrollView>
+      <VerticalStackLayout Padding="20" Spacing="16">
+        <Grid ColumnDefinitions="*,Auto">
+          <Label Text="Finora" Style="{StaticResource Title}" />
+          <Button Grid.Column="1" Text="Hide / show" Command="{Binding TogglePrivacyCommand}" SemanticProperties.Description="Toggle amount privacy mode" />
+        </Grid>
+        <Label Text="Your money stays on this device." />
+        <Border Style="{StaticResource Card}"><VerticalStackLayout><Label Text="Current balance" /><Label Text="{Binding TotalBalance}" FontSize="30" FontAttributes="Bold" /></VerticalStackLayout></Border>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+          <Border Style="{StaticResource Card}"><VerticalStackLayout><Label Text="Income" /><Label Text="{Binding Income}" FontAttributes="Bold" /></VerticalStackLayout></Border>
+          <Border Grid.Column="1" Style="{StaticResource Card}"><VerticalStackLayout><Label Text="Spending" /><Label Text="{Binding Expense}" FontAttributes="Bold" /></VerticalStackLayout></Border>
+        </Grid>
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+          <Border Style="{StaticResource Card}"><VerticalStackLayout><Label Text="Net change" /><Label Text="{Binding NetChange}" FontAttributes="Bold" /></VerticalStackLayout></Border>
+          <Border Grid.Column="1" Style="{StaticResource Card}"><VerticalStackLayout><Label Text="Budget left" /><Label Text="{Binding RemainingBudget}" FontAttributes="Bold" /></VerticalStackLayout></Border>
+        </Grid>
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+          <Button Text="Accounts" Clicked="OnAccountsClicked" />
+          <Button Grid.Column="1" Text="Reports" Clicked="OnReportsClicked" />
+          <Button Grid.Column="2" Text="Recurring" Clicked="OnRecurringClicked" />
+        </Grid>
+        <Label Text="Recent transactions" Style="{StaticResource SectionTitle}" />
+        <CollectionView ItemsSource="{Binding RecentTransactions}" EmptyView="No transactions yet.">
+          <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Currency}" HorizontalTextAlignment="End" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" HorizontalTextAlignment="End" /></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
+        </CollectionView>
+        <Label Text="Top categories" Style="{StaticResource SectionTitle}" />
+        <CollectionView ItemsSource="{Binding TopCategories}" EmptyView="Categorized spending appears here.">
+          <CollectionView.ItemTemplate><DataTemplate><Grid Padding="8" ColumnDefinitions="*,Auto"><Label Text="{Binding CategoryName}" /><Label Grid.Column="1" Text="{Binding AmountMinor, StringFormat='{0} minor'}" /></Grid></DataTemplate></CollectionView.ItemTemplate>
+        </CollectionView>
+        <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+      </VerticalStackLayout>
+    </ScrollView>
+  </RefreshView>
+</ContentPage>

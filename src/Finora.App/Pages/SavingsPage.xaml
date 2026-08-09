@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.SavingsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Goals">
+  <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="Savings goals" Style="{StaticResource Title}" />
+    <CollectionView ItemsSource="{Binding Goals}" EmptyView="Create a savings goal below." HeightRequest="260">
+      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><ProgressBar Progress="{Binding Progress}" /><Label Text="{Binding CurrentMinor, StringFormat='Saved: {0} minor'}" /><Label Text="{Binding TargetMinor, StringFormat='Target: {0} minor'}" /><Label Text="{Binding TargetDate, StringFormat='Target date: {0}'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
+    </CollectionView>
+    <Label Text="Create goal" Style="{StaticResource SectionTitle}" />
+    <Entry Placeholder="Goal name" Text="{Binding Name}" />
+    <Entry Placeholder="Target amount" Keyboard="Numeric" Text="{Binding Target}" />
+    <Entry Placeholder="Starting amount" Keyboard="Numeric" Text="{Binding Starting}" />
+    <DatePicker Date="{Binding TargetDate}" />
+    <Button Text="Create goal" Command="{Binding AddGoalCommand}" />
+    <Label Text="Add contribution or withdrawal" Style="{StaticResource SectionTitle}" />
+    <Picker Title="Goal" ItemsSource="{Binding Goals}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedGoal}" />
+    <Entry Placeholder="Amount; use a minus sign for withdrawal" Keyboard="Numeric" Text="{Binding Contribution}" />
+    <Button Text="Apply" Command="{Binding ContributeCommand}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

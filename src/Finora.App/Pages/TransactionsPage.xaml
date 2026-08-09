@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.TransactionsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Transactions">
+  <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="Transactions" Style="{StaticResource Title}" />
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><SearchBar Placeholder="Search merchant, note, account or category" Text="{Binding SearchText}" SearchCommand="{Binding SearchCommand}" /><Button Grid.Column="1" Text="Search" Command="{Binding SearchCommand}" /></Grid>
+    <Label Text="Quick add" Style="{StaticResource SectionTitle}" />
+    <Picker Title="Type" ItemsSource="{Binding TransactionTypes}" SelectedItem="{Binding Type}" />
+    <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedAccount}" />
+    <Picker Title="Category (optional)" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedCategory}" />
+    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" />
+    <Entry Placeholder="Merchant or payee" Text="{Binding Merchant}" />
+    <Editor Placeholder="Note" AutoSize="TextChanges" Text="{Binding Note}" />
+    <Button Text="Save transaction" Command="{Binding AddCommand}" />
+    <Label Text="History" Style="{StaticResource SectionTitle}" />
+    <CollectionView ItemsSource="{Binding Transactions}" EmptyView="No matching transactions." HeightRequest="420">
+      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding Note}" FontSize="12" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Type}" HorizontalTextAlignment="End" /><Label Text="{Binding Currency}" HorizontalTextAlignment="End" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" HorizontalTextAlignment="End" /></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
+    </CollectionView>
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

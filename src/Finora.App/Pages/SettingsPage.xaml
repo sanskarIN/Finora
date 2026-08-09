@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.SettingsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Settings">
+  <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="Settings" Style="{StaticResource Title}" />
+    <Label Text="Appearance &amp; accessibility" Style="{StaticResource SectionTitle}" />
+    <Picker Title="Theme" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" />
+    <Grid ColumnDefinitions="*,Auto"><Label Text="Reduced motion" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding ReducedMotion}" /></Grid>
+    <Label Text="Privacy" Style="{StaticResource SectionTitle}" />
+    <Grid ColumnDefinitions="*,Auto"><Label Text="Privacy mode" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding PrivacyMode}" /></Grid>
+    <Grid ColumnDefinitions="*,Auto"><Label Text="Hide amounts on launch" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding HideAmounts}" /></Grid>
+    <Label Text="Finance preferences" Style="{StaticResource SectionTitle}" />
+    <Entry Text="{Binding Currency}" Placeholder="Default currency" MaxLength="8" />
+    <Label Text="Financial month start day" /><Stepper Minimum="1" Maximum="28" Value="{Binding MonthStartDay}" /><Label Text="{Binding MonthStartDay}" />
+    <Grid ColumnDefinitions="*,Auto"><Label Text="Backup reminders" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding BackupReminders}" /></Grid>
+    <Label Text="Backup &amp; export" Style="{StaticResource SectionTitle}" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Create backup" Clicked="OnCreateBackupClicked" /><Button Grid.Column="1" Text="Restore backup" Clicked="OnRestoreBackupClicked" /></Grid>
+    <Button Text="Export sanitized diagnostic log" Clicked="OnExportLogClicked" />
+    <Label Text="App lock" Style="{StaticResource SectionTitle}" />
+    <Label Text="Auto-lock after inactivity (minutes)" /><Stepper Minimum="1" Maximum="60" Value="{Binding AutoLockMinutes}" /><Label Text="{Binding AutoLockMinutes, StringFormat='After {0} minute(s)'}" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Set / change PIN" Clicked="OnSetPinClicked" /><Button Grid.Column="1" Text="Remove PIN" Clicked="OnRemovePinClicked" /></Grid>
+    <Label Text="Data controls" Style="{StaticResource SectionTitle}" />
+    <Button Text="Revisit onboarding" Clicked="OnOnboardingClicked" />
+    <Button Text="Delete all local finance data" BackgroundColor="{StaticResource Danger}" Clicked="OnDeleteAllClicked" />
+    <Label Text="About" Style="{StaticResource SectionTitle}" />
+    <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="6"><Label Text="Finora 0.1.0 (1)" FontAttributes="Bold"><Label.GestureRecognizers><TapGestureRecognizer Tapped="OnVersionTapped" /></Label.GestureRecognizers></Label><Label Text="Made by the Sanskar" /><Label Text=".NET MAUI · C# · XAML · SQLite · MVVM" /><Button Text="Open-source repository" Clicked="OnRepositoryClicked" /><Button Text="Creator GitHub profile" Clicked="OnProfileClicked" /><Button Text="Business: sanskarin@outlook.in" Clicked="OnBusinessEmailClicked" /><Button Text="Support: supportramsandesh@gmail.com" Clicked="OnSupportEmailClicked" /><Label Text="Licensed under Apache-2.0. See repository notices for third-party licenses." /></VerticalStackLayout></Border>
+    <VerticalStackLayout x:Name="DeveloperPanel" IsVisible="False" Spacing="10"><Label Text="Developer options" Style="{StaticResource SectionTitle}" /><Button Text="Show database schema version" Clicked="OnSchemaVersionClicked" /><Button Text="Show feature flags" Clicked="OnFeatureFlagsClicked" /><Grid ColumnDefinitions="*,Auto"><Label Text="Local premium demo flag" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding LocalPremiumDemoEnabled}" /></Grid><Label Text="The premium flag is a local development/demo capability only and is not tamper-proof commercial licensing." /></VerticalStackLayout>
+    <Label Text="Local premium flags, when used in development builds, are not tamper-proof commercial licensing. A future store/server integration is required for reliable paid entitlement validation." />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

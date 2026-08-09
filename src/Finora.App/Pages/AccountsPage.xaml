@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.AccountsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Accounts">
+  <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="Accounts" Style="{StaticResource Title}" />
+    <CollectionView ItemsSource="{Binding Accounts}" EmptyView="Add your first account below." HeightRequest="240">
+      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Type}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Currency}" /><Label Text="{Binding BalanceMinor, StringFormat='{0} minor'}" /></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
+    </CollectionView>
+    <Label Text="Add account" Style="{StaticResource SectionTitle}" />
+    <Entry Placeholder="Account name" Text="{Binding Name}" />
+    <Picker Title="Account type" ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding AccountType}" />
+    <Entry Placeholder="Opening balance" Keyboard="Numeric" Text="{Binding OpeningBalance}" />
+    <Button Text="Add account" Command="{Binding AddAccountCommand}" />
+    <Label Text="Transfer between accounts" Style="{StaticResource SectionTitle}" />
+    <Picker Title="From" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SourceAccount}" />
+    <Picker Title="To" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding DestinationAccount}" />
+    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding TransferAmount}" />
+    <Entry Placeholder="Optional note" Text="{Binding TransferNote}" />
+    <Button Text="Transfer" Command="{Binding TransferCommand}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

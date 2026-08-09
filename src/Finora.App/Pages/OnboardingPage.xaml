@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.OnboardingPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Shell.NavBarIsVisible="False">
+  <ScrollView><VerticalStackLayout Padding="28" Spacing="18">
+    <Label Text="Welcome to Finora" Style="{StaticResource Title}" />
+    <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="8"><Label Text="Local-first privacy" Style="{StaticResource SectionTitle}" /><Label Text="Finora works without an account. Financial records are stored on this device in this release. Nothing is uploaded automatically. Back up your data before uninstalling the app." /></VerticalStackLayout></Border>
+    <Label Text="Default currency" /><Entry Text="{Binding Currency}" Placeholder="INR" MaxLength="8" />
+    <Label Text="Locale" /><Entry Text="{Binding Locale}" Placeholder="en-IN" />
+    <Label Text="Financial month start day (1–28)" /><Stepper Minimum="1" Maximum="28" Value="{Binding MonthStart}" /><Label Text="{Binding MonthStart}" />
+    <Label Text="Optional opening balance" /><Entry Text="{Binding OpeningBalance}" Keyboard="Numeric" />
+    <Grid ColumnDefinitions="*,Auto"><Label Text="Add explicit opt-in sample data" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding SampleData}" /></Grid>
+    <Label Text="You can revisit onboarding from Settings. Location is never collected in the background; attachments, backups, and exports remain local unless you explicitly share them." />
+    <Button Text="Start using Finora" Command="{Binding FinishCommand}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

@@ -1,0 +1,1 @@
+using Microsoft.Extensions.DependencyInjection;namespace Finora.App;internal static class ServiceHelper{public static T Get<T>() where T:notnull=>IPlatformApplication.Current?.Services.GetRequiredService<T>()??throw new InvalidOperationException("Finora services are unavailable.");}
