@@ -1,3 +1,5 @@
+using Microsoft.Maui.Devices;
+
 namespace Finora.App;
 
 public static class AppRoutes
