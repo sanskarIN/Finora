@@ -1,1 +1,235 @@
-using System.Security.Cryptography;using System.Text;using System.Text.Json;using Finora.Application;using Finora.Domain;using Finora.Shared;using Microsoft.EntityFrameworkCore;namespace Finora.Infrastructure;public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory):IBackupService{private static readonly JsonSerializerOptions Json=new(JsonSerializerDefaults.Web);public async Task<byte[]>CreateEncryptedBackupAsync(string password,CancellationToken c=default){Validate(password);await using var db=await factory.CreateDbContextAsync(c);var data=new Snapshot(AppConstants.DatabaseSchemaVersion,DateTimeOffset.UtcNow,await db.Accounts.AsNoTracking().ToListAsync(c),await db.Transactions.AsNoTracking().ToListAsync(c),await db.Categories.AsNoTracking().ToListAsync(c),await db.Budgets.AsNoTracking().ToListAsync(c),await db.SavingsGoals.AsNoTracking().ToListAsync(c),await db.GoalContributions.AsNoTracking().ToListAsync(c),await db.RecurrenceRules.AsNoTracking().ToListAsync(c),await db.RecurrenceOccurrences.AsNoTracking().ToListAsync(c));return Encrypt(JsonSerializer.SerializeToUtf8Bytes(data,Json),password);}public async Task<Result<BackupPreview>>PreviewEncryptedBackupAsync(Stream stream,string password,CancellationToken c=default){try{var s=await Read(stream,password,c);if(s.SchemaVersion>AppConstants.DatabaseSchemaVersion)return Result<BackupPreview>.Failure("Backup was created by a newer Finora schema.");return Result<BackupPreview>.Success(new BackupPreview(s.SchemaVersion,s.CreatedAtUtc,s.Accounts.Count,s.Transactions.Count,s.Budgets.Count,s.Goals.Count));}catch(Exception e)when(e is CryptographicException or JsonException or InvalidDataException or ArgumentException){return Result<BackupPreview>.Failure("The backup could not be verified. Check the file and password.");}}public async Task<Result>RestoreEncryptedBackupAsync(Stream stream,string password,CancellationToken c=default){try{var s=await Read(stream,password,c);if(s.SchemaVersion!=AppConstants.DatabaseSchemaVersion)return Result.Failure("Backup schema is incompatible with this build.");await using var db=await factory.CreateDbContextAsync(c);await using var tx=await db.Database.BeginTransactionAsync(c);db.RecurrenceOccurrences.RemoveRange(db.RecurrenceOccurrences);db.GoalContributions.RemoveRange(db.GoalContributions);db.Transactions.RemoveRange(db.Transactions);db.RecurrenceRules.RemoveRange(db.RecurrenceRules);db.Budgets.RemoveRange(db.Budgets);db.SavingsGoals.RemoveRange(db.SavingsGoals);db.Categories.RemoveRange(db.Categories);db.Accounts.RemoveRange(db.Accounts);await db.SaveChangesAsync(c);db.Accounts.AddRange(s.Accounts);db.Categories.AddRange(s.Categories);db.Budgets.AddRange(s.Budgets);db.SavingsGoals.AddRange(s.Goals);db.GoalContributions.AddRange(s.Contributions);db.RecurrenceRules.AddRange(s.Rules);db.Transactions.AddRange(s.Transactions);db.RecurrenceOccurrences.AddRange(s.Occurrences);await db.SaveChangesAsync(c);await tx.CommitAsync(c);return Result.Success();}catch(Exception e)when(e is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException){return Result.Failure("Restore failed safely; existing data was not replaced.");}}private async Task<Snapshot>Read(Stream stream,string password,CancellationToken c){Validate(password);using var ms=new MemoryStream();await stream.CopyToAsync(ms,c);var plain=Decrypt(ms.ToArray(),password);return JsonSerializer.Deserialize<Snapshot>(plain,Json)??throw new InvalidDataException();}private static byte[]Encrypt(byte[] plain,string password){var salt=RandomNumberGenerator.GetBytes(16);var nonce=RandomNumberGenerator.GetBytes(12);var tag=new byte[16];var cipher=new byte[plain.Length];var key=Rfc2898DeriveBytes.Pbkdf2(password,salt,210000,HashAlgorithmName.SHA256,32);using(var aes=new AesGcm(key,16))aes.Encrypt(nonce,plain,cipher,tag,Encoding.ASCII.GetBytes(AppConstants.BackupMagic));CryptographicOperations.ZeroMemory(key);using var ms=new MemoryStream();using var w=new BinaryWriter(ms);w.Write(Encoding.ASCII.GetBytes(AppConstants.BackupMagic));w.Write(salt);w.Write(nonce);w.Write(tag);w.Write(cipher.Length);w.Write(cipher);return ms.ToArray();}private static byte[]Decrypt(byte[] data,string password){using var ms=new MemoryStream(data);using var r=new BinaryReader(ms);var magic=Encoding.ASCII.GetString(r.ReadBytes(AppConstants.BackupMagic.Length));if(magic!=AppConstants.BackupMagic)throw new InvalidDataException();var salt=r.ReadBytes(16);var nonce=r.ReadBytes(12);var tag=r.ReadBytes(16);var len=r.ReadInt32();if(len<0||len>256000000)throw new InvalidDataException();var cipher=r.ReadBytes(len);if(cipher.Length!=len)throw new InvalidDataException();var plain=new byte[len];var key=Rfc2898DeriveBytes.Pbkdf2(password,salt,210000,HashAlgorithmName.SHA256,32);using(var aes=new AesGcm(key,16))aes.Decrypt(nonce,cipher,tag,plain,Encoding.ASCII.GetBytes(AppConstants.BackupMagic));CryptographicOperations.ZeroMemory(key);return plain;}private static void Validate(string p){if(string.IsNullOrWhiteSpace(p)||p.Length<8)throw new ArgumentException("Backup password must be at least 8 characters.");}private sealed record Snapshot(int SchemaVersion,DateTimeOffset CreatedAtUtc,List<Account> Accounts,List<FinanceTransaction> Transactions,List<Category> Categories,List<Budget> Budgets,List<SavingsGoal> Goals,List<GoalContribution> Contributions,List<RecurrenceRule> Rules,List<RecurrenceOccurrence> Occurrences);}
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Finora.Application;
+using Finora.Domain;
+using Finora.Shared;
+using Microsoft.EntityFrameworkCore;
+
+namespace Finora.Infrastructure;
+
+public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, string appDataRoot) : IBackupService
+{
+    private const int MaximumEncryptedBytes = 512 * 1024 * 1024;
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    private readonly IDbContextFactory<FinoraDbContext> _factory = factory;
+    private readonly string _appDataRoot = Path.GetFullPath(appDataRoot);
+    private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
+
+    public async Task<byte[]> CreateEncryptedBackupAsync(string password, CancellationToken cancellationToken = default)
+    {
+        ValidatePassword(password);
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var attachments = await db.Attachments.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
+        var blobs = new List<AttachmentBlob>(attachments.Count);
+        foreach (var attachment in attachments)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var path = ResolveAttachmentPath(attachment.RelativePath);
+            if (!File.Exists(path)) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' is missing; backup was not created.");
+            var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+            if (attachment.SizeBytes != bytes.LongLength) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' size does not match the database record.");
+            var hash = SHA256.HashData(bytes);
+            if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256)) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' failed integrity verification.");
+            blobs.Add(new AttachmentBlob(attachment.Id, bytes));
+        }
+
+        var snapshot = new Snapshot(
+            AppConstants.DatabaseSchemaVersion,
+            DateTimeOffset.UtcNow,
+            await db.Accounts.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.Transactions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.TransactionSplits.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.Categories.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.Tags.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.TransactionTags.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.Budgets.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.BudgetPeriods.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.SavingsGoals.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.GoalContributions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.RecurrenceRules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.RecurrenceOccurrences.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            attachments,
+            blobs,
+            await db.TransactionRevisions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.AccountReconciliations.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.NotificationSchedules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+            await db.AppSettings.AsNoTracking().Where(x => x.Key != "schema.version").ToListAsync(cancellationToken).ConfigureAwait(false));
+
+        var plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
+        var encrypted = Encrypt(plaintext, password);
+        var metadata = new BackupMetadata { BackupId = Guid.NewGuid().ToString("N"), SchemaVersion = AppConstants.DatabaseSchemaVersion, CreatedOnUtc = snapshot.CreatedAtUtc, Sha256Hex = Convert.ToHexString(SHA256.HashData(encrypted)) };
+        db.BackupMetadata.Add(metadata);
+        db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = metadata.Id, Action = "CreatedEncryptedBackup" });
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return encrypted;
+    }
+
+    public async Task<Result<BackupPreview>> PreviewEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var snapshot = await ReadAndValidateAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+            if (snapshot.SchemaVersion > AppConstants.DatabaseSchemaVersion) return Result<BackupPreview>.Failure("Backup was created by a newer Finora schema.");
+            return Result<BackupPreview>.Success(new BackupPreview(snapshot.SchemaVersion, snapshot.CreatedAtUtc, snapshot.Accounts.Count, snapshot.Transactions.Count, snapshot.Budgets.Count, snapshot.Goals.Count));
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or ArgumentException or IOException) { return Result<BackupPreview>.Failure("The backup could not be verified. Check the file and password."); }
+    }
+
+    public async Task<Result> RestoreEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
+    {
+        string? stagedDirectory = null;
+        string? rollbackDirectory = null;
+        try
+        {
+            var snapshot = await ReadAndValidateAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+            if (snapshot.SchemaVersion != AppConstants.DatabaseSchemaVersion) return Result.Failure("This build restores schema-v2 backups. Migrate older backups with the matching Finora version first.");
+            stagedDirectory = Path.Combine(_appDataRoot, $"attachments.restore.{Guid.NewGuid():N}");
+            Directory.CreateDirectory(stagedDirectory);
+            foreach (var attachment in snapshot.Attachments)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var blob = snapshot.AttachmentBlobs.Single(x => x.AttachmentId == attachment.Id);
+                var destination = ResolveStagedPath(stagedDirectory, attachment.RelativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                await File.WriteAllBytesAsync(destination, blob.Data, cancellationToken).ConfigureAwait(false);
+            }
+
+            await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+            db.TransactionRevisions.RemoveRange(db.TransactionRevisions);
+            db.AccountReconciliations.RemoveRange(db.AccountReconciliations);
+            db.NotificationSchedules.RemoveRange(db.NotificationSchedules);
+            db.TransactionTags.RemoveRange(db.TransactionTags);
+            db.TransactionSplits.RemoveRange(db.TransactionSplits);
+            db.Attachments.RemoveRange(db.Attachments);
+            db.RecurrenceOccurrences.RemoveRange(db.RecurrenceOccurrences);
+            db.GoalContributions.RemoveRange(db.GoalContributions);
+            db.BudgetPeriods.RemoveRange(db.BudgetPeriods);
+            db.Transactions.RemoveRange(db.Transactions);
+            db.RecurrenceRules.RemoveRange(db.RecurrenceRules);
+            db.Budgets.RemoveRange(db.Budgets);
+            db.SavingsGoals.RemoveRange(db.SavingsGoals);
+            db.Tags.RemoveRange(db.Tags);
+            db.Categories.RemoveRange(db.Categories);
+            db.Accounts.RemoveRange(db.Accounts);
+            db.AppSettings.RemoveRange(db.AppSettings.Where(x => x.Key != "schema.version"));
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            db.Accounts.AddRange(snapshot.Accounts);
+            db.Categories.AddRange(snapshot.Categories);
+            db.Tags.AddRange(snapshot.Tags);
+            db.Budgets.AddRange(snapshot.Budgets);
+            db.BudgetPeriods.AddRange(snapshot.BudgetPeriods);
+            db.SavingsGoals.AddRange(snapshot.Goals);
+            db.GoalContributions.AddRange(snapshot.Contributions);
+            db.RecurrenceRules.AddRange(snapshot.Rules);
+            db.Transactions.AddRange(snapshot.Transactions);
+            db.TransactionSplits.AddRange(snapshot.Splits);
+            db.TransactionTags.AddRange(snapshot.TransactionTags);
+            db.RecurrenceOccurrences.AddRange(snapshot.Occurrences);
+            db.Attachments.AddRange(snapshot.Attachments);
+            db.TransactionRevisions.AddRange(snapshot.Revisions);
+            db.AccountReconciliations.AddRange(snapshot.Reconciliations);
+            db.NotificationSchedules.AddRange(snapshot.Notifications);
+            db.AppSettings.AddRange(snapshot.Settings);
+            db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = Guid.NewGuid(), Action = "RestoredEncryptedBackup" });
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            rollbackDirectory = Path.Combine(_appDataRoot, $"attachments.rollback.{Guid.NewGuid():N}");
+            if (Directory.Exists(AttachmentRoot)) Directory.Move(AttachmentRoot, rollbackDirectory);
+            Directory.Move(stagedDirectory, AttachmentRoot);
+            stagedDirectory = null;
+            try
+            {
+                await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                if (Directory.Exists(rollbackDirectory)) Directory.Delete(rollbackDirectory, true);
+                rollbackDirectory = null;
+            }
+            catch
+            {
+                if (Directory.Exists(AttachmentRoot)) Directory.Delete(AttachmentRoot, true);
+                if (Directory.Exists(rollbackDirectory)) Directory.Move(rollbackDirectory, AttachmentRoot);
+                rollbackDirectory = null;
+                throw;
+            }
+            return Result.Success();
+        }
+        catch (OperationCanceledException) { Cleanup(stagedDirectory); Cleanup(rollbackDirectory); throw; }
+        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException)
+        {
+            Cleanup(stagedDirectory); Cleanup(rollbackDirectory);
+            return Result.Failure("Restore failed safely; the existing database was not committed with incomplete backup data.");
+        }
+    }
+
+    private async Task<Snapshot> ReadAndValidateAsync(Stream stream, string password, CancellationToken cancellationToken)
+    {
+        ValidatePassword(password);
+        if (!stream.CanRead) throw new InvalidDataException("Backup cannot be read.");
+        if (stream.CanSeek && stream.Length > MaximumEncryptedBytes) throw new InvalidDataException("Backup file is too large.");
+        if (stream.CanSeek) stream.Position = 0;
+        using var buffer = new MemoryStream();
+        await stream.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
+        if (buffer.Length > MaximumEncryptedBytes) throw new InvalidDataException("Backup file is too large.");
+        var plaintext = Decrypt(buffer.ToArray(), password);
+        var snapshot = JsonSerializer.Deserialize<Snapshot>(plaintext, Json) ?? throw new InvalidDataException("Backup payload is empty.");
+        if (snapshot.SchemaVersion <= 0) throw new InvalidDataException("Backup schema is invalid.");
+        if (snapshot.Attachments.Count != snapshot.AttachmentBlobs.Count) throw new InvalidDataException("Backup attachment metadata is incomplete.");
+        foreach (var attachment in snapshot.Attachments)
+        {
+            _ = ResolveAttachmentPath(attachment.RelativePath);
+            var blob = snapshot.AttachmentBlobs.SingleOrDefault(x => x.AttachmentId == attachment.Id) ?? throw new InvalidDataException("Backup attachment data is incomplete.");
+            if (blob.Data.LongLength != attachment.SizeBytes) throw new InvalidDataException("Backup attachment size is invalid.");
+            var hash = SHA256.HashData(blob.Data);
+            if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256)) throw new InvalidDataException("Backup attachment integrity check failed.");
+        }
+        return snapshot;
+    }
+
+    private static byte[] Encrypt(byte[] plaintext, string password)
+    {
+        var salt = RandomNumberGenerator.GetBytes(16); var nonce = RandomNumberGenerator.GetBytes(12); var tag = new byte[16]; var ciphertext = new byte[plaintext.Length];
+        var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, 210_000, HashAlgorithmName.SHA256, 32);
+        try { using var aes = new AesGcm(key, 16); aes.Encrypt(nonce, plaintext, ciphertext, tag, Encoding.ASCII.GetBytes(AppConstants.BackupMagic)); }
+        finally { CryptographicOperations.ZeroMemory(key); }
+        using var stream = new MemoryStream(); using var writer = new BinaryWriter(stream);
+        writer.Write(Encoding.ASCII.GetBytes(AppConstants.BackupMagic)); writer.Write(salt); writer.Write(nonce); writer.Write(tag); writer.Write(ciphertext.Length); writer.Write(ciphertext); return stream.ToArray();
+    }
+
+    private static byte[] Decrypt(byte[] data, string password)
+    {
+        using var stream = new MemoryStream(data); using var reader = new BinaryReader(stream);
+        var magic = Encoding.ASCII.GetString(reader.ReadBytes(AppConstants.BackupMagic.Length)); if (magic != AppConstants.BackupMagic) throw new InvalidDataException("Not a Finora backup.");
+        var salt = reader.ReadBytes(16); var nonce = reader.ReadBytes(12); var tag = reader.ReadBytes(16); var length = reader.ReadInt32();
+        if (length < 0 || length > MaximumEncryptedBytes || reader.BaseStream.Length - reader.BaseStream.Position != length) throw new InvalidDataException("Backup length is invalid.");
+        var ciphertext = reader.ReadBytes(length); var plaintext = new byte[length]; var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, 210_000, HashAlgorithmName.SHA256, 32);
+        try { using var aes = new AesGcm(key, 16); aes.Decrypt(nonce, ciphertext, tag, plaintext, Encoding.ASCII.GetBytes(AppConstants.BackupMagic)); }
+        finally { CryptographicOperations.ZeroMemory(key); }
+        return plaintext;
+    }
+
+    private string ResolveAttachmentPath(string relativePath)
+    {
+        var full = Path.GetFullPath(Path.Combine(_appDataRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
+        var root = AttachmentRoot.EndsWith(Path.DirectorySeparatorChar) ? AttachmentRoot : AttachmentRoot + Path.DirectorySeparatorChar;
+        if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Attachment path escaped Finora storage.");
+        return full;
+    }
+
+    private string ResolveStagedPath(string stagedRoot, string relativePath)
+    {
+        var attachmentRelative = Path.GetRelativePath(AttachmentRoot, ResolveAttachmentPath(relativePath));
+        var full = Path.GetFullPath(Path.Combine(stagedRoot, attachmentRelative));
+        var root = stagedRoot.EndsWith(Path.DirectorySeparatorChar) ? stagedRoot : stagedRoot + Path.DirectorySeparatorChar;
+        if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Staged attachment path is invalid.");
+        return full;
+    }
+
+    private static void ValidatePassword(string password) { if (string.IsNullOrWhiteSpace(password) || password.Length < 8) throw new ArgumentException("Backup password must be at least 8 characters."); }
+    private static void Cleanup(string? directory) { try { if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory)) Directory.Delete(directory, true); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+
+    private sealed record AttachmentBlob(Guid AttachmentId, byte[] Data);
+    private sealed record Snapshot(int SchemaVersion, DateTimeOffset CreatedAtUtc, List<Account> Accounts, List<FinanceTransaction> Transactions, List<TransactionSplit> Splits, List<Category> Categories, List<Tag> Tags, List<TransactionTag> TransactionTags, List<Budget> Budgets, List<BudgetPeriod> BudgetPeriods, List<SavingsGoal> Goals, List<GoalContribution> Contributions, List<RecurrenceRule> Rules, List<RecurrenceOccurrence> Occurrences, List<Attachment> Attachments, List<AttachmentBlob> AttachmentBlobs, List<TransactionRevision> Revisions, List<AccountReconciliation> Reconciliations, List<NotificationSchedule> Notifications, List<AppSetting> Settings);
+}
