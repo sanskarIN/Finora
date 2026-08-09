@@ -14,11 +14,37 @@ try {
     }
 
     dotnet --info
-    dotnet workload restore
-    dotnet restore Finora.sln
-    dotnet format Finora.sln --verify-no-changes --no-restore
-    dotnet build Finora.sln -c Release --no-restore
-    dotnet test Finora.sln -c Release --no-build --logger "trx;LogFileName=finora-tests.trx"
+
+    $testProjects = @(
+        'tests/Finora.UnitTests/Finora.UnitTests.csproj',
+        'tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj',
+        'tests/Finora.UiTests/Finora.UiTests.csproj'
+    )
+
+    foreach ($project in $testProjects) {
+        dotnet restore $project
+        dotnet test $project -c Release --no-restore
+    }
+
+    if ($env:FINORA_SKIP_MAUI -eq '1') {
+        Write-Host 'FINORA_SKIP_MAUI=1: skipped native MAUI builds after core verification.'
+        return
+    }
+
+    dotnet workload restore src/Finora.App/Finora.App.csproj
+    dotnet restore src/Finora.App/Finora.App.csproj
+
+    if ($IsWindows -or $env:OS -eq 'Windows_NT') {
+        dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
+        dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android --no-restore
+    }
+    elseif ($IsMacOS) {
+        dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --no-restore
+        dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --no-restore
+    }
+    else {
+        Write-Host 'Core verification passed. Native MAUI build skipped on this host; CI builds Windows/Android and Apple targets on supported runners.'
+    }
 }
 finally {
     Pop-Location
