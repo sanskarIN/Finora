@@ -33,8 +33,17 @@ public sealed class RecurringViewModel : ViewModelBase
 
     public RecurringViewModel(IFinanceStore store, IRecurringWorkflowService workflow, ILocalNotificationService notifications, IAppSettingsService settings)
     {
-        _store = store; _workflow = workflow; _notifications = notifications; _settings = settings;
-        RefreshCommand = new AsyncCommand(LoadAsync); AddCommand = new AsyncCommand(AddAsync); ProcessNowCommand = new AsyncCommand(ProcessNowAsync); MarkPaidCommand = new AsyncCommand(MarkPaidAsync); SkipCommand = new AsyncCommand(SkipAsync); PostponeCommand = new AsyncCommand(PostponeAsync);
+        _store = store;
+        _workflow = workflow;
+        _notifications = notifications;
+        _settings = settings;
+        RefreshCommand = new AsyncCommand(LoadAsync);
+        AddCommand = new AsyncCommand(AddAsync);
+        ProcessNowCommand = new AsyncCommand(ProcessNowAsync);
+        MarkPaidCommand = new AsyncCommand(MarkPaidAsync);
+        SkipCommand = new AsyncCommand(SkipAsync);
+        PostponeCommand = new AsyncCommand(PostponeAsync);
+        ReopenCommand = new AsyncCommand(ReopenAsync);
     }
 
     public ObservableCollection<RecurrenceRule> Rules { get; } = [];
@@ -59,7 +68,21 @@ public sealed class RecurringViewModel : ViewModelBase
     public int ReminderMinutesBefore { get => _reminderMinutesBefore; set => SetProperty(ref _reminderMinutesBefore, Math.Clamp(value, 0, 10080)); }
     public string Merchant { get => _merchant; set => SetProperty(ref _merchant, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-    public RecurrenceOccurrenceInfo? SelectedOccurrence { get => _selectedOccurrence; set { if (SetProperty(ref _selectedOccurrence, value) && value is not null) { PaidAmount = new Money(value.AmountMinor, value.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture); PostponeDate = (value.PostponedTo ?? value.DueOn).ToDateTime(TimeOnly.MinValue).AddDays(1); } } }
+
+    public RecurrenceOccurrenceInfo? SelectedOccurrence
+    {
+        get => _selectedOccurrence;
+        set
+        {
+            if (!SetProperty(ref _selectedOccurrence, value)) return;
+            OnPropertyChanged(nameof(CanReopenSelectedOccurrence));
+            if (value is null) return;
+            PaidAmount = new Money(value.AmountMinor, value.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture);
+            PostponeDate = (value.PostponedTo ?? value.DueOn).ToDateTime(TimeOnly.MinValue).AddDays(1);
+        }
+    }
+
+    public bool CanReopenSelectedOccurrence => SelectedOccurrence?.Status == OccurrenceStatus.Skipped;
     public string PaidAmount { get => _paidAmount; set => SetProperty(ref _paidAmount, value); }
     public DateTime PostponeDate { get => _postponeDate; set => SetProperty(ref _postponeDate, value.Date); }
     public string ProcessingResult { get => _processingResult; private set => SetProperty(ref _processingResult, value); }
@@ -69,13 +92,17 @@ public sealed class RecurringViewModel : ViewModelBase
     public System.Windows.Input.ICommand MarkPaidCommand { get; }
     public System.Windows.Input.ICommand SkipCommand { get; }
     public System.Windows.Input.ICommand PostponeCommand { get; }
+    public System.Windows.Input.ICommand ReopenCommand { get; }
 
     public Task LoadAsync() => RunAsync(async () =>
     {
-        Accounts.Clear(); foreach (var item in await _store.GetAccountsAsync()) if (item.State != AccountState.Archived) Accounts.Add(item);
-        Categories.Clear(); foreach (var item in await _store.GetCategoriesAsync()) if (!item.IsArchived) Categories.Add(item);
+        Accounts.Clear();
+        foreach (var item in await _store.GetAccountsAsync()) if (item.State != AccountState.Archived) Accounts.Add(item);
+        Categories.Clear();
+        foreach (var item in await _store.GetCategoriesAsync()) if (!item.IsArchived) Categories.Add(item);
         Account ??= Accounts.FirstOrDefault(x => x.Id == _settings.DefaultAccountId) ?? Accounts.FirstOrDefault();
-        await LoadRulesCoreAsync(); await LoadOccurrencesCoreAsync();
+        await LoadRulesCoreAsync();
+        await LoadOccurrencesCoreAsync();
     });
 
     private Task AddAsync() => RunAsync(async () =>
@@ -89,22 +116,106 @@ public sealed class RecurringViewModel : ViewModelBase
             if (DestinationAccount is null || DestinationAccount.Id == Account.Id) throw new InvalidOperationException("Choose a different destination account for the transfer.");
             if (!string.Equals(Account.Currency, DestinationAccount.Currency, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Recurring transfers currently require matching account currencies.");
         }
-        var start = DateOnly.FromDateTime(StartsOn); var minor = Money.FromMajorUnits(major, Account.Currency).MinorUnits;
-        var rule = new RecurrenceRule { Name = Name.Trim(), Frequency = Frequency, Interval = Math.Clamp(Interval, 1, 365), StartsOn = start, EndsOn = HasEndDate ? DateOnly.FromDateTime(EndsOn) : null, NextDueOn = start, TransactionType = Type, AmountMinor = minor, Currency = Account.Currency, AccountId = Account.Id, DestinationAccountId = IsTransfer ? DestinationAccount?.Id : null, CategoryId = IsTransfer ? null : Category?.Id, DayOfMonth = Frequency is RecurrenceFrequency.Monthly or RecurrenceFrequency.Yearly ? start.Day : null, DayOfWeek = Frequency == RecurrenceFrequency.Weekly ? start.DayOfWeek : null, GracePeriodDays = GracePeriodDays, ReminderMinutesBefore = ReminderMinutesBefore, Merchant = string.IsNullOrWhiteSpace(Merchant) ? null : Merchant.Trim(), Note = string.IsNullOrWhiteSpace(Note) ? null : Note.Trim() };
+
+        var start = DateOnly.FromDateTime(StartsOn);
+        var minor = Money.FromMajorUnits(major, Account.Currency).MinorUnits;
+        var rule = new RecurrenceRule
+        {
+            Name = Name.Trim(),
+            Frequency = Frequency,
+            Interval = Math.Clamp(Interval, 1, 365),
+            StartsOn = start,
+            EndsOn = HasEndDate ? DateOnly.FromDateTime(EndsOn) : null,
+            NextDueOn = start,
+            TransactionType = Type,
+            AmountMinor = minor,
+            Currency = Account.Currency,
+            AccountId = Account.Id,
+            DestinationAccountId = IsTransfer ? DestinationAccount?.Id : null,
+            CategoryId = IsTransfer ? null : Category?.Id,
+            DayOfMonth = Frequency is RecurrenceFrequency.Monthly or RecurrenceFrequency.Yearly ? start.Day : null,
+            DayOfWeek = Frequency == RecurrenceFrequency.Weekly ? start.DayOfWeek : null,
+            GracePeriodDays = GracePeriodDays,
+            ReminderMinutesBefore = ReminderMinutesBefore,
+            Merchant = string.IsNullOrWhiteSpace(Merchant) ? null : Merchant.Trim(),
+            Note = string.IsNullOrWhiteSpace(Note) ? null : Note.Trim()
+        };
         await _store.SaveRecurrenceRuleAsync(rule);
+
         if (_settings.NotificationsEnabled)
         {
-            var triggerLocal = StartsOn.Date.AddHours(9).AddMinutes(-ReminderMinutesBefore); var trigger = new DateTimeOffset(DateTime.SpecifyKind(triggerLocal, DateTimeKind.Local)).ToUniversalTime();
-            if (trigger > DateTimeOffset.UtcNow) await _notifications.ScheduleAsync(LocalReminderKind.RecurringItem, Name.Trim(), "A recurring Finora item is approaching.", trigger, $"recurrence:{rule.Id}");
+            var triggerLocal = StartsOn.Date.AddHours(9).AddMinutes(-ReminderMinutesBefore);
+            var trigger = new DateTimeOffset(DateTime.SpecifyKind(triggerLocal, DateTimeKind.Local)).ToUniversalTime();
+            if (trigger > DateTimeOffset.UtcNow)
+                await _notifications.ScheduleAsync(LocalReminderKind.RecurringItem, Name.Trim(), "A recurring Finora item is approaching.", trigger, $"recurrence:{rule.Id}");
         }
-        Name = Amount = Merchant = Note = string.Empty; await LoadRulesCoreAsync(); await LoadOccurrencesCoreAsync();
+
+        Name = Amount = Merchant = Note = string.Empty;
+        await LoadRulesCoreAsync();
+        await LoadOccurrencesCoreAsync();
     });
 
-    private Task ProcessNowAsync() => RunAsync(async () => { var count = await _store.ProcessDueRecurrencesAsync(DateOnly.FromDateTime(DateTime.Today)); ProcessingResult = $"Prepared {count} due occurrence(s). No transaction is created until you mark an occurrence paid."; await LoadRulesCoreAsync(); await LoadOccurrencesCoreAsync(); });
-    private Task MarkPaidAsync() => RunAsync(async () => { if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence."); if (!TryParse(PaidAmount, out var major) || major <= 0) throw new InvalidOperationException("Enter a positive paid amount."); var minor = Money.FromMajorUnits(major, SelectedOccurrence.Currency).MinorUnits; var result = await _workflow.MarkPaidAsync(SelectedOccurrence.Id, minor); if (!result.IsSuccess) throw new InvalidOperationException(result.Error); ProcessingResult = minor == SelectedOccurrence.AmountMinor ? "Occurrence marked paid." : "Partial payment recorded."; await LoadOccurrencesCoreAsync(); });
-    private Task SkipAsync() => RunAsync(async () => { if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence."); var result = await _workflow.SkipAsync(SelectedOccurrence.Id); if (!result.IsSuccess) throw new InvalidOperationException(result.Error); ProcessingResult = "Occurrence skipped without creating a transaction."; await LoadOccurrencesCoreAsync(); });
-    private Task PostponeAsync() => RunAsync(async () => { if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence."); var result = await _workflow.PostponeAsync(SelectedOccurrence.Id, DateOnly.FromDateTime(PostponeDate)); if (!result.IsSuccess) throw new InvalidOperationException(result.Error); ProcessingResult = $"Occurrence postponed to {PostponeDate:d}."; await LoadOccurrencesCoreAsync(); });
-    private async Task LoadRulesCoreAsync() { Rules.Clear(); foreach (var rule in await _store.GetRecurrenceRulesAsync()) Rules.Add(rule); }
-    private async Task LoadOccurrencesCoreAsync() { Occurrences.Clear(); foreach (var occurrence in await _workflow.GetOccurrencesAsync(DateOnly.FromDateTime(DateTime.Today.AddMonths(-1)), DateOnly.FromDateTime(DateTime.Today.AddMonths(6)), true)) Occurrences.Add(occurrence); SelectedOccurrence = Occurrences.FirstOrDefault(x => x.Status is OccurrenceStatus.Pending or OccurrenceStatus.Postponed or OccurrenceStatus.PartiallyPaid); }
-    private static bool TryParse(string value, out decimal result) => decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out result) || decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+    private Task ProcessNowAsync() => RunAsync(async () =>
+    {
+        var count = await _store.ProcessDueRecurrencesAsync(DateOnly.FromDateTime(DateTime.Today));
+        ProcessingResult = $"Prepared {count} due occurrence(s). No transaction is created until you mark an occurrence paid.";
+        await LoadRulesCoreAsync();
+        await LoadOccurrencesCoreAsync();
+    });
+
+    private Task MarkPaidAsync() => RunAsync(async () =>
+    {
+        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence.");
+        if (!TryParse(PaidAmount, out var major) || major <= 0) throw new InvalidOperationException("Enter a positive paid amount.");
+        var minor = Money.FromMajorUnits(major, SelectedOccurrence.Currency).MinorUnits;
+        var result = await _workflow.MarkPaidAsync(SelectedOccurrence.Id, minor);
+        if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
+        ProcessingResult = minor == SelectedOccurrence.AmountMinor ? "Occurrence marked paid." : "Partial payment recorded.";
+        await LoadOccurrencesCoreAsync();
+    });
+
+    private Task SkipAsync() => RunAsync(async () =>
+    {
+        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence.");
+        var result = await _workflow.SkipAsync(SelectedOccurrence.Id);
+        if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
+        ProcessingResult = "Occurrence skipped without creating a transaction.";
+        await LoadOccurrencesCoreAsync();
+    });
+
+    private Task PostponeAsync() => RunAsync(async () =>
+    {
+        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence.");
+        var result = await _workflow.PostponeAsync(SelectedOccurrence.Id, DateOnly.FromDateTime(PostponeDate));
+        if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
+        ProcessingResult = $"Occurrence postponed to {PostponeDate:d}.";
+        await LoadOccurrencesCoreAsync();
+    });
+
+    private Task ReopenAsync() => RunAsync(async () =>
+    {
+        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a skipped occurrence.");
+        var result = await _workflow.ReopenAsync(SelectedOccurrence.Id);
+        if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
+        ProcessingResult = "Skipped occurrence reopened as pending.";
+        await LoadOccurrencesCoreAsync();
+    });
+
+    private async Task LoadRulesCoreAsync()
+    {
+        Rules.Clear();
+        foreach (var rule in await _store.GetRecurrenceRulesAsync()) Rules.Add(rule);
+    }
+
+    private async Task LoadOccurrencesCoreAsync()
+    {
+        Occurrences.Clear();
+        foreach (var occurrence in await _workflow.GetOccurrencesAsync(DateOnly.FromDateTime(DateTime.Today.AddMonths(-1)), DateOnly.FromDateTime(DateTime.Today.AddMonths(6)), true))
+            Occurrences.Add(occurrence);
+        SelectedOccurrence = Occurrences.FirstOrDefault(x => x.Status is OccurrenceStatus.Pending or OccurrenceStatus.Postponed or OccurrenceStatus.PartiallyPaid);
+    }
+
+    private static bool TryParse(string value, out decimal result)
+        => decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out result) ||
+           decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
 }
