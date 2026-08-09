@@ -51,17 +51,11 @@ jobs:
         run: dotnet restore tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj
       - name: Restore UI-contract tests
         run: dotnet restore tests/Finora.UiTests/Finora.UiTests.csproj
-      - name: Format unit-test dependency graph
-        run: dotnet format tests/Finora.UnitTests/Finora.UnitTests.csproj --verify-no-changes --no-restore
-      - name: Format integration-test dependency graph
-        run: dotnet format tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj --verify-no-changes --no-restore
-      - name: Format UI-contract project
-        run: dotnet format tests/Finora.UiTests/Finora.UiTests.csproj --verify-no-changes --no-restore
-      - name: Run unit tests
+      - name: Run unit tests with warnings as errors
         run: dotnet test tests/Finora.UnitTests/Finora.UnitTests.csproj -c Release --no-restore --logger "trx;LogFileName=unit.trx"
-      - name: Run integration tests
+      - name: Run integration tests with warnings as errors
         run: dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Release --no-restore --logger "trx;LogFileName=integration.trx"
-      - name: Run UI-contract tests
+      - name: Run UI-contract tests with warnings as errors
         run: dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release --no-restore --logger "trx;LogFileName=ui-contract.trx"
       - name: Upload test results
         if: always()
@@ -88,11 +82,9 @@ jobs:
         run: dotnet workload install maui
       - name: Restore MAUI app
         run: dotnet restore src/Finora.App/Finora.App.csproj
-      - name: Format MAUI app
-        run: dotnet format src/Finora.App/Finora.App.csproj --verify-no-changes --no-restore
-      - name: Build Windows
+      - name: Build Windows with analyzers/warnings as errors
         run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
-      - name: Build Android
+      - name: Build Android with analyzers/warnings as errors
         run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android --no-restore
 
   maui-apple:
@@ -111,7 +103,7 @@ jobs:
         run: dotnet workload install maui
       - name: Restore MAUI app
         run: dotnet restore src/Finora.App/Finora.App.csproj
-      - name: Build iOS
+      - name: Build iOS with analyzers/warnings as errors
         run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --no-restore
-      - name: Build Mac Catalyst
+      - name: Build Mac Catalyst with analyzers/warnings as errors
         run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --no-restore
