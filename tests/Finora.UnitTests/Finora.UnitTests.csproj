@@ -5,6 +5,7 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Finora.Shared\Finora.Shared.csproj" />
     <ProjectReference Include="..\..\src\Finora.Domain\Finora.Domain.csproj" />
     <ProjectReference Include="..\..\src\Finora.Application\Finora.Application.csproj" />
     <Compile Include="..\..\src\Finora.App\ViewModels\ViewModelBase.cs" Link="Production\ViewModelBase.cs" />
