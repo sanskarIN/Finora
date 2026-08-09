@@ -2,19 +2,20 @@
 <ContentPage x:Class="Finora.App.RecurringPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Recurring">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Recurring items" Style="{StaticResource Title}" />
-    <Button Text="Process due items now" Command="{Binding ProcessNowCommand}" />
-    <Label Text="{Binding ProcessingResult}" />
-    <CollectionView ItemsSource="{Binding Rules}" EmptyView="No recurring items." HeightRequest="260">
-      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Frequency}" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" /><Label Text="{Binding NextDueOn, StringFormat='Next: {0}'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
-    </CollectionView>
+    <Button Text="Prepare due occurrences now" Command="{Binding ProcessNowCommand}" />
+    <Label Text="{Binding ProcessingResult}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="Rules" Style="{StaticResource SectionTitle}" />
+    <CollectionView ItemsSource="{Binding Rules}" EmptyView="No recurring items." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding TransactionType}" /><Label Text="{Binding Frequency}" /><Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" /><Label Text="{Binding NextDueOn, StringFormat='Next: {0}'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Label Text="Occurrence workflow" Style="{StaticResource SectionTitle}" />
+    <Picker Title="Choose occurrence" ItemsSource="{Binding Occurrences}" ItemDisplayBinding="{Binding RuleName}" SelectedItem="{Binding SelectedOccurrence}" />
+    <Border Style="{StaticResource Card}"><VerticalStackLayout><Label Text="{Binding SelectedOccurrence.RuleName}" FontAttributes="Bold" /><Label Text="{Binding SelectedOccurrence.Status}" /><Label Text="{Binding SelectedOccurrence.DueOn, StringFormat='Due {0}'}" /><Label Text="{Binding SelectedOccurrence.PostponedTo, StringFormat='Postponed to {0}'}" /><Label Text="{Binding SelectedOccurrence.AmountMinor, StringFormat='Scheduled: {0} minor'}" /><Label Text="{Binding SelectedOccurrence.PaidAmountMinor, StringFormat='Paid: {0} minor'}" /></VerticalStackLayout></Border>
+    <Entry Placeholder="Paid amount (full or partial)" Keyboard="Numeric" Text="{Binding PaidAmount}" /><Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Mark paid / partial" Command="{Binding MarkPaidCommand}" /><Button Grid.Column="1" Text="Skip" Command="{Binding SkipCommand}" /></Grid><DatePicker Date="{Binding PostponeDate}" /><Button Text="Postpone to selected date" Command="{Binding PostponeCommand}" />
     <Label Text="Create recurring item" Style="{StaticResource SectionTitle}" />
-    <Entry Placeholder="Name" Text="{Binding Name}" />
-    <Picker Title="Type" ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" />
-    <Picker Title="Frequency" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" />
-    <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Account}" />
-    <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Category}" />
-    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" />
-    <Button Text="Save recurring item" Command="{Binding AddCommand}" />
+    <Entry Placeholder="Name" Text="{Binding Name}" /><Picker Title="Type" ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" /><Picker Title="Frequency" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" />
+    <Label Text="Repeat every N frequency units" /><Stepper Minimum="1" Maximum="365" Value="{Binding Interval}" /><Label Text="{Binding Interval}" />
+    <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Account}" /><Picker Title="Destination account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding DestinationAccount}" IsVisible="{Binding IsTransfer}" /><Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Category}" IsVisible="{Binding IsTransfer, Converter={StaticResource InverseBoolConverter}}" />
+    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" /><Entry Placeholder="Merchant / payee" Text="{Binding Merchant}" /><Editor Placeholder="Note" Text="{Binding Note}" AutoSize="TextChanges" /><Label Text="Start date" /><DatePicker Date="{Binding StartsOn}" /><Grid ColumnDefinitions="*,Auto"><Label Text="Use end date" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding HasEndDate}" /></Grid><DatePicker Date="{Binding EndsOn}" IsEnabled="{Binding HasEndDate}" />
+    <Label Text="Grace period (days)" /><Stepper Minimum="0" Maximum="90" Value="{Binding GracePeriodDays}" /><Label Text="{Binding GracePeriodDays}" /><Label Text="Reminder lead time (minutes)" /><Entry Keyboard="Numeric" Text="{Binding ReminderMinutesBefore}" /><Button Text="Save recurring item" Command="{Binding AddCommand}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
