@@ -11,6 +11,15 @@ public sealed class NavigationContractTests
         yield return ["settings"];
     }
 
+    public static IEnumerable<object[]> AdaptiveRoutePairs()
+    {
+        yield return ["dashboard", "dashboard-desktop"];
+        yield return ["transactions", "transactions-desktop"];
+        yield return ["budgets", "budgets-desktop"];
+        yield return ["goals", "goals-desktop"];
+        yield return ["settings", "settings-desktop"];
+    }
+
     [Theory]
     [MemberData(nameof(RequiredPrimaryRoutes))]
     public void PrimaryRouteNames_AreStableAndNonEmpty(string route)
@@ -19,10 +28,39 @@ public sealed class NavigationContractTests
         Assert.DoesNotContain(' ', route);
     }
 
-    [Fact]
-    public void PrivacyAndRecoveryFlows_ArePartOfUiTestContract()
+    [Theory]
+    [MemberData(nameof(AdaptiveRoutePairs))]
+    public void DesktopRoute_IsDistinctStableCompanionOfMobileRoute(string mobile, string desktop)
     {
-        string[] flows = ["onboarding", "lock", "backup-preview", "destructive-delete-confirmation", "privacy-mode", "transaction-edit", "receipt-attachment", "csv-mapping", "reconciliation", "recurrence-actions"];
+        Assert.Equal($"{mobile}-desktop", desktop);
+        Assert.NotEqual(mobile, desktop);
+        Assert.DoesNotContain(' ', desktop);
+    }
+
+    [Fact]
+    public void PrivacyRecoveryAndAdaptiveFlows_ArePartOfUiTestContract()
+    {
+        string[] flows =
+        [
+            "onboarding",
+            "lock",
+            "backup-preview",
+            "destructive-delete-confirmation",
+            "synthetic-sample-reset-confirmation",
+            "privacy-mode",
+            "transaction-edit",
+            "receipt-attachment",
+            "csv-mapping",
+            "reconciliation",
+            "recurrence-actions",
+            "mobile-bottom-tabs",
+            "tablet-desktop-flyout",
+            "resize-route-preservation",
+            "large-text",
+            "keyboard-focus",
+            "screen-reader-semantics"
+        ];
+
         Assert.Equal(flows.Length, flows.Distinct(StringComparer.Ordinal).Count());
     }
 }
