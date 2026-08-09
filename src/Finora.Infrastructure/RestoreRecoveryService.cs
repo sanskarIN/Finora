@@ -46,26 +46,32 @@ public sealed class RestoreRecoveryService(
                 return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(true, false, true, cleanupCount));
             }
 
-            if (Directory.Exists(AttachmentRoot))
-            {
-                Directory.Delete(AttachmentRoot, recursive: true);
-                cleanupCount++;
-            }
-
+            var restoredPreviousAttachments = false;
             if (state.HadLiveAttachmentRoot)
             {
-                if (!Directory.Exists(rollback))
-                    return Result<StorageRecoveryReport>.Failure("An interrupted restore could not recover the previous receipt directory. The recovery journal was preserved for manual repair.");
-                Directory.Move(rollback, AttachmentRoot);
+                if (Directory.Exists(rollback))
+                {
+                    cleanupCount += DeleteDirectoryIfPresent(AttachmentRoot);
+                    Directory.Move(rollback, AttachmentRoot);
+                    restoredPreviousAttachments = true;
+                }
+                else if (!Directory.Exists(AttachmentRoot))
+                {
+                    return Result<StorageRecoveryReport>.Failure("An interrupted restore could not locate either the previous receipt directory or its rollback copy. The recovery journal was preserved for manual repair.");
+                }
+                // When the rollback directory does not exist but the live directory does,
+                // the crash occurred before the first swap. The existing live directory is
+                // still the pre-restore copy and must remain untouched.
             }
             else
             {
+                cleanupCount += DeleteDirectoryIfPresent(AttachmentRoot);
                 cleanupCount += DeleteDirectoryIfPresent(rollback);
             }
 
             cleanupCount += DeleteDirectoryIfPresent(staged);
             _journal.Delete();
-            return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(true, state.HadLiveAttachmentRoot, false, cleanupCount));
+            return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(true, restoredPreviousAttachments, false, cleanupCount));
         }
         catch (OperationCanceledException)
         {
