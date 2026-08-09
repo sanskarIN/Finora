@@ -221,13 +221,10 @@ public sealed class MauiAppLockService : IAppLockService
 
     private static void RegisterFailure()
     {
-        var previous = Math.Clamp(Preferences.Get(FailureKey, 0), 0, 999);
-        var failures = previous + 1;
+        var failures = PinAttemptPolicy.NextFailureCount(Preferences.Get(FailureKey, 0));
         Preferences.Set(FailureKey, failures);
-        if (failures < 5) return;
-
-        var exponent = Math.Clamp(failures - 5, 0, 5);
-        var minutes = Math.Min(30, 1 << exponent);
-        Preferences.Set(LockUntilKey, DateTimeOffset.UtcNow.AddMinutes(minutes).ToUnixTimeSeconds());
+        var lockout = PinAttemptPolicy.GetLockoutDuration(failures);
+        if (lockout <= TimeSpan.Zero) return;
+        Preferences.Set(LockUntilKey, DateTimeOffset.UtcNow.Add(lockout).ToUnixTimeSeconds());
     }
 }
