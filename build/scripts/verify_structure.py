@@ -215,7 +215,7 @@ def check_schema_consistency(errors: list[str]) -> None:
         return
     version = match.group(1)
     doc = read(schema_doc)
-    if not re.search(rf"\bSchema(?:\s+version)?\s+{re.escape(version)}\b", doc, re.IGNORECASE):
+    if not re.search(rf"\bschema\b[^\n]{{0,80}}(?<!\d){re.escape(version)}(?!\d)", doc, re.IGNORECASE):
         errors.append(f"docs/architecture/DATABASE_SCHEMA.md: schema version {version} is not documented")
 
 
