@@ -1,0 +1,11 @@
+# Default ownership
+* @sanskarIN
+
+# Security and privacy sensitive surfaces
+/SECURITY.md @sanskarIN
+/PRIVACY.md @sanskarIN
+/src/Finora.Infrastructure/BackupService.cs @sanskarIN
+/src/Finora.Infrastructure/AppLockService.cs @sanskarIN
+/src/Finora.Infrastructure/DatabaseMigrationRunner.cs @sanskarIN
+/src/Finora.App/Platforms/ @sanskarIN
+/.github/workflows/ @sanskarIN
