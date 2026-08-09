@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Finora.Application;
 using Finora.Shared;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,6 @@ public sealed class FinanceDataResetService(IDbContextFactory<FinoraDbContext> f
             await db.SavingsGoals.ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
             await db.Tags.ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 
-            // Categories are self-referencing with Restrict delete behavior. Delete leaves first.
             while (await db.Categories.AnyAsync(cancellationToken).ConfigureAwait(false))
             {
                 var leafIds = await db.Categories
@@ -52,7 +52,10 @@ public sealed class FinanceDataResetService(IDbContextFactory<FinoraDbContext> f
                     .ConfigureAwait(false);
 
                 if (leafIds.Count == 0)
+                {
+                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
                     return Result<FinanceResetResult>.Failure("Category hierarchy is cyclic; finance reset was rolled back.");
+                }
 
                 await db.Categories.Where(category => leafIds.Contains(category.Id)).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -79,7 +82,7 @@ public sealed class FinanceDataResetService(IDbContextFactory<FinoraDbContext> f
         {
             throw;
         }
-        catch (Exception exception) when (exception is DbUpdateException or InvalidOperationException)
+        catch (Exception exception) when (exception is DbException or DbUpdateException or InvalidOperationException)
         {
             return Result<FinanceResetResult>.Failure("Finora could not delete all finance data safely. No partial reset was committed.");
         }
