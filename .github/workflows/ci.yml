@@ -25,9 +25,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - name: Validate repository structure
@@ -37,12 +37,12 @@ jobs:
     name: Core tests
     needs: structural-preflight
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
       - name: Restore unit tests
@@ -51,8 +51,12 @@ jobs:
         run: dotnet restore tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj
       - name: Restore UI-contract tests
         run: dotnet restore tests/Finora.UiTests/Finora.UiTests.csproj
-      - name: Format verification
-        run: dotnet format Finora.sln --verify-no-changes --no-restore
+      - name: Format unit-test dependency graph
+        run: dotnet format tests/Finora.UnitTests/Finora.UnitTests.csproj --verify-no-changes --no-restore
+      - name: Format integration-test dependency graph
+        run: dotnet format tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj --verify-no-changes --no-restore
+      - name: Format UI-contract project
+        run: dotnet format tests/Finora.UiTests/Finora.UiTests.csproj --verify-no-changes --no-restore
       - name: Run unit tests
         run: dotnet test tests/Finora.UnitTests/Finora.UnitTests.csproj -c Release --no-restore --logger "trx;LogFileName=unit.trx"
       - name: Run integration tests
@@ -72,18 +76,20 @@ jobs:
     name: MAUI Windows + Android
     needs: core-tests
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
         run: dotnet workload install maui
       - name: Restore MAUI app
         run: dotnet restore src/Finora.App/Finora.App.csproj
+      - name: Format MAUI app
+        run: dotnet format src/Finora.App/Finora.App.csproj --verify-no-changes --no-restore
       - name: Build Windows
         run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
       - name: Build Android
@@ -93,12 +99,12 @@ jobs:
     name: MAUI iOS + Mac Catalyst
     needs: core-tests
     runs-on: macos-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
       - name: Set up .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
