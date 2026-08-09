@@ -19,6 +19,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<DatabaseInitializer>();
         builder.Services.AddSingleton<IFinanceStore, FinanceStore>();
         builder.Services.AddSingleton<IFinanceDataResetService, FinanceDataResetService>();
+        builder.Services.AddSingleton<ISampleDataService, SampleDataService>();
         builder.Services.AddSingleton<ITransactionMaintenanceService, TransactionMaintenanceService>();
         builder.Services.AddSingleton<IAccountManagementService, AccountManagementService>();
         builder.Services.AddSingleton<ICategoryTagService, CategoryTagService>();
