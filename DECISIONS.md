@@ -123,3 +123,39 @@ Keystores, private keys, certificates, provisioning profiles containing secrets,
 ## 25. Open source license remains Apache-2.0
 
 Finora source is Apache-2.0 licensed. Third-party dependencies retain their own licenses and require exact release-time dependency/license review.
+
+## 26. Currency precision is currency-aware
+
+Stored values remain integer minor units, but major/minor conversion and formatting use currency-specific decimal precision where Finora has built-in metadata. Zero-decimal and three-decimal currencies are not forced through a two-decimal assumption.
+
+Release QA must verify the built-in currency precision table against the currency metadata required by the targeted release markets. No exchange-rate conversion is implied by this metadata.
+
+## 27. Unlike currencies are never silently aggregated
+
+Dashboards and aggregate reports use an explicit reporting currency. Accounts, budgets, goals, transactions, and recurrence rows with another currency retain that currency and are displayed separately rather than converted or added together.
+
+Finora does not invent exchange rates. A future cross-currency aggregate requires an explicit exchange-rate source, timestamp semantics, user disclosure, and a new architecture decision.
+
+## 28. Restore spans SQLite and receipt files through a recovery protocol
+
+Encrypted restore touches both the relational database and app-private attachment files, so a SQLite transaction alone is insufficient for crash safety. Production restore uses a durable app-private recovery journal, a transient `internal.restore.commit` marker, a verified pre-restore receipt copy, and startup recovery.
+
+If the pending marker remains, the database replacement did not commit and receipt files roll back. If the marker was removed by the committed restore transaction, startup finalizes the new receipt tree. Recovery metadata contains no backup password or financial contents.
+
+## 29. Primary navigation adapts by device class and width
+
+Phones use bottom primary tabs. Tablet/desktop layouts expose the equivalent primary hierarchy through a flyout/sidebar. Route helpers keep onboarding, unlock, startup, and resize transitions on the correct root without changing finance state.
+
+Native resize, keyboard, focus, and accessibility behavior remain platform-release validation requirements.
+
+## 30. Locale preference controls runtime formatting
+
+The saved locale is validated and applied to process/thread culture before normal UI navigation. Date and number formatting follows the active culture while stored money remains integer minor units and stored timestamps remain explicit UTC/date values as designed.
+
+Localization readiness does not mean every literal UI string has already been translated; translation completeness is a separate release concern.
+
+## 31. Destructive reset and sample reset have distinct guarantees
+
+“Delete all local finance data” removes finance-domain records, audit/backup metadata, reminder records, and receipt metadata/files while preserving schema metadata, app preferences, and app-lock configuration.
+
+The hidden developer “Reset to synthetic sample data” action first performs the same safe finance reset, then creates a deterministic synthetic dataset. It requires an explicit typed confirmation and must never silently overwrite real local finance data.
