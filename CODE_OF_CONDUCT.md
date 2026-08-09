@@ -47,11 +47,7 @@ This code applies to repository issues, pull requests, discussions, review comme
 
 ## Reporting a conduct concern
 
-For a private conduct concern, contact:
-
-` sanskarin@outlook.in `
-
-Remove the surrounding spaces when using the address. Include only the information needed to understand the conduct concern. Do not attach unrelated private financial data.
+For a private conduct concern, contact `sanskarin@outlook.in`. Include only the information needed to understand the conduct concern. Do not attach unrelated private financial data.
 
 For a software security vulnerability rather than a conduct concern, use the process in `SECURITY.md`.
 
