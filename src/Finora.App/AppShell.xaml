@@ -1,1 +1,35 @@
-<?xml version="1.0" encoding="UTF-8" ?><Shell x:Class="Finora.App.AppShell" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:local="clr-namespace:Finora.App" FlyoutBehavior="Disabled"><TabBar><ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate local:DashboardPage}"/><ShellContent Title="Transactions" Route="transactions" ContentTemplate="{DataTemplate local:TransactionsPage}"/><ShellContent Title="Budgets" Route="budgets" ContentTemplate="{DataTemplate local:BudgetsPage}"/><ShellContent Title="Goals" Route="goals" ContentTemplate="{DataTemplate local:SavingsPage}"/><ShellContent Title="Settings" Route="settings" ContentTemplate="{DataTemplate local:SettingsPage}"/></TabBar><ShellContent Route="onboarding" Shell.FlyoutItemIsVisible="False" ContentTemplate="{DataTemplate local:OnboardingPage}"/><ShellContent Route="lock" Shell.FlyoutItemIsVisible="False" ContentTemplate="{DataTemplate local:LockPage}"/></Shell>
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+  x:Class="Finora.App.AppShell"
+  xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+  xmlns:local="clr-namespace:Finora.App"
+  FlyoutBehavior="Disabled">
+
+  <TabBar x:Name="MobileTabBar" Route="mobile-tabs">
+    <ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate local:DashboardPage}" />
+    <ShellContent Title="Transactions" Route="transactions" ContentTemplate="{DataTemplate local:TransactionsPage}" />
+    <ShellContent Title="Budgets" Route="budgets" ContentTemplate="{DataTemplate local:BudgetsPage}" />
+    <ShellContent Title="Goals" Route="goals" ContentTemplate="{DataTemplate local:SavingsPage}" />
+    <ShellContent Title="Settings" Route="settings" ContentTemplate="{DataTemplate local:SettingsPage}" />
+  </TabBar>
+
+  <FlyoutItem x:Name="DesktopDashboard" Title="Dashboard" Route="dashboard-desktop" IsVisible="False">
+    <ShellContent ContentTemplate="{DataTemplate local:DashboardPage}" />
+  </FlyoutItem>
+  <FlyoutItem x:Name="DesktopTransactions" Title="Transactions" Route="transactions-desktop" IsVisible="False">
+    <ShellContent ContentTemplate="{DataTemplate local:TransactionsPage}" />
+  </FlyoutItem>
+  <FlyoutItem x:Name="DesktopBudgets" Title="Budgets" Route="budgets-desktop" IsVisible="False">
+    <ShellContent ContentTemplate="{DataTemplate local:BudgetsPage}" />
+  </FlyoutItem>
+  <FlyoutItem x:Name="DesktopGoals" Title="Goals" Route="goals-desktop" IsVisible="False">
+    <ShellContent ContentTemplate="{DataTemplate local:SavingsPage}" />
+  </FlyoutItem>
+  <FlyoutItem x:Name="DesktopSettings" Title="Settings" Route="settings-desktop" IsVisible="False">
+    <ShellContent ContentTemplate="{DataTemplate local:SettingsPage}" />
+  </FlyoutItem>
+
+  <ShellContent Route="onboarding" Shell.FlyoutItemIsVisible="False" ContentTemplate="{DataTemplate local:OnboardingPage}" />
+  <ShellContent Route="lock" Shell.FlyoutItemIsVisible="False" ContentTemplate="{DataTemplate local:LockPage}" />
+</Shell>
