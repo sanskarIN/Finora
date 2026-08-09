@@ -20,6 +20,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IFinanceStore, FinanceStore>();
         builder.Services.AddSingleton<IFinanceDataResetService, FinanceDataResetService>();
         builder.Services.AddSingleton<ISampleDataService, SampleDataService>();
+        builder.Services.AddSingleton<IStorageRecoveryService>(sp => new RestoreRecoveryService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<ITransactionMaintenanceService, TransactionMaintenanceService>();
         builder.Services.AddSingleton<IAccountManagementService, AccountManagementService>();
         builder.Services.AddSingleton<ICategoryTagService, CategoryTagService>();
