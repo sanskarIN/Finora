@@ -1,3 +1,5 @@
+using Microsoft.Maui.Devices;
+
 namespace Finora.App;
 
 public partial class AppShell : Shell
