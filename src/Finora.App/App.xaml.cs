@@ -7,6 +7,7 @@ namespace Finora.App;
 public partial class App : Microsoft.Maui.Controls.Application
 {
     private readonly IFinanceStore _store;
+    private readonly IStorageRecoveryService _storageRecovery;
     private readonly IAppSettingsService _settings;
     private readonly IAppLockService _appLock;
     private readonly ISensitiveScreenService _sensitiveScreen;
@@ -16,6 +17,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 
     public App(
         IFinanceStore store,
+        IStorageRecoveryService storageRecovery,
         IAppSettingsService settings,
         IAppLockService appLock,
         ISensitiveScreenService sensitiveScreen,
@@ -24,6 +26,7 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         InitializeComponent();
         _store = store;
+        _storageRecovery = storageRecovery;
         _settings = settings;
         _appLock = appLock;
         _sensitiveScreen = sensitiveScreen;
@@ -56,6 +59,13 @@ public partial class App : Microsoft.Maui.Controls.Application
         try
         {
             await _store.InitializeAsync().ConfigureAwait(false);
+            var recovery = await _storageRecovery.RecoverAsync().ConfigureAwait(false);
+            if (!recovery.IsSuccess)
+                throw new InvalidOperationException(recovery.Error ?? "Interrupted restore recovery failed.");
+
+            if (recovery.Value?.RecoveryWasRequired == true)
+                _exceptions.Report(new InvalidOperationException("Interrupted restore recovered."), "restore_recovery_completed");
+
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 if (_settings.SensitiveScreenProtectionEnabled)
