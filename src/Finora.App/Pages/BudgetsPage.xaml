@@ -2,18 +2,18 @@
 <ContentPage x:Class="Finora.App.BudgetsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Budgets">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Budgets" Style="{StaticResource Title}" />
-    <CollectionView ItemsSource="{Binding Budgets}" EmptyView="No budgets for this period." HeightRequest="260">
-      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Currency}" /><Label Text="{Binding PlannedMinor, StringFormat='Planned: {0} minor'}" /><Label Text="{Binding ActualMinor, StringFormat='Actual: {0} minor'}" /><Label Text="{Binding WarningThresholdPercent, StringFormat='Warning at {0}%'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
-    </CollectionView>
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><DatePicker Date="{Binding ViewDate}" /><Button Grid.Column="1" Text="View period" Command="{Binding RefreshCommand}" /></Grid>
+    <CollectionView ItemsSource="{Binding Budgets}" EmptyView="No budgets for this period." HeightRequest="300"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Currency}" /><Label Text="{Binding PlannedMinor, StringFormat='Available plan: {0} minor'}" /><Label Text="{Binding ActualMinor, StringFormat='Actual spending: {0} minor'}" /><Label Text="{Binding WarningThresholdPercent, StringFormat='Warning at {0}%'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="Create budget" Style="{StaticResource SectionTitle}" />
     <Entry Placeholder="Budget name" Text="{Binding Name}" />
     <Entry Placeholder="Limit" Keyboard="Numeric" Text="{Binding Limit}" />
+    <Picker Title="Cadence" ItemsSource="{Binding Cadences}" SelectedItem="{Binding Cadence}" />
+    <VerticalStackLayout IsVisible="{Binding IsCustom}"><Label Text="Custom period start" /><DatePicker Date="{Binding CustomStart}" /><Label Text="Custom period end" /><DatePicker Date="{Binding CustomEnd}" /></VerticalStackLayout>
     <Picker Title="Category (leave empty for overall)" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Category}" />
-    <Grid ColumnDefinitions="*,Auto"><Label Text="Rollover unused budget" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Rollover}" /></Grid>
-    <Label Text="Warning threshold (%)" />
-    <Slider Minimum="1" Maximum="100" Value="{Binding WarningThreshold}" />
-    <Label Text="{Binding WarningThreshold, StringFormat='{0}%'}" />
+    <Grid ColumnDefinitions="*,Auto"><Label Text="Rollover unused weekly/monthly budget" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Rollover}" IsEnabled="{Binding IsCustom, Converter={StaticResource InverseBoolConverter}}" /></Grid>
+    <Label Text="Warning threshold (%)" /><Slider Minimum="1" Maximum="100" Value="{Binding WarningThreshold}" /><Label Text="{Binding WarningThreshold, StringFormat='{0}%'}" />
     <Button Text="Save budget" Command="{Binding AddCommand}" />
+    <Label Text="Budget actuals include transaction splits and descendant categories. Rollover is calculated from explicit budget periods when present." FontSize="12" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
