@@ -14,23 +14,53 @@ public sealed class CrashSafeBackupService(
     private readonly BackupService _inner = new(factory, appDataRoot);
     private readonly RestoreRecoveryService _recovery = new(factory, appDataRoot);
     private readonly RestoreRecoveryJournal _journal = new(appDataRoot);
+    private readonly SemaphoreSlim _operationGate = new(1, 1);
     private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
 
     public async Task<byte[]> CreateEncryptedBackupAsync(string password, CancellationToken cancellationToken = default)
     {
-        await EnsureRecoveredAsync(cancellationToken).ConfigureAwait(false);
-        return await _inner.CreateEncryptedBackupAsync(password, cancellationToken).ConfigureAwait(false);
+        await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await EnsureRecoveredAsync(cancellationToken).ConfigureAwait(false);
+            return await _inner.CreateEncryptedBackupAsync(password, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _operationGate.Release();
+        }
     }
 
     public async Task<Result<BackupPreview>> PreviewEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
     {
-        var recovery = await _recovery.RecoverAsync(cancellationToken).ConfigureAwait(false);
-        if (!recovery.IsSuccess)
-            return Result<BackupPreview>.Failure(recovery.Error ?? "Finora could not recover a previous interrupted restore.");
-        return await _inner.PreviewEncryptedBackupAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+        await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var recovery = await _recovery.RecoverAsync(cancellationToken).ConfigureAwait(false);
+            if (!recovery.IsSuccess)
+                return Result<BackupPreview>.Failure(recovery.Error ?? "Finora could not recover a previous interrupted restore.");
+            return await _inner.PreviewEncryptedBackupAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _operationGate.Release();
+        }
     }
 
     public async Task<Result> RestoreEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
+    {
+        await _operationGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await RestoreCoreAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _operationGate.Release();
+        }
+    }
+
+    private async Task<Result> RestoreCoreAsync(Stream backupStream, string password, CancellationToken cancellationToken)
     {
         var previousRecovery = await _recovery.RecoverAsync(cancellationToken).ConfigureAwait(false);
         if (!previousRecovery.IsSuccess)
