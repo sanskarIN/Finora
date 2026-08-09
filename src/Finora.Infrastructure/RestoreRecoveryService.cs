@@ -23,6 +23,7 @@ public sealed class RestoreRecoveryService(
             if (state is null)
             {
                 var cleaned = await RemoveOrphanCommitMarkerAsync(cancellationToken).ConfigureAwait(false);
+                cleaned += CleanupOrphanRestoreDirectories();
                 return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(false, false, false, cleaned));
             }
 
@@ -43,6 +44,7 @@ public sealed class RestoreRecoveryService(
                 cleanupCount += DeleteDirectoryIfPresent(rollback);
                 _journal.Delete();
                 await RemoveCommitMarkerAsync(db, cancellationToken).ConfigureAwait(false);
+                cleanupCount += CleanupOrphanRestoreDirectories();
                 return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(true, false, true, cleanupCount));
             }
 
@@ -74,6 +76,7 @@ public sealed class RestoreRecoveryService(
             cleanupCount += DeleteDirectoryIfPresent(staged);
             _journal.Delete();
             await RemoveCommitMarkerAsync(db, cancellationToken).ConfigureAwait(false);
+            cleanupCount += CleanupOrphanRestoreDirectories();
             return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(true, restoredPreviousAttachments, false, cleanupCount));
         }
         catch (OperationCanceledException)
@@ -102,6 +105,18 @@ public sealed class RestoreRecoveryService(
         if (marker is null) return;
         db.AppSettings.Remove(marker);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private int CleanupOrphanRestoreDirectories()
+    {
+        if (!Directory.Exists(_appDataRoot)) return 0;
+        var removed = 0;
+        foreach (var pattern in new[] { "attachments.restore.*", "attachments.rollback.*" })
+        {
+            foreach (var directory in Directory.EnumerateDirectories(_appDataRoot, pattern, SearchOption.TopDirectoryOnly))
+                removed += DeleteDirectoryIfPresent(directory);
+        }
+        return removed;
     }
 
     private static int DeleteDirectoryIfPresent(string path)
