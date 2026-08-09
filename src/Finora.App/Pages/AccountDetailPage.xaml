@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage x:Class="Finora.App.AccountDetailPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Account details">
+  <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
+    <Label Text="Account details" Style="{StaticResource Title}" />
+    <Border Style="{StaticResource Card}"><Label Text="{Binding Summary}" /></Border>
+    <Entry Placeholder="Name" Text="{Binding Name}" />
+    <Picker Title="Type" ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding Type}" />
+    <Entry Placeholder="Icon name" Text="{Binding Icon}" />
+    <Entry Placeholder="Optional color label" Text="{Binding ColorLabel}" />
+    <Entry Placeholder="Opening balance" Keyboard="Numeric" Text="{Binding OpeningBalance}" />
+    <VerticalStackLayout IsVisible="{Binding IsCreditCard}"><Entry Placeholder="Credit limit" Keyboard="Numeric" Text="{Binding CreditLimit}" /><Label Text="Billing day (1–28)" /><Stepper Minimum="1" Maximum="28" Value="{Binding BillingDay}" /><Label Text="{Binding BillingDay}" /></VerticalStackLayout>
+    <Picker Title="State" ItemsSource="{Binding States}" SelectedItem="{Binding State}" />
+    <Button Text="Save account" Command="{Binding SaveCommand}" />
+    <Button Text="Archive / restore account" Command="{Binding ArchiveOrRestoreCommand}" />
+    <Button Text="Reconcile this account" Clicked="OnReconcileClicked" />
+    <Label Text="Account transactions" Style="{StaticResource SectionTitle}" />
+    <CollectionView x:Name="AccountTransactions" ItemsSource="{Binding Transactions}" SelectionMode="Single" SelectionChanged="OnTransactionSelected" EmptyView="No transactions." HeightRequest="360"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" /></VerticalStackLayout><Label Grid.Column="1" Text="{Binding AmountMinor, StringFormat='{0} minor'}" /></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+  </VerticalStackLayout></ScrollView>
+</ContentPage>

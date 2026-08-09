@@ -2,9 +2,10 @@
 <ContentPage x:Class="Finora.App.AccountsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Accounts">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Accounts" Style="{StaticResource Title}" />
-    <CollectionView ItemsSource="{Binding Accounts}" EmptyView="Add your first account below." HeightRequest="240">
+    <CollectionView x:Name="AccountList" ItemsSource="{Binding Accounts}" SelectionMode="Single" SelectionChanged="OnAccountSelected" EmptyView="Add your first account below." HeightRequest="280">
       <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Type}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Currency}" /><Label Text="{Binding BalanceMinor, StringFormat='{0} minor'}" /></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Reconcile account" Clicked="OnReconcileClicked" /><Button Grid.Column="1" Text="Categories &amp; tags" Clicked="OnAccountCategoriesClicked" /></Grid>
     <Label Text="Add account" Style="{StaticResource SectionTitle}" />
     <Entry Placeholder="Account name" Text="{Binding Name}" />
     <Picker Title="Account type" ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding AccountType}" />
