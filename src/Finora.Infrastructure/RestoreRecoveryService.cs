@@ -1,5 +1,4 @@
 using Finora.Application;
-using Finora.Domain;
 using Finora.Shared;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,7 +30,8 @@ public sealed class RestoreRecoveryService(
             var marker = await db.AppSettings.AsNoTracking()
                 .SingleOrDefaultAsync(setting => setting.Key == CommitMarkerKey, cancellationToken)
                 .ConfigureAwait(false);
-            var databaseCommitted = marker is not null && string.Equals(marker.Value, state.RestoreId, StringComparison.Ordinal);
+            var markerMatches = marker is not null && string.Equals(marker.Value, state.RestoreId, StringComparison.Ordinal);
+            var databaseCommitted = state.MarkerMeansPending ? !markerMatches : markerMatches;
 
             var staged = _journal.ResolveStagedDirectory(state);
             var rollback = _journal.ResolveRollbackDirectory(state);
@@ -49,19 +49,21 @@ public sealed class RestoreRecoveryService(
             var restoredPreviousAttachments = false;
             if (state.HadLiveAttachmentRoot)
             {
-                if (Directory.Exists(rollback))
+                if (state.RollbackCopyReady)
                 {
+                    if (!Directory.Exists(rollback))
+                        return Result<StorageRecoveryReport>.Failure("An interrupted restore is missing its verified receipt rollback copy. The recovery journal was preserved for manual repair.");
+
                     cleanupCount += DeleteDirectoryIfPresent(AttachmentRoot);
                     Directory.Move(rollback, AttachmentRoot);
                     restoredPreviousAttachments = true;
                 }
-                else if (!Directory.Exists(AttachmentRoot))
+                else
                 {
-                    return Result<StorageRecoveryReport>.Failure("An interrupted restore could not locate either the previous receipt directory or its rollback copy. The recovery journal was preserved for manual repair.");
+                    if (!Directory.Exists(AttachmentRoot))
+                        return Result<StorageRecoveryReport>.Failure("An interrupted restore lost the live receipt directory before its rollback copy was ready. The recovery journal was preserved for manual repair.");
+                    cleanupCount += DeleteDirectoryIfPresent(rollback);
                 }
-                // When the rollback directory does not exist but the live directory does,
-                // the crash occurred before the first swap. The existing live directory is
-                // still the pre-restore copy and must remain untouched.
             }
             else
             {
@@ -71,6 +73,7 @@ public sealed class RestoreRecoveryService(
 
             cleanupCount += DeleteDirectoryIfPresent(staged);
             _journal.Delete();
+            await RemoveCommitMarkerAsync(db, cancellationToken).ConfigureAwait(false);
             return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(true, restoredPreviousAttachments, false, cleanupCount));
         }
         catch (OperationCanceledException)
