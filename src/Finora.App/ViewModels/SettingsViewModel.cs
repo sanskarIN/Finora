@@ -71,7 +71,9 @@ public sealed class SettingsViewModel : ViewModelBase
             var normalized = (value ?? string.Empty).Trim().ToUpperInvariant();
             try { DomainRules.ValidateCurrency(normalized); }
             catch (ArgumentException) { return; }
-            if (SetProperty(ref _currency, normalized)) _settings.DefaultCurrency = normalized;
+            if (!SetProperty(ref _currency, normalized)) return;
+            _settings.DefaultCurrency = normalized;
+            OnPropertyChanged(nameof(NumberFormatPreview));
         }
     }
 
