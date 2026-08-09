@@ -1,350 +1,173 @@
 # Finora
 
-**Finora** is an open-source, local-first personal finance application built with .NET MAUI, C#, XAML, SQLite/Entity Framework Core, and MVVM-oriented presentation architecture.
+Finora is an open-source, privacy-first, local-first personal finance application built with .NET MAUI, C#, XAML, SQLite/EF Core, and MVVM-style presentation logic.
 
-> **Made by the Sanskar**
+> Made by the Sanskar
 
-Current source version: **0.2.0 (build 2)**  
-Current database schema: **2**
+**Current source line:** 0.2.0 (build 2) · database schema 2.
 
-Finora's current product model requires no Finora account, login, email address, phone number, subscription account, or internet connection for core finance functionality. Financial records remain on the user's device unless the user explicitly imports, exports, shares, or saves an encrypted backup.
+The current release design requires no Finora login/account and keeps finance data in app-private local storage. There is no automatic cloud sync, automatic backup upload, analytics SDK, or advertising SDK in the current source.
 
-## Product goals
+## What Finora includes
 
-Finora is designed to help users:
+### Finance core
 
-- record income, expenses, refunds, adjustments, and transfers;
-- understand balances, cash flow, spending, and budget performance;
-- manage categories, subcategories, and tags;
-- create budgets and warning thresholds;
-- track savings goals and contributions;
-- manage recurring obligations and reminders;
-- reconcile account statements;
-- attach local receipt/document files;
-- import CSV files through mapping/preview/validation;
-- export finance records to CSV/PDF;
-- create encrypted backups and restore them safely;
-- keep working fully offline without an account requirement.
-
-## Implemented source areas
-
-### Onboarding and local-first privacy
-
-- No mandatory login/account creation.
-- Default currency and locale preference.
-- Financial-month start day.
-- Optional opening balance.
-- Explicit sample-data opt-in.
-- Privacy summary/full privacy path.
-- Onboarding can be revisited from Settings.
-
-### Accounts
-
-- Cash, bank, credit card, digital wallet, savings, investment-placeholder, and custom types.
-- Name/icon/color/currency/opening balance.
-- Active/hidden/archived state.
-- Credit limit and billing day metadata.
-- Account-specific transaction history.
-- Same-currency linked transfer pair.
-- Account editing/archive/restore.
-- Reconciliation preview/history with explicit adjustment option.
-
-### Transactions
-
-- Expense, income, transfer, refund, and adjustment.
-- Decimal-safe amount entry and calculator.
-- Account/category/date/time/merchant-payee/note/tags/payment method/manual location.
-- Manual-only location: no background location collection.
-- Split transactions.
-- Search and account/category/type/date filters.
-- Transaction revision history for critical edits.
-- Soft delete/restore.
-- Bulk categorization.
-- Duplicate review.
-- Receipt/document attachment lifecycle.
-- Selected/all CSV and PDF export paths.
-
-### Categories and tags
-
-- Default categories.
-- User categories and subcategories.
-- Reorder/archive/restore.
-- Safe reassignment/merge.
-- Parent-cycle prevention.
-- Tag creation/archive/restore and reporting linkage.
-
-### Budgets
-
-- Overall/category/subcategory budgets.
-- Weekly/monthly/custom periods.
-- Rollover option.
-- Planned versus actual/variance reporting.
-- Warning threshold.
-- Split-aware category spending.
-- Reminder coordination when permission/settings allow.
-
-### Savings goals
-
-- Target/starting amount and optional target date.
-- Notes/icon.
-- Contributions and withdrawals.
-- Optional linked account transaction.
-- Forecast/milestones/completion state.
-- Reduced-motion-aware completion messaging.
-
-### Recurring items
-
-- Daily/weekly/monthly/yearly/custom interval.
-- Expense/income/transfer/refund template support.
-- Start/end date, grace period, reminder lead time.
-- Persisted unique occurrence state.
-- Paid/partial-paid/skipped/postponed actions.
-- Idempotent processing so repeated startup/scheduler runs do not create duplicate occurrences.
-- Linked transfer creation for recurring transfer payments.
+- Cash, bank, credit-card, digital-wallet, savings, investment-placeholder and custom accounts.
+- Expense, income, refund, adjustment and paired same-currency transfer transactions.
+- Integer `long` minor-unit money storage with `decimal` major-unit arithmetic.
+- Currency-aware zero-/two-/three-decimal conversion and formatting metadata.
+- Search/filter, soft delete/restore, revision history, splits, tags, receipts, bulk categorization and duplicate review.
+- Categories/subcategories with merge/reassign/reorder/archive/restore.
+- Account reconciliation with explicit adjustment history.
+- Weekly/monthly/custom budgets, rollover and warning thresholds.
+- Savings goals, linked contributions/withdrawals, milestones and forecasts.
+- Restart-safe recurring obligations with pending/paid/partial/skipped/reopened/postponed states.
 
 ### Dashboard and reports
 
-- Balance, income/spending/net, remaining budget, upcoming recurring items, top categories, goal progress, recent transactions, and cash-flow summaries.
-- Configurable cards.
-- Privacy mode that hides displayed amounts.
-- Category spending, income/expense, account balance trend, budget performance, merchant/payee, tag, and monthly comparison report data.
-- MAUI-drawn chart surfaces with text/tabular equivalents for accessibility.
+- Configurable privacy-aware dashboard.
+- Category, income/expense, merchant/payee, monthly comparison, account trend and budget performance reports.
+- Accessible MAUI-drawn charts plus equivalent text/table data.
+- Explicit reporting-currency behavior: Finora does not silently convert or add unlike currencies. Dashboard/report aggregates use one selected/default reporting currency; other currencies remain separate and labeled.
 
-### CSV import
+### Import/export
 
-- System file picker.
-- Detected headers and explicit mapping.
-- Required date/type/amount/account fields plus optional currency/category/merchant/note/payment method/location/transfer group/counterparty/tags.
-- Major-versus-minor-unit handling.
-- Decimal-safe conversion.
-- UTF-8 validation.
-- File/row limits.
-- Quoted-field parsing.
-- Account/category/tag resolution.
-- Duplicate protection.
-- Transfer-group validation.
-- Transactional commit and explicit row errors.
+- User-mapped CSV preview/import with quoted-field parsing, validation, duplicate protection and transactional commit.
+- Currency-aware major-unit import, including zero- and three-decimal currencies.
+- Transfer/counterparty/tag/category/account validation.
+- CSV export and multipage PDF export through explicit system share/save actions.
 
-### Receipts and attachments
+### Receipt storage
 
-- App-private local storage.
-- Sanitized/generate internal filenames.
-- Path confinement.
-- Image/PDF content-type allow-list.
-- Per-file size limit.
-- Asynchronous copy.
-- SHA-256 checksum and byte-size metadata.
-- Open/delete/storage-usage/orphan-cleanup workflow.
-- Receipt bytes included in encrypted backups.
+- Image/PDF receipts/documents copied into app-private storage.
+- Safe-path confinement, file/type/size metadata and SHA-256 checksums.
+- Open/delete/storage-usage/orphan-cleanup workflows.
 
-### Encrypted backup and restore
+### Encrypted backup and crash-safe restore
 
-- Explicit user-created backup only; no automatic upload.
-- PBKDF2-SHA256 password-derived key.
-- Random salt.
-- AES-GCM authenticated encryption with random nonce/tag.
-- Schema metadata/preview.
-- Receipt path/size/checksum verification.
-- Staged attachment restore.
-- Transactional database replacement with rollback handling.
-- Wrong/tampered/incompatible backup rejection.
+- AES-GCM authenticated encryption.
+- PBKDF2-SHA256 password-derived keys with random salt.
+- Backup preview, current-schema validation and attachment-byte inclusion.
+- Serialized backup/preview/restore operations.
+- Production crash-safe restore wrapper with private recovery journal, pre-restore receipt rollback copy, transient DB marker and startup recovery before normal navigation.
+- If the DB restore did not commit, receipts roll back; if the DB committed, the new receipt tree is finalized. Unsafe unresolved recovery blocks normal initialization rather than exposing mismatched state.
 
-Finora cannot recover a forgotten backup password.
+### Privacy and security
 
-### App lock and privacy controls
+- No required online account for current-release functionality.
+- No background location collection; transaction location is manually entered only.
+- Optional local PIN app lock with PBKDF2 verifier, secure storage, bounded lockout and inactivity locking.
+- Missing/corrupt secure-storage verifier fails closed while app lock is marked enabled.
+- Optional biometric/Windows Hello source with PIN fallback.
+- Android and supported-Windows sensitive-screen protection source where platform capabilities allow it.
+- Generic local notification text designed to avoid lock-screen finance details.
+- Bounded privacy-safe diagnostics and an on-device integrity report that exposes status codes/counts rather than private finance contents.
 
-- Optional 4–12 digit PIN.
-- Random-salt password-based verifier.
-- OS secure storage for small verifier/security values.
-- Escalating local lockout.
-- Configurable inactivity auto-lock.
-- Optional biometric/Windows Hello with PIN fallback.
-- Privacy mode/hide amounts.
-- Platform sensitive-screen protection where supported.
-- Platform limitations are documented rather than represented as universal screenshot blocking.
+### Adaptive UI and accessibility
 
-### Local reminders
+- Phone bottom primary tabs.
+- Tablet/desktop flyout/sidebar-equivalent primary navigation.
+- Route preservation when switching responsive navigation modes.
+- Adaptive startup/onboarding/unlock dashboard routing.
+- Light/dark/system appearance, larger-interface sizing, reduced-motion preference and minimum touch/input target sizing.
+- Semantic headings/live error states and chart text equivalents.
+- Native screen-reader/keyboard/resize/Dynamic-Type validation remains part of release QA.
 
-- Local notification scheduling only after permission where applicable.
-- Persisted schedule/dedupe state.
-- Backup, budget, and recurring-item reminder coordination.
-- Android, Apple, and Windows platform source paths.
-- Generic privacy-safe notification text.
+### Localization and formatting
 
-### Diagnostics and integrity
+- English-first UI with localization-ready resources including an initial Hindi resource structure.
+- Saved locale is validated and applied at runtime before normal navigation.
+- Locale-aware number/date format preview in Settings.
+- Financial storage does not depend on display culture.
 
-- Privacy logger stores sanitized event/type tokens rather than private finance payloads.
-- Bounded/rotated local diagnostic log.
-- Sanitized export.
-- Hidden developer integrity checker for:
-  - SQLite integrity;
-  - foreign-key state;
-  - transaction/account references and currency;
-  - transfer pairing;
-  - split totals;
-  - category hierarchy cycles;
-  - recurrence references/duplicates;
-  - receipt path/presence/size/SHA-256 state.
-- Integrity export contains health codes/counts rather than account names, merchants, notes, amounts, or receipt contents.
+### Data controls and developer tools
 
-### Developer/repository quality gates
-
-- Nullable reference types.
-- Warnings-as-errors.
-- Latest-recommended analyzers.
-- Deterministic builds.
-- Central package-version management.
-- Dependency-free structural preflight.
-- Unit/integration/UI-contract tests.
-- Migration tests.
-- Cross-platform GitHub Actions build/test workflow.
-- CodeQL workflow.
-- Pull-request dependency review.
-- Dependabot configuration.
-- CODEOWNERS.
-- Privacy-aware issue and PR templates.
+- Full confirmed local finance-data reset that preserves schema metadata, app preferences and PIN configuration while clearing finance-domain records and receipt files safely.
+- Hidden developer panel with schema/feature state, reminder sync, privacy-safe integrity check and deterministic synthetic sample reset.
+- Synthetic sample reset requires typed destructive confirmation and never intentionally keeps the prior finance dataset.
+- Local premium flag is a development/demo capability only and is not secure commercial entitlement validation.
 
 ## Architecture
 
+Dependency direction:
+
+```text
+Finora.App -> Finora.Infrastructure / Finora.Application -> Finora.Domain -> Finora.Shared
+```
+
+Key source areas:
+
 ```text
 src/
-  Finora.App/                 # .NET MAUI UI, resources, platform integrations
-  Finora.Domain/              # Entities, money/domain rules
-  Finora.Application/         # Use-case contracts and DTOs
-  Finora.Infrastructure/      # SQLite, files, backup, import/export, diagnostics
-  Finora.Shared/              # Shared constants/primitives
-
+  Finora.Shared/
+  Finora.Domain/
+  Finora.Application/
+  Finora.Infrastructure/
+  Finora.App/
 tests/
   Finora.UnitTests/
   Finora.IntegrationTests/
   Finora.UiTests/
-
 docs/
-  architecture/
-  branding/
-  privacy/
-  releases/
-  security/
-  setup/
-
-build/
-  scripts/
+build/scripts/
+.github/
 ```
 
-Architecture details: [`docs/architecture/OVERVIEW.md`](docs/architecture/OVERVIEW.md)
+See `docs/architecture/OVERVIEW.md`, `docs/architecture/DATABASE_SCHEMA.md`, `DECISIONS.md`, and `docs/security/THREAT_MODEL.md`.
 
-Database schema: [`docs/architecture/DATABASE_SCHEMA.md`](docs/architecture/DATABASE_SCHEMA.md)
+## Build and test
 
-Engineering decisions: [`DECISIONS.md`](DECISIONS.md)
-
-## Money correctness
-
-Finora stores money as signed 64-bit integer **minor units** plus a currency code. User-entered major-unit text is handled with `decimal` at conversion boundaries. Binary floating-point values are not used for stored/calculated monetary amounts.
-
-Same-currency transfers are two linked rows with equal/opposite values and reciprocal counterparty accounts.
-
-## Local-first privacy model
-
-Current source intentionally has:
-
-- no required remote Finora account;
-- no required cloud synchronization;
-- no automatic backup upload;
-- no required analytics/advertising telemetry service;
-- no background location collection;
-- explicit user-controlled import/export/share flows.
-
-Read [`PRIVACY.md`](PRIVACY.md) and [`docs/privacy/DATA_LIFECYCLE.md`](docs/privacy/DATA_LIFECYCLE.md).
-
-## Build and validation
-
-Dependency-free structural check:
+Start with dependency-free structural validation:
 
 ```bash
 python build/scripts/verify_structure.py
 ```
 
-Full SDK quality gate:
+Core verification:
 
 ```bash
-dotnet workload restore
-dotnet restore Finora.sln
-dotnet format Finora.sln --verify-no-changes --no-restore
-dotnet build Finora.sln -c Release --no-restore
-dotnet test Finora.sln -c Release --no-build
+./build/scripts/verify.sh
 ```
 
-PowerShell wrapper:
+Windows PowerShell:
 
 ```powershell
 ./build/scripts/verify.ps1
 ```
 
-See [`docs/setup/BUILD.md`](docs/setup/BUILD.md).
+The scripts run structural checks and core tests, then run native MAUI builds only where the current host supports the relevant target. CI separately builds Windows+Android on Windows and iOS+Mac Catalyst on macOS.
 
-## Target platforms
+For full details see `docs/setup/BUILD.md` and `docs/TEST_PLAN.md`.
 
-The MAUI application project currently declares:
+## Important release note
 
-- Android: `net10.0-android`
-- iOS: `net10.0-ios`
-- Mac Catalyst: `net10.0-maccatalyst`
-- Windows: `net10.0-windows10.0.19041.0`
+The repository contains complete source implementations and automated test/CI definitions, but **source presence is not proof of native store readiness**. A release still requires successful .NET/MAUI compilation, platform SDK/workload compatibility, device/emulator/simulator tests, signing/package validation, accessibility/resize tests, notification/biometric/capture behavior validation, migration testing, interrupted-restore failure injection and store privacy/licensing review.
 
-Platform source presence is **not** proof of a successful native release. Final notification/biometric/screen-protection/file-picker behavior, packaging, signing, accessibility, upgrade, and store compliance must be tested with the appropriate SDK/host/device.
+See:
 
-Use [`docs/releases/STORE_READINESS.md`](docs/releases/STORE_READINESS.md) and [`docs/releases/RELEASE_CHECKLIST.md`](docs/releases/RELEASE_CHECKLIST.md).
+- `PROJECT_STATUS.md`
+- `docs/releases/RELEASE_CHECKLIST.md`
+- `docs/releases/STORE_READINESS.md`
 
-## Current source validation status
+## Privacy
 
-See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for the distinction between implemented source and external compiler/device/store gates.
+Finora is local-first. Finance records and receipt files remain in app-private storage unless the user explicitly exports/shares them or creates/saves an encrypted backup. Uninstalling the app can remove local data, so save a separate encrypted backup first when records must be preserved.
 
-No claim is made that Finora is bug-free.
+Read `PRIVACY.md` and `docs/privacy/DATA_LIFECYCLE.md`.
 
-## Testing
+## Security reports
 
-See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Major test areas include money/domain rules, linked transfers, recurrence idempotency, transaction revisions, reconciliation, mapped CSV import, schema migration, encrypted attachment backup/restore, local integrity diagnostics, and navigation/privacy contracts.
+Do not post a vulnerability with real finance data publicly. Follow `SECURITY.md` and use synthetic reproduction data.
 
-## Security
+## Contributing
 
-Private vulnerability reporting: [`SECURITY.md`](SECURITY.md)
+Read `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `DECISIONS.md`, and the pull-request template. Preserve integer-money, local-first, privacy, migration, recovery and currency-isolation invariants when changing finance behavior.
 
-Threat model: [`docs/security/THREAT_MODEL.md`](docs/security/THREAT_MODEL.md)
-
-Do not attach real finance databases, receipts, PINs, or backup passwords to public issues.
-
-## Localization and accessibility
-
-Finora is English-first and includes localization-ready resource structure with initial Hindi common strings. Full screen-by-screen Hindi localization is not represented as complete yet.
-
-UI architecture includes reduced-motion and larger-interface preferences, semantic/text report equivalents, and desktop/adaptive layout considerations. Final screen-reader/keyboard/large-text/device validation remains a native release gate.
-
-## Local premium/demo state
-
-The local premium flag is a development/demo capability only. It is **not** tamper-proof commercial entitlement validation. A future paid build would require store/server-backed entitlement design.
-
-## Later-version boundaries
-
-Not part of the current local-first release:
-
-- cloud synchronization;
-- remote Finora account/login;
-- collaboration;
-- mobile-number authentication;
-- server-backed commercial entitlement.
-
-These require new architecture, privacy, security, retention, and migration decisions before implementation.
-
-## Repository and contacts
+## Links
 
 - Repository: https://github.com/sanskarIN/Finora
 - Creator/open-source profile: https://www.github.com/sanskarIN
 - Business/security: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
-- Attribution: **Made by the Sanskar**
 
-## License
-
-Finora is licensed under the Apache License 2.0. See [`LICENSE`](LICENSE).
-
-Third-party components retain their own licenses. Exact direct/transitive package license metadata must be reviewed with the release toolchain before publishing binaries. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+Finora is licensed under Apache-2.0. Third-party dependencies retain their own licenses; see `THIRD_PARTY_NOTICES.md`.
