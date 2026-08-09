@@ -28,6 +28,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IBackupService>(sp => new BackupService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IExportService, ExportService>();
         builder.Services.AddSingleton<IAttachmentService>(sp => new AttachmentService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
+        builder.Services.AddSingleton<IDataIntegrityService>(sp => new DataIntegrityService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IPrivacyLogger>(_ => new PrivacyLogger(FileSystem.CacheDirectory));
         builder.Services.AddSingleton<IAppSettingsService, MauiAppSettingsService>();
         builder.Services.AddSingleton<IAppLockService, MauiAppLockService>();
