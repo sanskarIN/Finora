@@ -1,6 +1,7 @@
 using System.Globalization;
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 
 namespace Finora.App;
 
@@ -19,7 +20,7 @@ public sealed class OnboardingViewModel : ViewModelBase
         _store = store;
         _settings = settings;
         _currency = settings.DefaultCurrency;
-        _locale = settings.Locale;
+        _locale = CultureSettings.NormalizeOrFallback(settings.Locale);
         _monthStart = settings.FinancialMonthStartDay;
         FinishCommand = new AsyncCommand(FinishAsync);
     }
@@ -35,12 +36,15 @@ public sealed class OnboardingViewModel : ViewModelBase
     {
         var currency = Currency.Trim().ToUpperInvariant();
         DomainRules.ValidateCurrency(currency);
+        var locale = CultureSettings.NormalizeOrFallback(Locale, CultureInfo.CurrentCulture.Name);
+        CultureSettings.TryApply(locale);
+
         if (!decimal.TryParse(OpeningBalance, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out var opening) &&
             !decimal.TryParse(OpeningBalance, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out opening))
             throw new InvalidOperationException("Enter a valid opening balance.");
 
         _settings.DefaultCurrency = currency;
-        _settings.Locale = string.IsNullOrWhiteSpace(Locale) ? CultureInfo.CurrentCulture.Name : Locale.Trim();
+        _settings.Locale = locale;
         _settings.FinancialMonthStartDay = MonthStart;
 
         var accounts = await _store.GetAccountsAsync();
