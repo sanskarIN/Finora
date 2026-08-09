@@ -1,12 +1,39 @@
 FINORA TERMS SUMMARY
 
-Finora is personal organization software. It is not financial, investment, tax, legal, or accounting advice. Users are responsible for checking the accuracy of their records, imports, reports, exports, and backups.
+Finora is personal finance organization software. It is not a bank, broker, lender, payment processor, accountant, tax adviser, financial adviser, investment adviser, insurer, or legal adviser. Finora calculations, budgets, reports, reminders, imports, and exports are not financial, investment, tax, accounting, or legal advice.
 
-The open-source Finora code is provided under the Apache License 2.0. Third-party components remain subject to their respective licenses.
+Users are responsible for reviewing the accuracy of their records and source data before relying on them for real-world decisions.
 
+LOCAL DATA AND BACKUPS
+The current release stores finance data locally. Device storage can fail, become corrupted, be lost, reset, or be removed during uninstall. Keep appropriate external encrypted backups. Uninstalling/resetting Finora without a separately saved backup may permanently remove local finance records and receipts.
+
+Finora cannot recover a forgotten encrypted-backup password.
+
+IMPORT AND EXPORT
+Imported CSV files can contain incorrect or ambiguous source data. Review mapping and imported results.
+
+When an export or backup is shared/saved through operating-system UI, protection at the selected destination is controlled by the operating system and recipient application/location.
+
+REMINDERS
+Notifications/reminders are convenience features. Operating systems can delay or suppress them because of permissions, power management, reboot, force-stop behavior, or platform policy. Do not use Finora as the sole mechanism for time-critical financial obligations.
+
+APP LOCK AND DEVICE SECURITY
+PIN, biometric/Windows Hello, privacy mode, and supported screen-capture restrictions can reduce casual exposure but cannot guarantee security on a rooted/jailbroken/compromised device or against every capture method.
+
+LOCAL PREMIUM DEMO
 Local-only premium/demo feature flags are development capabilities and are not secure commercial entitlement enforcement.
 
-The software is provided without warranties to the extent permitted by applicable law. Keep independent backups of important records.
+OPEN SOURCE AND THIRD PARTIES
+The open-source Finora code is provided under the Apache License 2.0, subject to the repository LICENSE file. Third-party components remain subject to their own licenses/notices.
 
-Full repository terms: https://github.com/sanskarIN/Finora/blob/main/TERMS.md
-License: https://github.com/sanskarIN/Finora/blob/main/LICENSE
+NO WARRANTY
+To the extent permitted by applicable law, Finora is provided on an “AS IS” and “AS AVAILABLE” basis without a guarantee that it is error-free, uninterrupted, suitable for every accounting/tax system, or immune from data loss/security defects. The Apache-2.0 license contains the controlling software warranty/liability terms for licensed source where applicable.
+
+Full repository terms:
+https://github.com/sanskarIN/Finora/blob/main/TERMS.md
+
+Privacy:
+https://github.com/sanskarIN/Finora/blob/main/PRIVACY.md
+
+License:
+https://github.com/sanskarIN/Finora/blob/main/LICENSE
