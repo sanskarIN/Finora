@@ -18,6 +18,7 @@ public static class MauiProgram
         builder.Services.AddPooledDbContextFactory<FinoraDbContext>(options => options.UseSqlite($"Data Source={dbPath};Cache=Shared"));
         builder.Services.AddSingleton<DatabaseInitializer>();
         builder.Services.AddSingleton<IFinanceStore, FinanceStore>();
+        builder.Services.AddSingleton<IFinanceDataResetService, FinanceDataResetService>();
         builder.Services.AddSingleton<ITransactionMaintenanceService, TransactionMaintenanceService>();
         builder.Services.AddSingleton<IAccountManagementService, AccountManagementService>();
         builder.Services.AddSingleton<ICategoryTagService, CategoryTagService>();
