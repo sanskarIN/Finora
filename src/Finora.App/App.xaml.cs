@@ -1,5 +1,6 @@
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 
 namespace Finora.App;
 
@@ -30,6 +31,7 @@ public partial class App : Microsoft.Maui.Controls.Application
         _exceptions = exceptions;
         _exceptions.Start();
 
+        CultureSettings.TryApply(_settings.Locale);
         UserAppTheme = _settings.Theme switch
         {
             ThemePreference.Light => AppTheme.Light,
