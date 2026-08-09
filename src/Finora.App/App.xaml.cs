@@ -67,7 +67,7 @@ public partial class App : Microsoft.Maui.Controls.Application
                 else if (!_settings.OnboardingComplete)
                     await Shell.Current.GoToAsync("//onboarding");
                 else
-                    await Shell.Current.GoToAsync("//dashboard");
+                    await Shell.Current.GoToAsync(AppRoutes.DashboardRoot);
             });
         }
         catch (Exception ex)
