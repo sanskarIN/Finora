@@ -1,45 +1,111 @@
-name: ci
+name: Finora CI
+
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
 permissions:
   contents: read
+
+concurrency:
+  group: finora-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
 jobs:
-  core-tests:
-    runs-on: windows-latest
+  structural-preflight:
+    name: Structural preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate repository structure
+        run: python build/scripts/verify_structure.py
+
+  core-tests:
+    name: Core tests
+    needs: structural-preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet restore tests/Finora.UnitTests/Finora.UnitTests.csproj
-      - run: dotnet restore tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj
-      - run: dotnet restore tests/Finora.UiTests/Finora.UiTests.csproj
-      - run: dotnet test tests/Finora.UnitTests/Finora.UnitTests.csproj -c Release --no-restore
-      - run: dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Release --no-restore
-      - run: dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release --no-restore
+      - name: Restore unit tests
+        run: dotnet restore tests/Finora.UnitTests/Finora.UnitTests.csproj
+      - name: Restore integration tests
+        run: dotnet restore tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj
+      - name: Restore UI-contract tests
+        run: dotnet restore tests/Finora.UiTests/Finora.UiTests.csproj
+      - name: Format verification
+        run: dotnet format Finora.sln --verify-no-changes --no-restore
+      - name: Run unit tests
+        run: dotnet test tests/Finora.UnitTests/Finora.UnitTests.csproj -c Release --no-restore --logger "trx;LogFileName=unit.trx"
+      - name: Run integration tests
+        run: dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Release --no-restore --logger "trx;LogFileName=integration.trx"
+      - name: Run UI-contract tests
+        run: dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release --no-restore --logger "trx;LogFileName=ui-contract.trx"
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-test-results
+          path: '**/*.trx'
+          if-no-files-found: ignore
+          retention-days: 14
 
   maui-windows-android:
+    name: MAUI Windows + Android
+    needs: core-tests
     runs-on: windows-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet workload install maui
-      - run: dotnet restore src/Finora.App/Finora.App.csproj
-      - run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
-      - run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android --no-restore
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+      - name: Restore MAUI app
+        run: dotnet restore src/Finora.App/Finora.App.csproj
+      - name: Build Windows
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
+      - name: Build Android
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android --no-restore
 
   maui-apple:
+    name: MAUI iOS + Mac Catalyst
+    needs: core-tests
     runs-on: macos-latest
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - run: dotnet workload install maui
-      - run: dotnet restore src/Finora.App/Finora.App.csproj
-      - run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --no-restore
-      - run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --no-restore
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+      - name: Restore MAUI app
+        run: dotnet restore src/Finora.App/Finora.App.csproj
+      - name: Build iOS
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --no-restore
+      - name: Build Mac Catalyst
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --no-restore
