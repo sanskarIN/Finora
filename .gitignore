@@ -1,7 +1,15 @@
+# Build outputs
 bin/
 obj/
 artifacts/
 TestResults/
+coverage/
+coverage-results/
+*.trx
+*.coverage
+*.coveragexml
+
+# IDE/user-local files
 .vs/
 .idea/
 .vscode/*
@@ -9,24 +17,62 @@ TestResults/
 !.vscode/settings.json
 *.user
 *.suo
+*.userprefs
+
+# Platform packages/build products
 *.apk
 *.aab
 *.ipa
-*.msix*
-*.appx*
+*.msix
+*.msixbundle
+*.msixupload
+*.appx
+*.appxbundle
+*.appxupload
+
+# Signing/certificate/provisioning material
 *.cer
+*.crt
 *.pfx
-*.mobileprovision
+*.p12
+*.pem
+*.key
 *.keystore
 *.jks
+*.mobileprovision
+*.provisionprofile
+*.snk
+
+# Local databases and WAL/journal files
 *.db
+*.db3
+*.sqlite
+*.sqlite3
 *.db-shm
 *.db-wal
+*.sqlite-shm
+*.sqlite-wal
+*.journal
+
+# Finora private/local data exports
 *.finora-backup
+*.finora-backup.*
+attachments/
+finora-diagnostic.log
+finora-diagnostic.previous.log
+Finora-integrity-*.txt
+Finora-transactions-*.csv
+Finora-transactions-*.pdf
+
+# Secrets/local configuration
 .env
 .env.*
 !.env.example
 secrets.json
 appsettings.Local.json
+appsettings.*.Local.json
+
+# OS files
 .DS_Store
 Thumbs.db
+Desktop.ini
