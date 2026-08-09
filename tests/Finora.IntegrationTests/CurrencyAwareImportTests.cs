@@ -45,7 +45,7 @@ public sealed class CurrencyAwareImportTests : IAsyncLifetime
 
         Assert.True(result.IsSuccess);
         Assert.Equal(1, result.Value!.ImportedRows);
-        Assert.Equal(0, result.Value.ErrorRows);
+        Assert.Equal(0, result.Value.InvalidRows);
         Assert.Equal(expectedMinor, Assert.Single(await _store.SearchTransactionsAsync()).AmountMinor);
     }
 
@@ -63,7 +63,7 @@ public sealed class CurrencyAwareImportTests : IAsyncLifetime
 
         Assert.True(result.IsSuccess);
         Assert.Equal(0, result.Value!.ImportedRows);
-        Assert.Equal(1, result.Value.ErrorRows);
+        Assert.Equal(1, result.Value.InvalidRows);
         Assert.Empty(await _store.SearchTransactionsAsync());
     }
 
@@ -81,7 +81,7 @@ public sealed class CurrencyAwareImportTests : IAsyncLifetime
 
         Assert.True(result.IsSuccess);
         Assert.Equal(1, result.Value!.ImportedRows);
-        Assert.Equal(1, result.Value.ErrorRows);
+        Assert.Equal(1, result.Value.InvalidRows);
         Assert.Single(result.Value.Errors);
     }
 }
