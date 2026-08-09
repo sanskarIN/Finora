@@ -2,291 +2,160 @@
 
 ## Scope
 
-This threat model covers the current local-first release. Finora does not require an account or cloud service and does not automatically upload financial data or backups. Future cloud/account features require a new threat-model section before implementation.
+This threat model covers the current local-first release. Finora does not require an account or cloud service and does not automatically upload financial data or backups. Future cloud/account/remote-entitlement features require a new threat-model section before implementation.
 
 ## Assets
 
-High-value assets include:
-
-- account metadata and balances;
-- transaction amounts, categories, merchants/payees, notes, tags, payment methods, and manually entered locations;
-- receipt/attachment files;
-- budgets, goals, recurring obligations, and reconciliation history;
-- local SQLite database and WAL files;
-- encrypted backup files;
-- backup passwords while transiently entered;
-- app-lock PIN verifier/salt and biometric preference;
-- platform secure-storage values;
-- sanitized diagnostic/integrity reports;
-- release signing credentials (outside the repository/application).
+High-value assets include finance records, account/budget/goal/recurrence/reconciliation data, receipt files, SQLite/WAL state, encrypted backups, transient backup passwords, app-lock verifier material, platform secure-storage values, restore-recovery metadata, sanitized diagnostics, and release-signing credentials held outside the repository/application.
 
 ## Trust boundaries
 
-1. **Finora process ↔ app-private storage** — SQLite and receipt files are trusted only after path/schema/integrity validation.
-2. **Finora ↔ OS secure storage** — used for small verifier/security values, never large finance datasets.
-3. **Finora ↔ system picker/share sheet** — data leaves app-private storage only after explicit user action; destination security is controlled by the OS/selected app.
-4. **Finora ↔ notification subsystem** — notifications are visible outside the app lock, therefore contents must remain generic/privacy-safe.
-5. **Finora ↔ biometric/Windows Hello APIs** — platform authentication result is trusted only as an unlock factor with PIN fallback.
-6. **Finora ↔ GitHub/NuGet/build infrastructure** — supply-chain and CI systems can alter build inputs; repository policies, dependency review, CodeQL, version control, and release review reduce risk.
-7. **Release engineer ↔ signing infrastructure** — signing keys/certificates/profiles must remain outside source control.
+1. **Finora process ↔ app-private storage** — SQLite, receipts, and restore-recovery artifacts are trusted only after schema/path/integrity validation.
+2. **Finora ↔ OS secure storage** — small verifier/security values only; never the finance database or receipt tree.
+3. **Finora ↔ system picker/share sheet** — finance data leaves app-private storage only after explicit user action; destination security is controlled by the OS/user-selected app.
+4. **Finora ↔ notification subsystem** — reminder content may appear outside app lock and must remain generic.
+5. **Finora ↔ biometric/Windows Hello APIs** — platform result is an optional unlock factor with PIN fallback, not a replacement for Finora's locked state.
+6. **Finora ↔ GitHub/NuGet/build infrastructure** — dependency/action/build inputs require review, CI, static analysis, and release validation.
+7. **Release engineer ↔ signing infrastructure** — signing secrets stay outside source control.
 
-## Threats and controls
+## Lost/casually accessed device
 
-### Lost or casually accessed device
+Controls include optional 4–12 digit PIN, PBKDF2-SHA256 verifier with random salt, OS secure storage, bounded escalating lockout, inactivity auto-lock, biometric/Hello with PIN fallback, privacy mode, and supported-platform screen-capture protection.
 
-Threat: another person opens Finora and sees finance data.
+### Fail-closed verifier state
 
-Controls:
+A persisted non-secret “PIN enabled” marker prevents a missing/corrupt secure-storage verifier from becoming a fail-open condition. If the marker indicates app lock is enabled but verifier material is unavailable/malformed, PIN verification fails and failure/lockout policy is applied rather than unlocking.
 
-- optional 4–12 digit app PIN;
-- PBKDF2-SHA256 PIN verifier with random salt rather than plaintext PIN storage;
-- OS secure storage for verifier material;
-- escalating local lockout after failed PIN attempts;
-- configurable inactivity auto-lock;
-- biometric/Windows Hello only with PIN fallback;
-- privacy mode / hide amounts on launch;
-- sensitive-screen protection where the platform provides a supported mechanism.
+Residual risk: a device/OS compromise can bypass app-level controls. Fail-closed secure-storage loss can also require recovery/reinstallation rather than weakening the lock.
 
-Residual risk: a rooted/jailbroken/compromised device or attacker with OS-level privileges may bypass app-level controls.
+## Screenshot/screen-recording leakage
 
-### Screenshot/screen-recording leakage
+Android uses secure-window behavior; supported Windows paths use display-affinity behavior. Unsupported platforms report the limitation. Privacy mode can hide amounts. No app control prevents an external camera or OS-compromise capture.
 
-Threat: sensitive finance UI appears in screenshots or capture streams.
+## Database corruption/partial writes
 
 Controls:
 
-- Android uses platform secure-window behavior where implemented;
-- supported Windows paths use display-affinity protection;
-- unsupported platforms report limitations rather than claiming universal protection;
-- privacy mode can hide amounts.
-
-Residual risk: camera photographs, OS/platform capture gaps, accessibility/system processes, or compromised devices may still expose the screen.
-
-### Database corruption or partial writes
-
-Threat: force-close, disk pressure, coding defect, or interrupted operation corrupts relationships or creates inconsistent financial records.
-
-Controls:
-
-- SQLite relational persistence;
-- foreign keys;
-- WAL and busy timeout;
-- database transactions for multi-record workflows;
-- linked transfer pair invariants;
+- SQLite relational persistence, foreign keys, WAL, busy timeout;
+- transactions for multi-record finance workflows;
+- persistence-boundary Account/FinanceTransaction validation;
+- linked transfer invariants;
 - unique recurrence occurrence index;
-- transactional schema migration;
-- transactional restore;
-- data-integrity diagnostic covering SQLite integrity, foreign keys, transfers, splits, category cycles, recurrence links, and attachment integrity;
-- automated integration/migration tests.
+- transactional migrations;
+- privacy-safe integrity checker;
+- automated unit/integration/migration/recovery tests.
 
-Residual risk: filesystem/hardware corruption or untested platform/runtime defects require external backups and recovery testing.
+Integrity diagnostics detect SQLite/foreign-key issues, unsafe transaction amounts/signs/currencies, transfer/split/category/recurrence inconsistencies, and receipt path/size/hash problems without logging finance contents.
 
-### Transfer inconsistency
+## Cross-resource restore interruption
+
+Threat: the SQLite transaction and receipt-directory swap cannot share one filesystem/database transaction. A process kill between them could expose a new database with old receipts or an old database with new receipts.
+
+Controls:
+
+- production restore runs through `CrashSafeBackupService`;
+- a random restore ID is written as transient `internal.restore.commit` metadata before replacement;
+- app-private recovery journal records safe operation/directory state only;
+- current receipt tree is copied to a private rollback directory before destructive replacement;
+- validated encrypted restore executes underneath;
+- the committed restore transaction removes the pending marker as part of replacing non-schema app settings;
+- startup recovery runs before normal navigation;
+- matching pending marker means DB restore did not commit and receipts roll back;
+- absent matching marker means DB replacement committed and new receipts are finalized;
+- stale staging/rollback directories are cleaned only after journal resolution;
+- if safe recovery cannot be completed, normal app initialization is blocked instead of exposing mismatched state.
+
+Recovery metadata must never contain backup passwords, derived keys, account names, merchant/payee text, amounts, notes, locations, or receipt filenames/contents.
+
+Residual risk: severe filesystem/hardware loss can destroy both live and rollback copies. Users still need separately saved encrypted backups.
+
+## Transfers
 
 Threat: one transfer half changes/deletes independently or no longer balances.
 
-Controls:
+Controls: shared `TransferGroupId`, same currency, equal/opposite checked integer amounts, reciprocal counterparties, paired edit/delete/restore workflows, persistence/integrity checks, and integration tests. Cross-currency paired transfers are rejected until a deliberate exchange workflow exists.
 
-- shared `TransferGroupId`;
-- equal/opposite amount rule;
-- reciprocal counterparty accounts;
-- paired edit/delete/restore workflow;
-- integrity-report detection;
-- integration tests.
+## Multi-currency correctness
 
-### Duplicate recurring transactions
-
-Threat: restart or repeated recurrence processing creates duplicate financial records.
+Threat: unrelated currencies are added together or one amount is displayed with another currency label.
 
 Controls:
 
-- persisted `RecurrenceOccurrence`;
-- unique `(RecurrenceRuleId, DueOn)` index;
-- idempotent due-occurrence processing;
-- financial transaction is created from explicit paid/partial-paid workflow rather than every scheduler run;
-- tests repeat processing across the same due date.
+- each account/transaction/budget/goal/recurrence record retains currency metadata;
+- money stays integer minor units with currency-aware display/conversion precision;
+- aggregate reports require an explicit reporting currency;
+- dashboard/report totals filter to that currency;
+- other currencies remain separate with explicit explanatory UI;
+- Finora does not invent exchange rates.
 
-### Receipt/path traversal or file tampering
+Release QA must verify the built-in minor-unit precision metadata required by supported markets. Currency precision metadata is not an exchange-rate source.
 
-Threat: attachment metadata escapes app storage, points to arbitrary files, or receipt bytes are altered.
+## Recurrence duplication/state corruption
 
-Controls:
+Controls: persisted occurrence rows, unique `(RecurrenceRuleId, DueOn)`, idempotent due processing, transaction generation only from paid/partial-paid workflow, explicit skipped→reopen transition, repeated full-payment idempotency, and account/currency availability guards.
 
-- sanitized generated internal file paths;
-- app-private attachment root;
-- canonical full-path confinement check;
-- per-file size limit;
-- allowed receipt/document content types;
-- stored SHA-256 checksum and byte count;
-- backup verifies path/size/hash before encryption;
-- restore stages and revalidates attachments;
-- integrity checker detects unsafe/missing/changed attachment files.
+## Receipt/path traversal/tampering
 
-Residual risk: checksum detects changes but does not prevent a privileged attacker from changing both database metadata and local file contents.
+Controls include generated private paths, canonical path confinement to the receipt root, file/type/size limits, SHA-256/byte-count metadata, backup/restore validation, and integrity checks. A privileged attacker who can rewrite both DB metadata and files remains outside app-level protection.
 
-### Backup theft
-
-Threat: copied `.finora-backup` reveals financial contents.
+## Backup theft/tampering
 
 Controls:
 
-- password-derived key using PBKDF2-SHA256 with random salt and high iteration count;
+- PBKDF2-SHA256 password-derived key with random salt;
 - AES-GCM authenticated encryption with random nonce/tag;
-- format magic used as authenticated associated data;
-- derived key zeroed after cryptographic operation;
-- backup is created only after explicit user action;
-- no automatic upload destination.
+- authenticated Finora format magic;
+- derived key zeroing;
+- strict length/schema/path/size/hash validation;
+- explicit user-created backup only;
+- no automatic upload;
+- serialized backup/preview/restore operations.
 
-Residual risk: weak/reused backup passwords can be guessed offline. Finora cannot recover a forgotten backup password.
+Weak/reused backup passwords remain susceptible to offline guessing. Finora cannot recover a forgotten backup password.
 
-### Backup tampering/truncation
+## CSV import abuse/corruption
 
-Threat: corrupted or modified backup causes silent partial restore.
+Controls include UTF-8 validation, file/row limits, explicit mapping/preview, currency-aware decimal-to-minor conversion, overflow/`long.MinValue` rejection, account/category/type/date/currency validation, transfer-pair/counterparty checks, within-batch duplicate protection, tags, transactional commit, and explicit row errors.
 
-Controls:
+Semantic correctness still requires user review.
 
-- AES-GCM authentication;
-- strict file length/magic validation;
-- schema validation;
-- attachment count/path/size/hash validation;
-- staged receipt restore;
-- database transaction and attachment rollback path;
-- preview before destructive replacement;
-- failure is reported instead of silently accepting partial data.
+## Logs/diagnostics leakage
 
-### Restore from incompatible schema
+Privacy logger emits event/type metadata only and keeps bounded files. Unhandled/unobserved failures are captured without exception messages/stacks/finance payloads. Integrity reports expose codes/counts only.
 
-Threat: old/new backup silently maps incorrectly.
+Forbidden diagnostic content includes monetary amounts, account names, merchant/payee names, notes, manually entered locations, receipt names/contents, PINs, backup passwords, encryption keys, signing material, or raw transaction revision snapshots.
 
-Controls:
+## Notifications
 
-- schema version stored in backup;
-- future schema rejected;
-- current restore path requires explicitly supported schema;
-- database migrations are versioned separately;
-- migration/backup compatibility is tested/documented.
+Local reminders are permission-gated/deduplicated and use generic text. No merchant/amount/note/location belongs in lock-screen notifications.
 
-### CSV import abuse/corruption
+## Local premium tampering
 
-Threat: malformed or huge CSV causes memory/resource exhaustion or incorrect financial entries.
+The local premium flag is development/demo state only. It is not commercial entitlement. Paid entitlement requires future store/server validation and a new threat assessment.
 
-Controls:
+## Supply chain
 
-- size/row limits;
-- UTF-8 validation;
-- explicit column mapping/preview;
-- decimal-safe money conversion;
-- account/category/type/date/currency validation;
-- transfer-group validation;
-- duplicate protection option;
-- transactional import;
-- explicit errors rather than partial silent coercion.
+Controls include central package versions, Dependabot, dependency review, CodeQL, warnings-as-errors/recommended analyzers, code ownership, structural preflight, small dependency surface, and release-time exact dependency/license review. Mutable action tags remain a residual risk; high-assurance releases may pin reviewed immutable action commits after compatibility validation.
 
-Residual risk: CSV is user-provided data; semantic correctness still requires user review.
+## Secret/signing-material exposure
 
-### Logs/diagnostics leakage
-
-Threat: logs expose finance data or credentials.
-
-Controls:
-
-- privacy-aware logger;
-- no private transaction payload logging by default;
-- integrity report contains counts/codes only;
-- explicit sanitized export action;
-- developer diagnostics avoid private finance contents.
-
-Forbidden log content includes amounts, account names, merchant/payee names, notes, locations, receipt names/contents, PINs, backup passwords, encryption keys, signing material, and private finance identifiers unless an identifier is explicitly sanitized/non-sensitive.
-
-### Notification leakage
-
-Threat: lock-screen notification exposes a bill/merchant/amount.
-
-Controls:
-
-- generic privacy-safe titles/bodies;
-- local scheduling only after permission;
-- no background location;
-- reminder deduplication;
-- user can disable reminders.
-
-### App-lock bypass through biometrics
-
-Threat: biometric integration unlocks without a valid platform authentication or removes PIN fallback.
-
-Controls:
-
-- biometric unlock requires existing Finora PIN configuration;
-- platform availability checked;
-- cancellation/unavailable/error returns to locked/PIN path;
-- PIN removal disables biometric preference.
-
-Residual risk: security ultimately depends on OS biometric/Hello implementation and device integrity.
-
-### Local premium tampering
-
-Threat: local flag is modified to unlock premium-ready features.
-
-Control: explicitly document the flag as a development/demo capability and never represent it as secure paid entitlement.
-
-Commercial licensing requires future store/server-backed validation and a new threat assessment.
-
-### Supply-chain compromise
-
-Threat: malicious/vulnerable dependency or CI action alters build behavior.
-
-Controls:
-
-- small dependency surface;
-- central package versions;
-- Dependabot update proposals;
-- pull-request dependency review;
-- CodeQL analysis;
-- warnings-as-errors/latest-recommended analyzers;
-- code ownership for sensitive files;
-- release-time exact dependency/license review.
-
-Residual risk: tags such as `@v4` are mutable references. High-assurance release processes may pin actions/dependencies to reviewed immutable commits after validating compatibility.
-
-### Secret/signing-material exposure
-
-Threat: repository or logs contain release credentials.
-
-Controls:
-
-- no production secrets in source;
-- `.gitignore`/review/checklists;
-- signing performed through external secure configuration;
-- security issue guidance prohibits attaching credentials/private data.
+No production signing secrets belong in source, diagnostics, issue attachments, test data, or backups. `.gitignore`, review templates, security guidance, and release checklists reinforce this boundary.
 
 ## Privacy principles
 
-- No account/login required in current release.
+- No required account/login in current release.
 - No analytics/advertising telemetry by default.
-- No background location collection; location is manually entered only.
+- No background location collection; transaction location is manually entered only.
 - No automatic backup upload.
-- System pickers/share sheets are invoked only after explicit user action.
-- Uninstalling without a separately saved backup may remove local data.
+- System pickers/share sheets only after explicit user action.
+- Full finance reset is explicit/confirmed and preserves app-lock/preferences/schema metadata by design.
+- Developer sample reset requires typed destructive confirmation and creates synthetic data only.
+- Uninstalling without separately saved backup may remove local data.
 
-## Security regression gates
+## Security regression gates before release
 
-Before release, verify:
-
-- app-lock/PIN/biometric/capture paths on supported devices;
-- wrong/tampered backup rejection;
-- migration and integrity checks;
-- notification privacy;
-- sanitized logs/reports;
-- no new network/analytics/account dependency;
-- exact package vulnerability/license review;
-- platform signing credentials stay outside repository artifacts.
+Verify PIN/biometric/capture paths, fail-closed secure-storage loss, wrong/tampered backup rejection, interrupted restore at every journal/copy/DB/swap/finalization phase, migration + integrity checks, currency-isolated reports/import precision, generic notifications, sanitized logs/reports, no new account/network/telemetry requirement, exact dependency/license review, and external signing-secret handling.
 
 ## Out of scope for current release
 
-- cloud synchronization;
-- remote account authentication;
-- collaboration/sharing service;
-- server-side entitlement validation;
-- remote key escrow/recovery.
-
-Adding any of these requires updating this threat model before implementation.
+Cloud sync, remote account authentication, collaboration service, server entitlement, remote key escrow/recovery, and automatic exchange-rate conversion. Adding any requires new architecture/privacy/security analysis before implementation.
