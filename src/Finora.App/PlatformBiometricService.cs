@@ -4,6 +4,7 @@ using Finora.Shared;
 #if ANDROID
 using Android.App;
 using Android.Content;
+using Android.Hardware.Biometrics;
 using Android.OS;
 using Microsoft.Maui.ApplicationModel;
 #elif IOS || MACCATALYST
