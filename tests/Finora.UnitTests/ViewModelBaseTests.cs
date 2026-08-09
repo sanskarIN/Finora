@@ -16,7 +16,7 @@ public sealed class ViewModelBaseTests
 
         await probe.RunProbeAsync(async () => await Task.Yield());
 
-        Assert.Equal([true, false], states);
+        Assert.Equal(new[] { true, false }, states);
         Assert.False(probe.IsBusy);
         Assert.False(probe.HasError);
     }
@@ -37,14 +37,14 @@ public sealed class ViewModelBaseTests
     public async Task RunAsync_IgnoresConcurrentInvocationWhileBusy()
     {
         var probe = new ProbeViewModel();
-        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var executions = 0;
 
         var first = probe.RunProbeAsync(async () =>
         {
             Interlocked.Increment(ref executions);
-            entered.SetResult();
+            entered.TrySetResult(true);
             await release.Task;
         });
 
@@ -54,7 +54,7 @@ public sealed class ViewModelBaseTests
             Interlocked.Increment(ref executions);
             return Task.CompletedTask;
         });
-        release.SetResult();
+        release.TrySetResult(true);
         await first;
 
         Assert.Equal(1, executions);
@@ -63,16 +63,16 @@ public sealed class ViewModelBaseTests
     [Fact]
     public async Task AsyncCommand_PreventsParallelExecution_AndRestoresCanExecute()
     {
-        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var completed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var executions = 0;
         var command = new AsyncCommand(async () =>
         {
             Interlocked.Increment(ref executions);
-            entered.SetResult();
+            entered.TrySetResult(true);
             await release.Task;
-            completed.SetResult();
+            completed.TrySetResult(true);
         });
 
         command.Execute(null);
@@ -80,7 +80,7 @@ public sealed class ViewModelBaseTests
         Assert.False(command.CanExecute(null));
 
         command.Execute(null);
-        release.SetResult();
+        release.TrySetResult(true);
         await completed.Task;
         await Task.Yield();
 
