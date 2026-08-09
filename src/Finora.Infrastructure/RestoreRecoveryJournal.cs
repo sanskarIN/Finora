@@ -7,6 +7,8 @@ internal sealed record RestoreRecoveryState(
     string StagedDirectoryName,
     string RollbackDirectoryName,
     bool HadLiveAttachmentRoot,
+    bool RollbackCopyReady,
+    bool MarkerMeansPending,
     DateTimeOffset CreatedAtUtc);
 
 internal sealed class RestoreRecoveryJournal(string appDataRoot)
