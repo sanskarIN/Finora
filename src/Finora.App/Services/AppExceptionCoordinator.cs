@@ -31,6 +31,7 @@ public sealed class AppExceptionCoordinator(IPrivacyLogger logger)
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs args)
     {
         Report(args.Exception, "task_unobserved_exception");
+        args.SetObserved();
     }
 
     private static string NormalizeEventName(string eventName)
