@@ -3,6 +3,7 @@ using Finora.Shared;
 
 namespace Finora.UnitTests;
 
+[Collection(CultureTestCollection.Name)]
 public sealed class CultureSettingsTests
 {
     [Theory]
