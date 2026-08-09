@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Security.Cryptography;
 using Finora.Application;
+using Finora.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace Finora.Infrastructure;
@@ -10,6 +11,7 @@ public sealed class DataIntegrityService(
     string appDataRoot) : IDataIntegrityService
 {
     private readonly string _appDataRoot = Path.GetFullPath(appDataRoot);
+    private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
 
     public async Task<IntegrityReport> CheckAsync(CancellationToken cancellationToken = default)
     {
@@ -28,6 +30,7 @@ public sealed class DataIntegrityService(
         var transactions = await db.Transactions.AsNoTracking()
             .Select(x => new TransactionRow(
                 x.Id,
+                x.Type,
                 x.AccountId,
                 x.AmountMinor,
                 x.Currency,
@@ -37,6 +40,7 @@ public sealed class DataIntegrityService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        CheckTransactionValues(transactions, issues);
         CheckTransactionAccounts(transactions, accountCurrencies, issues);
         CheckTransferPairs(transactions, issues);
         await CheckSplitsAsync(db, transactions.ToDictionary(x => x.Id, x => x.AmountMinor), issues, cancellationToken).ConfigureAwait(false);
@@ -79,13 +83,10 @@ public sealed class DataIntegrityService(
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             var value = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
-            if (!string.Equals(value, "ok", StringComparison.OrdinalIgnoreCase))
-                failures++;
+            if (!string.Equals(value, "ok", StringComparison.OrdinalIgnoreCase)) failures++;
         }
 
-        if (failures == 0)
-            return true;
-
+        if (failures == 0) return true;
         issues.Add(new IntegrityIssue(
             "SQLITE_INTEGRITY",
             IntegritySeverity.Error,
@@ -105,18 +106,38 @@ public sealed class DataIntegrityService(
         command.CommandText = "PRAGMA foreign_key_check;";
         var violations = 0;
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
-            violations++;
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false)) violations++;
 
-        if (violations == 0)
-            return true;
-
+        if (violations == 0) return true;
         issues.Add(new IntegrityIssue(
             "FOREIGN_KEY_VIOLATION",
             IntegritySeverity.Error,
             "One or more local records reference missing parent records.",
             violations));
         return false;
+    }
+
+    private static void CheckTransactionValues(
+        IReadOnlyCollection<TransactionRow> transactions,
+        ICollection<IntegrityIssue> issues)
+    {
+        var unsupportedAmounts = transactions.Count(x => x.AmountMinor is 0 or long.MinValue);
+        var semanticSigns = transactions.Count(x =>
+            (x.Type == TransactionType.Expense && x.AmountMinor >= 0) ||
+            (x.Type is TransactionType.Income or TransactionType.Refund && x.AmountMinor <= 0));
+        var invalidCurrencies = 0;
+        foreach (var transaction in transactions)
+        {
+            try { DomainRules.ValidateCurrency(transaction.Currency); }
+            catch (ArgumentException) { invalidCurrencies++; }
+        }
+
+        if (unsupportedAmounts > 0)
+            issues.Add(new IntegrityIssue("TRANSACTION_AMOUNT_INVALID", IntegritySeverity.Error, "Transactions contain a zero or unsupported extreme minor-unit amount.", unsupportedAmounts));
+        if (semanticSigns > 0)
+            issues.Add(new IntegrityIssue("TRANSACTION_SIGN_INVALID", IntegritySeverity.Error, "Expense, income, or refund rows use an invalid amount sign.", semanticSigns));
+        if (invalidCurrencies > 0)
+            issues.Add(new IntegrityIssue("TRANSACTION_CURRENCY_INVALID", IntegritySeverity.Error, "Transactions contain an invalid currency code.", invalidCurrencies));
     }
 
     private static void CheckTransactionAccounts(
@@ -161,14 +182,20 @@ public sealed class DataIntegrityService(
 
             var left = pair[0];
             var right = pair[1];
+            var balancesToZero = false;
+            try { balancesToZero = checked(left.AmountMinor + right.AmountMinor) == 0; }
+            catch (OverflowException) { }
+
             var valid =
-                left.AmountMinor + right.AmountMinor == 0 &&
+                left.Type == TransactionType.Transfer &&
+                right.Type == TransactionType.Transfer &&
+                balancesToZero &&
+                Math.Sign(left.AmountMinor) != Math.Sign(right.AmountMinor) &&
                 string.Equals(left.Currency, right.Currency, StringComparison.OrdinalIgnoreCase) &&
                 left.CounterpartyAccountId == right.AccountId &&
                 right.CounterpartyAccountId == left.AccountId &&
                 left.IsDeleted == right.IsDeleted;
-            if (!valid)
-                broken++;
+            if (!valid) broken++;
         }
 
         if (broken > 0)
@@ -196,22 +223,15 @@ public sealed class DataIntegrityService(
             }
 
             long total;
-            try
-            {
-                total = group.Aggregate(0L, (sum, row) => checked(sum + row.AmountMinor));
-            }
-            catch (OverflowException)
-            {
-                invalid++;
-                continue;
-            }
+            try { total = group.Aggregate(0L, (sum, row) => checked(sum + row.AmountMinor)); }
+            catch (OverflowException) { invalid++; continue; }
 
-            if (total != amount)
+            if (total != amount || group.Any(row => row.AmountMinor == 0 || row.AmountMinor == long.MinValue || Math.Sign(row.AmountMinor) != Math.Sign(amount)))
                 invalid++;
         }
 
         if (invalid > 0)
-            issues.Add(new IntegrityIssue("TRANSACTION_SPLIT_TOTAL", IntegritySeverity.Error, "One or more split transactions do not add up to the parent transaction amount.", invalid));
+            issues.Add(new IntegrityIssue("TRANSACTION_SPLIT_TOTAL", IntegritySeverity.Error, "One or more split transactions have an invalid sign/value or do not add up to the parent amount.", invalid));
     }
 
     private static async Task CheckCategoryTreeAsync(
@@ -234,13 +254,10 @@ public sealed class DataIntegrityService(
             {
                 if (!path.Add(id))
                 {
-                    foreach (var member in path)
-                        cyclic.Add(member);
+                    foreach (var member in path) cyclic.Add(member);
                     break;
                 }
-
-                if (!parentById.TryGetValue(id, out current))
-                    break;
+                if (!parentById.TryGetValue(id, out current)) break;
             }
         }
 
@@ -253,9 +270,7 @@ public sealed class DataIntegrityService(
         IReadOnlySet<Guid> transactionIds,
         ICollection<IntegrityIssue> issues)
     {
-        var duplicateCount = occurrences
-            .GroupBy(x => (x.RecurrenceRuleId, x.DueOn))
-            .Count(group => group.Count() > 1);
+        var duplicateCount = occurrences.GroupBy(x => (x.RecurrenceRuleId, x.DueOn)).Count(group => group.Count() > 1);
         var missingGeneratedTransactions = occurrences.Count(x => x.GeneratedTransactionId is Guid id && !transactionIds.Contains(id));
 
         if (duplicateCount > 0)
@@ -278,15 +293,8 @@ public sealed class DataIntegrityService(
         {
             cancellationToken.ThrowIfCancellationRequested();
             string fullPath;
-            try
-            {
-                fullPath = ResolveSafePath(attachment.RelativePath);
-            }
-            catch (InvalidDataException)
-            {
-                unsafePaths++;
-                continue;
-            }
+            try { fullPath = ResolveSafePath(attachment.RelativePath); }
+            catch (InvalidDataException) { unsafePaths++; continue; }
 
             if (!File.Exists(fullPath))
             {
@@ -301,17 +309,15 @@ public sealed class DataIntegrityService(
                 continue;
             }
 
-            if (attachment.Sha256 is null || attachment.Sha256.Length == 0)
-                continue;
+            if (attachment.Sha256 is null || attachment.Sha256.Length == 0) continue;
 
             await using var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
             var actualHash = await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
-            if (!CryptographicOperations.FixedTimeEquals(actualHash, attachment.Sha256))
-                hashMismatches++;
+            if (!CryptographicOperations.FixedTimeEquals(actualHash, attachment.Sha256)) hashMismatches++;
         }
 
         if (unsafePaths > 0)
-            issues.Add(new IntegrityIssue("ATTACHMENT_PATH_UNSAFE", IntegritySeverity.Error, "Attachment metadata contains a path outside Finora private storage.", unsafePaths));
+            issues.Add(new IntegrityIssue("ATTACHMENT_PATH_UNSAFE", IntegritySeverity.Error, "Attachment metadata contains a path outside Finora private receipt storage.", unsafePaths));
         if (missingFiles > 0)
             issues.Add(new IntegrityIssue("ATTACHMENT_FILE_MISSING", IntegritySeverity.Error, "Attachment metadata exists but the local receipt file is missing.", missingFiles));
         if (sizeMismatches > 0)
@@ -324,11 +330,11 @@ public sealed class DataIntegrityService(
     {
         var normalized = relativePath.Replace('/', Path.DirectorySeparatorChar);
         var fullPath = Path.GetFullPath(Path.Combine(_appDataRoot, normalized));
-        var allowedRoot = _appDataRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? _appDataRoot
-            : _appDataRoot + Path.DirectorySeparatorChar;
+        var allowedRoot = AttachmentRoot.EndsWith(Path.DirectorySeparatorChar)
+            ? AttachmentRoot
+            : AttachmentRoot + Path.DirectorySeparatorChar;
         if (!fullPath.StartsWith(allowedRoot, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Attachment path escaped app-private storage.");
+            throw new InvalidDataException("Attachment path escaped app-private receipt storage.");
         return fullPath;
     }
 
@@ -339,7 +345,7 @@ public sealed class DataIntegrityService(
     }
 
     private sealed record AccountRow(Guid Id, string Currency);
-    private sealed record TransactionRow(Guid Id, Guid AccountId, long AmountMinor, string Currency, Guid? TransferGroupId, Guid? CounterpartyAccountId, bool IsDeleted);
+    private sealed record TransactionRow(Guid Id, TransactionType Type, Guid AccountId, long AmountMinor, string Currency, Guid? TransferGroupId, Guid? CounterpartyAccountId, bool IsDeleted);
     private sealed record SplitRow(Guid TransactionId, long AmountMinor);
     private sealed record CategoryRow(Guid Id, Guid? ParentId);
     private sealed record OccurrenceRow(Guid Id, Guid RecurrenceRuleId, DateOnly DueOn, Guid? GeneratedTransactionId);
