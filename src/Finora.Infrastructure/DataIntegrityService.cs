@@ -20,22 +20,20 @@ public sealed class DataIntegrityService(
         var foreignKeysPassed = await CheckForeignKeysAsync(db, issues, cancellationToken).ConfigureAwait(false);
 
         var accounts = await db.Accounts.AsNoTracking()
-            .Select(x => new { x.Id, x.Currency })
+            .Select(x => new AccountRow(x.Id, x.Currency))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        var accountCurrencies = accounts.ToDictionary(x => x.Id, x => x.Currency, EqualityComparer<Guid>.Default);
+        var accountCurrencies = accounts.ToDictionary(x => x.Id, x => x.Currency);
 
         var transactions = await db.Transactions.AsNoTracking()
-            .Select(x => new
-            {
+            .Select(x => new TransactionRow(
                 x.Id,
                 x.AccountId,
                 x.AmountMinor,
                 x.Currency,
                 x.TransferGroupId,
                 x.CounterpartyAccountId,
-                x.IsDeleted
-            })
+                x.IsDeleted))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -45,13 +43,13 @@ public sealed class DataIntegrityService(
         await CheckCategoryTreeAsync(db, issues, cancellationToken).ConfigureAwait(false);
 
         var occurrences = await db.RecurrenceOccurrences.AsNoTracking()
-            .Select(x => new { x.Id, x.RecurrenceRuleId, x.DueOn, x.GeneratedTransactionId })
+            .Select(x => new OccurrenceRow(x.Id, x.RecurrenceRuleId, x.DueOn, x.GeneratedTransactionId))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         CheckRecurrenceOccurrences(occurrences, transactions.Select(x => x.Id).ToHashSet(), issues);
 
         var attachments = await db.Attachments.AsNoTracking()
-            .Select(x => new { x.Id, x.RelativePath, x.SizeBytes, x.Sha256 })
+            .Select(x => new AttachmentRow(x.Id, x.RelativePath, x.SizeBytes, x.Sha256))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         await CheckAttachmentsAsync(attachments, issues, cancellationToken).ConfigureAwait(false);
@@ -121,26 +119,23 @@ public sealed class DataIntegrityService(
         return false;
     }
 
-    private static void CheckTransactionAccounts<TTransaction>(
-        IReadOnlyCollection<TTransaction> transactions,
+    private static void CheckTransactionAccounts(
+        IReadOnlyCollection<TransactionRow> transactions,
         IReadOnlyDictionary<Guid, string> accountCurrencies,
         ICollection<IntegrityIssue> issues)
-        where TTransaction : class
     {
         var missingAccounts = 0;
         var currencyMismatches = 0;
 
-        foreach (dynamic transaction in transactions)
+        foreach (var transaction in transactions)
         {
-            Guid accountId = transaction.AccountId;
-            string transactionCurrency = transaction.Currency;
-            if (!accountCurrencies.TryGetValue(accountId, out var accountCurrency))
+            if (!accountCurrencies.TryGetValue(transaction.AccountId, out var accountCurrency))
             {
                 missingAccounts++;
                 continue;
             }
 
-            if (!string.Equals(accountCurrency, transactionCurrency, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(accountCurrency, transaction.Currency, StringComparison.OrdinalIgnoreCase))
                 currencyMismatches++;
         }
 
@@ -150,17 +145,12 @@ public sealed class DataIntegrityService(
             issues.Add(new IntegrityIssue("TRANSACTION_CURRENCY_MISMATCH", IntegritySeverity.Error, "Transaction currency does not match its account currency.", currencyMismatches));
     }
 
-    private static void CheckTransferPairs<TTransaction>(
-        IReadOnlyCollection<TTransaction> transactions,
+    private static void CheckTransferPairs(
+        IReadOnlyCollection<TransactionRow> transactions,
         ICollection<IntegrityIssue> issues)
-        where TTransaction : class
     {
-        var rows = transactions.Cast<dynamic>()
-            .Where(x => x.TransferGroupId is not null)
-            .ToList();
         var broken = 0;
-
-        foreach (var group in rows.GroupBy(x => (Guid)x.TransferGroupId))
+        foreach (var group in transactions.Where(x => x.TransferGroupId is not null).GroupBy(x => x.TransferGroupId!.Value))
         {
             var pair = group.ToList();
             if (pair.Count != 2)
@@ -172,11 +162,11 @@ public sealed class DataIntegrityService(
             var left = pair[0];
             var right = pair[1];
             var valid =
-                (long)left.AmountMinor + (long)right.AmountMinor == 0 &&
-                string.Equals((string)left.Currency, (string)right.Currency, StringComparison.OrdinalIgnoreCase) &&
-                (Guid?)left.CounterpartyAccountId == (Guid)right.AccountId &&
-                (Guid?)right.CounterpartyAccountId == (Guid)left.AccountId &&
-                (bool)left.IsDeleted == (bool)right.IsDeleted;
+                left.AmountMinor + right.AmountMinor == 0 &&
+                string.Equals(left.Currency, right.Currency, StringComparison.OrdinalIgnoreCase) &&
+                left.CounterpartyAccountId == right.AccountId &&
+                right.CounterpartyAccountId == left.AccountId &&
+                left.IsDeleted == right.IsDeleted;
             if (!valid)
                 broken++;
         }
@@ -192,7 +182,7 @@ public sealed class DataIntegrityService(
         CancellationToken cancellationToken)
     {
         var splits = await db.TransactionSplits.AsNoTracking()
-            .Select(x => new { x.TransactionId, x.AmountMinor })
+            .Select(x => new SplitRow(x.TransactionId, x.AmountMinor))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var invalid = 0;
@@ -230,7 +220,7 @@ public sealed class DataIntegrityService(
         CancellationToken cancellationToken)
     {
         var categories = await db.Categories.AsNoTracking()
-            .Select(x => new { x.Id, x.ParentId })
+            .Select(x => new CategoryRow(x.Id, x.ParentId))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var parentById = categories.ToDictionary(x => x.Id, x => x.ParentId);
@@ -258,17 +248,15 @@ public sealed class DataIntegrityService(
             issues.Add(new IntegrityIssue("CATEGORY_CYCLE", IntegritySeverity.Error, "The category hierarchy contains a parent/child cycle.", cyclic.Count));
     }
 
-    private static void CheckRecurrenceOccurrences<TOccurrence>(
-        IReadOnlyCollection<TOccurrence> occurrences,
+    private static void CheckRecurrenceOccurrences(
+        IReadOnlyCollection<OccurrenceRow> occurrences,
         IReadOnlySet<Guid> transactionIds,
         ICollection<IntegrityIssue> issues)
-        where TOccurrence : class
     {
-        var rows = occurrences.Cast<dynamic>().ToList();
-        var duplicateCount = rows
-            .GroupBy(x => ((Guid)x.RecurrenceRuleId, (DateOnly)x.DueOn))
+        var duplicateCount = occurrences
+            .GroupBy(x => (x.RecurrenceRuleId, x.DueOn))
             .Count(group => group.Count() > 1);
-        var missingGeneratedTransactions = rows.Count(x => x.GeneratedTransactionId is Guid id && !transactionIds.Contains(id));
+        var missingGeneratedTransactions = occurrences.Count(x => x.GeneratedTransactionId is Guid id && !transactionIds.Contains(id));
 
         if (duplicateCount > 0)
             issues.Add(new IntegrityIssue("RECURRENCE_DUPLICATE", IntegritySeverity.Error, "Duplicate recurrence occurrences exist for the same rule and due date.", duplicateCount));
@@ -276,25 +264,23 @@ public sealed class DataIntegrityService(
             issues.Add(new IntegrityIssue("RECURRENCE_TRANSACTION_MISSING", IntegritySeverity.Error, "Recurring occurrences reference a generated transaction that is missing.", missingGeneratedTransactions));
     }
 
-    private async Task CheckAttachmentsAsync<TAttachment>(
-        IReadOnlyCollection<TAttachment> attachments,
+    private async Task CheckAttachmentsAsync(
+        IReadOnlyCollection<AttachmentRow> attachments,
         ICollection<IntegrityIssue> issues,
         CancellationToken cancellationToken)
-        where TAttachment : class
     {
         var unsafePaths = 0;
         var missingFiles = 0;
         var sizeMismatches = 0;
         var hashMismatches = 0;
 
-        foreach (dynamic attachment in attachments)
+        foreach (var attachment in attachments)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var relativePath = (string)attachment.RelativePath;
             string fullPath;
             try
             {
-                fullPath = ResolveSafePath(relativePath);
+                fullPath = ResolveSafePath(attachment.RelativePath);
             }
             catch (InvalidDataException)
             {
@@ -309,19 +295,18 @@ public sealed class DataIntegrityService(
             }
 
             var info = new FileInfo(fullPath);
-            if (info.Length != (long)attachment.SizeBytes)
+            if (info.Length != attachment.SizeBytes)
             {
                 sizeMismatches++;
                 continue;
             }
 
-            byte[]? expectedHash = attachment.Sha256;
-            if (expectedHash is null || expectedHash.Length == 0)
+            if (attachment.Sha256 is null || attachment.Sha256.Length == 0)
                 continue;
 
             await using var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
             var actualHash = await SHA256.HashDataAsync(stream, cancellationToken).ConfigureAwait(false);
-            if (!CryptographicOperations.FixedTimeEquals(actualHash, expectedHash))
+            if (!CryptographicOperations.FixedTimeEquals(actualHash, attachment.Sha256))
                 hashMismatches++;
         }
 
@@ -352,4 +337,11 @@ public sealed class DataIntegrityService(
         if (connection.State != System.Data.ConnectionState.Open)
             await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    private sealed record AccountRow(Guid Id, string Currency);
+    private sealed record TransactionRow(Guid Id, Guid AccountId, long AmountMinor, string Currency, Guid? TransferGroupId, Guid? CounterpartyAccountId, bool IsDeleted);
+    private sealed record SplitRow(Guid TransactionId, long AmountMinor);
+    private sealed record CategoryRow(Guid Id, Guid? ParentId);
+    private sealed record OccurrenceRow(Guid Id, Guid RecurrenceRuleId, DateOnly DueOn, Guid? GeneratedTransactionId);
+    private sealed record AttachmentRow(Guid Id, string RelativePath, long SizeBytes, byte[]? Sha256);
 }
