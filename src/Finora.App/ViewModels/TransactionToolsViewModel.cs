@@ -1,0 +1,89 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using Finora.Application;
+using Finora.Domain;
+
+namespace Finora.App;
+
+public sealed class TransactionToolsViewModel : ViewModelBase
+{
+    private readonly IFinanceStore _store;
+    private readonly ITransactionMaintenanceService _maintenance;
+    private Category? _bulkCategory;
+    private string _status = string.Empty;
+    private DateTime _fromDate = DateTime.Today.AddMonths(-1);
+    private DateTime _toDate = DateTime.Today;
+
+    public TransactionToolsViewModel(IFinanceStore store, ITransactionMaintenanceService maintenance)
+    {
+        _store = store;
+        _maintenance = maintenance;
+        LoadCommand = new AsyncCommand(LoadAsync);
+        BulkCategorizeCommand = new AsyncCommand(BulkCategorizeAsync);
+        ScanDuplicatesCommand = new AsyncCommand(ScanDuplicatesAsync);
+    }
+
+    public ObservableCollection<ToolTransactionItem> Transactions { get; } = [];
+    public ObservableCollection<Category> Categories { get; } = [];
+    public ObservableCollection<DuplicateTransactionCandidate> Duplicates { get; } = [];
+    public Category? BulkCategory { get => _bulkCategory; set => SetProperty(ref _bulkCategory, value); }
+    public DateTime FromDate { get => _fromDate; set => SetProperty(ref _fromDate, value); }
+    public DateTime ToDate { get => _toDate; set => SetProperty(ref _toDate, value); }
+    public string Status { get => _status; private set => SetProperty(ref _status, value); }
+    public System.Windows.Input.ICommand LoadCommand { get; }
+    public System.Windows.Input.ICommand BulkCategorizeCommand { get; }
+    public System.Windows.Input.ICommand ScanDuplicatesCommand { get; }
+
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        Categories.Clear();
+        foreach (var category in await _store.GetCategoriesAsync()) if (!category.IsArchived) Categories.Add(category);
+        await LoadTransactionsCoreAsync();
+        await ScanDuplicatesCoreAsync();
+    });
+
+    private Task BulkCategorizeAsync() => RunAsync(async () =>
+    {
+        var ids = Transactions.Where(x => x.IsSelected).Select(x => x.Id).ToArray();
+        if (ids.Length == 0) throw new InvalidOperationException("Select at least one transaction.");
+        var count = await _maintenance.BulkCategorizeAsync(ids, BulkCategory?.Id);
+        Status = $"Updated {count} transaction(s). Revision history was preserved.";
+        await LoadTransactionsCoreAsync();
+    });
+
+    private Task ScanDuplicatesAsync() => RunAsync(ScanDuplicatesCoreAsync);
+
+    private async Task LoadTransactionsCoreAsync()
+    {
+        var from = new DateTimeOffset(DateTime.SpecifyKind(FromDate.Date, DateTimeKind.Local)).ToUniversalTime();
+        var to = new DateTimeOffset(DateTime.SpecifyKind(ToDate.Date.AddDays(1), DateTimeKind.Local)).ToUniversalTime();
+        Transactions.Clear();
+        foreach (var tx in await _store.SearchTransactionsAsync(from: from, to: to)) Transactions.Add(new ToolTransactionItem(tx));
+    }
+
+    private async Task ScanDuplicatesCoreAsync()
+    {
+        if (ToDate.Date < FromDate.Date) throw new InvalidOperationException("The end date cannot be earlier than the start date.");
+        var from = new DateTimeOffset(DateTime.SpecifyKind(FromDate.Date, DateTimeKind.Local)).ToUniversalTime();
+        var to = new DateTimeOffset(DateTime.SpecifyKind(ToDate.Date.AddDays(1), DateTimeKind.Local)).ToUniversalTime();
+        Duplicates.Clear();
+        foreach (var item in await _maintenance.FindLikelyDuplicatesAsync(from, to)) Duplicates.Add(item);
+        Status = Duplicates.Count == 0 ? "No likely duplicates found in this period." : $"Found {Duplicates.Count} possible duplicate pair(s). Review before deleting anything.";
+    }
+}
+
+public sealed class ToolTransactionItem : INotifyPropertyChanged
+{
+    private bool _isSelected;
+    public ToolTransactionItem(TransactionListItem item) { Id = item.Id; Type = item.Type; AmountMinor = item.AmountMinor; Currency = item.Currency; OccurredAtUtc = item.OccurredAtUtc; AccountName = item.AccountName; CategoryName = item.CategoryName; Merchant = item.Merchant; }
+    public Guid Id { get; }
+    public TransactionType Type { get; }
+    public long AmountMinor { get; }
+    public string Currency { get; }
+    public DateTimeOffset OccurredAtUtc { get; }
+    public string AccountName { get; }
+    public string? CategoryName { get; }
+    public string? Merchant { get; }
+    public bool IsSelected { get => _isSelected; set { if (_isSelected == value) return; _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); } }
+    public event PropertyChangedEventHandler? PropertyChanged;
+}
