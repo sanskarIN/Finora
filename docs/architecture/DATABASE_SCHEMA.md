@@ -16,6 +16,18 @@ v1 -> v2
 
 A release that introduces schema v3 must add and test an explicit `v2 -> v3` path; it must not replace or delete the prior migration.
 
+## Money and currency invariants
+
+- Persist monetary values as signed 64-bit integer minor units plus currency code.
+- Major-unit parsing/conversion uses `decimal`, never `float`/`double`.
+- `CurrencyMinorUnits` provides Finora's built-in zero-, two-, and three-decimal precision mapping for major/minor conversion and formatting.
+- An expense is negative; income/refund is positive; transfers use equal/opposite linked rows.
+- Zero and `long.MinValue` transaction amounts are rejected because they are invalid/unsafe financial states.
+- Transaction splits must use the parent sign and must sum exactly to the parent amount with checked arithmetic.
+- Aggregate reports must filter to one explicit reporting currency. Unlike currencies are not silently added or converted.
+
+The built-in currency-precision metadata is implementation metadata, not an exchange-rate source. Release QA must verify the table against currencies supported by the target release markets.
+
 ## Main entities
 
 ### `Account`
@@ -61,7 +73,7 @@ Transfer invariant: two rows share a `TransferGroupId`, use the same currency, h
 
 ### `TransactionSplit`
 
-Child rows allocate a transaction amount to one or more categories/notes. The sum of split minor units must equal the parent transaction amount. The integrity diagnostic checks this invariant.
+Child rows allocate a transaction amount to one or more categories/notes. The sum of split minor units must equal the parent transaction amount. Each split uses the same sign as the parent. Persistence validation and the integrity diagnostic check these invariants.
 
 ### `Category`
 
@@ -99,15 +111,15 @@ Persists each due occurrence and workflow state (pending/paid/partial/skipped/po
 
 Unique index: `(RecurrenceRuleId, DueOn)`.
 
-This is the core restart/idempotency guard. Reprocessing the same due date must not produce a second occurrence.
+This is the core restart/idempotency guard. Reprocessing the same due date must not produce a second occurrence. A skipped occurrence must be explicitly reopened before payment or postponement; a fully paid occurrence is not regenerated.
 
 ### `Attachment`
 
-Stores receipt/document metadata only; bytes live under app-private attachment storage.
+Stores receipt/document metadata only; bytes live under app-private `attachments` storage.
 
 Fields include transaction link, relative app-private path, original filename, content type, byte size, SHA-256 checksum, and timestamps.
 
-Never replace `RelativePath` with an arbitrary absolute path. Attachment services canonicalize/check paths against the private attachment root.
+Never replace `RelativePath` with an arbitrary absolute path. Attachment services and the integrity checker canonicalize/check paths against the private receipt root.
 
 ### `TransactionRevision` — schema v2
 
@@ -158,6 +170,8 @@ Stores non-secret app preferences and the schema-version marker. `Key` is unique
 
 Small security verifier material belongs in OS secure storage, not this table. Large datasets do not belong in secure storage.
 
+`internal.restore.commit` is a transient internal recovery marker used only by the production crash-safe restore protocol. It contains a random restore operation ID, never a password, key, receipt name, transaction content, or monetary value. Normal recovery removes it. It is not a schema-version field and does not require a schema bump.
+
 ### `AuditEntry`
 
 Records privacy-safe action metadata for critical workflows. Audit details must be sanitized and must not become a duplicate private transaction log.
@@ -178,7 +192,7 @@ The v1 → v2 step:
 4. creates `NotificationSchedules` and scheduling/dedupe indexes;
 5. updates `schema.version` to 2 only after the migration SQL and EF save succeed inside the migration transaction.
 
-Migration tests must retain a representative v1 database shape and verify the v2 additions/version marker.
+Migration tests retain a representative v1 database shape and verify the v2 additions/version marker.
 
 ## Database runtime controls
 
@@ -188,7 +202,7 @@ Initialization enables:
 - `PRAGMA foreign_keys=ON`;
 - `PRAGMA busy_timeout=5000`.
 
-Multi-record financial operations use explicit database transactions where atomicity matters.
+Multi-record financial operations use explicit database transactions where atomicity matters. `FinoraDbContext` also validates tracked Account/FinanceTransaction writes before every EF save so direct EF/import-style write paths cannot bypass the core account/currency/sign/split rules.
 
 ## Data-integrity diagnostic
 
@@ -196,20 +210,40 @@ Multi-record financial operations use explicit database transactions where atomi
 
 - SQLite `integrity_check`;
 - SQLite `foreign_key_check`;
+- invalid/unsafe transaction values and semantic signs;
 - transaction/account currency/reference consistency;
 - transfer pairing/balance;
-- split totals;
+- split signs/totals;
 - category hierarchy cycles;
 - recurrence duplicate/generated-transaction references;
-- receipt/attachment path, presence, byte size, and SHA-256 checksum.
+- receipt path confinement, presence, byte size, and SHA-256 checksum.
 
-The exported integrity report contains status codes/counts only, not account names, merchants/payees, notes, monetary amounts, or receipt names/contents.
+The integrity report contains status codes/counts only, not account names, merchants/payees, notes, monetary amounts, or receipt names/contents.
 
-## Backup relationship
+## Backup and crash-recovery relationship
 
-Encrypted backup serialization includes the supported schema-v2 finance graph plus attachment bytes. Backup restore is not a SQLite file copy: it validates/decrypts the snapshot, stages attachment files, replaces supported relational data transactionally, and swaps the attachment directory with rollback handling.
+Encrypted backup serialization includes the supported schema-v2 finance graph plus attachment bytes. Backup restore is not a SQLite file copy: it validates/decrypts the snapshot, stages attachment files, replaces supported relational data transactionally, and swaps the attachment directory.
 
-A backup created by a newer schema is rejected by an older build.
+Because SQLite and the receipt file tree cannot participate in one native atomic transaction, production restore is wrapped by `CrashSafeBackupService` and `RestoreRecoveryService`:
+
+1. any previous interrupted restore is resolved first;
+2. a transient `internal.restore.commit` marker is written to the old database;
+3. an app-private recovery journal is written with a random restore ID and safe directory names;
+4. the current receipt tree is copied to an app-private rollback directory;
+5. the validated encrypted restore runs;
+6. the committed restore transaction replaces non-schema app settings, which removes the pending marker;
+7. recovery interprets a matching marker as “database restore did not commit” and restores the previous receipt tree;
+8. an absent matching marker means the database replacement committed, so recovery finalizes the new receipt tree and deletes rollback/staging artifacts.
+
+At startup, recovery runs before normal navigation. If safe automatic recovery cannot be completed, Finora blocks normal initialization instead of silently exposing a database/receipt mismatch.
+
+The recovery journal and marker do not contain backup passwords or financial contents. A backup created by a newer schema is rejected by an older build.
+
+## Full finance reset
+
+`FinanceDataResetService` removes finance-domain records in dependency-safe order, including transaction revisions, reconciliation rows, reminder schedules, tags, budgets, goals, recurrence, receipts, categories, accounts, audit entries, and backup metadata. Self-referencing categories are removed leaves-first and a cycle causes rollback.
+
+The reset intentionally keeps `schema.version`, non-finance app preferences, and app-lock configuration. Receipt files are cleaned only after the database reset commits.
 
 ## Schema change rules
 
@@ -221,4 +255,4 @@ Every future schema modification must:
 4. include integration tests from every released schema;
 5. update this file and backup compatibility documentation;
 6. run the integrity checker after migration in release QA;
-7. never silently reinterpret stored money or transfer semantics.
+7. never silently reinterpret stored money, currency precision, or transfer semantics.
