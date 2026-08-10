@@ -50,7 +50,7 @@ public abstract class ViewModelBase : INotifyPropertyChanged
         {
             IsBusy = true;
             ErrorMessage = null;
-            await action().ConfigureAwait(false);
+            await action();
         }
         catch (OperationCanceledException)
         {
@@ -128,7 +128,7 @@ public sealed class AsyncCommand : ICommand
         {
             _running = true;
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-            await _execute().ConfigureAwait(false);
+            await _execute();
         }
         catch (Exception exception) when (exception is not OutOfMemoryException and not StackOverflowException and not AccessViolationException)
         {
