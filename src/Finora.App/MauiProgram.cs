@@ -20,7 +20,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IFinanceStore, FinanceStore>();
         builder.Services.AddSingleton<IFinanceDataResetService, FinanceDataResetService>();
         builder.Services.AddSingleton<ISampleDataService, SampleDataService>();
-        builder.Services.AddSingleton<IStorageRecoveryService>(sp => new RestoreRecoveryService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
+        builder.Services.AddSingleton<IStorageRecoveryService>(sp => new RestoreRecoveryService(sp.GetRequiredServiceService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<ITransactionMaintenanceService, TransactionMaintenanceService>();
         builder.Services.AddSingleton<IAccountManagementService, AccountManagementService>();
         builder.Services.AddSingleton<ICategoryTagService, CategoryTagService>();
@@ -32,6 +32,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IExportService, ExportService>();
         builder.Services.AddSingleton<IAttachmentService>(sp => new AttachmentService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
         builder.Services.AddSingleton<IDataIntegrityService>(sp => new DataIntegrityService(sp.GetRequiredService<IDbContextFactory<FinoraDbContext>>(), FileSystem.AppDataDirectory));
+        builder.Services.AddSingleton<ITemporaryArtifactCleaner>(_ => new TemporaryArtifactCleaner(FileSystem.CacheDirectory));
         builder.Services.AddSingleton<IPrivacyLogger>(_ => new PrivacyLogger(FileSystem.CacheDirectory));
         builder.Services.AddSingleton<AppExceptionCoordinator>();
         builder.Services.AddSingleton<IAppSettingsService, MauiAppSettingsService>();
