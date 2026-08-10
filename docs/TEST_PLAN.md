@@ -10,13 +10,13 @@ Run on every pull request and release candidate:
 python build/scripts/verify_structure.py
 ```
 
-Expected: no malformed XML/XAML/RESX/project files, missing project references, empty implementation/resource files, unfinished placeholder markers, missing XAML event handlers, version/schema drift, missing required repository/policy files, forbidden floating-point money fields, or selected Android privacy-manifest regressions.
+Expected: no malformed XML/XAML/RESX/project files, missing project references, empty implementation/resource files, unfinished placeholder markers, missing XAML event handlers, version/schema drift, missing required repository/policy files, forbidden floating-point money fields, Android automatic-backup/data-transfer regressions, unmasked Settings backup/PIN fields, password/PIN `DisplayPromptAsync` regressions, or raw exception messages passed into user alerts.
 
 ## 2. Build/static analysis
 
-Use the platform-appropriate SDK/workloads and the repository verification wrappers. Warnings are errors. Do not ship a release that succeeds only after broad analyzer suppression.
+Use the platform-appropriate SDK/workloads and repository verification wrappers. Warnings are errors. Do not ship a release that succeeds only after broad analyzer suppression.
 
-Core/non-MAUI projects can be restored/built/tested on a general .NET host. MAUI target builds require their corresponding workloads/platform hosts.
+Core/non-MAUI projects can be restored/built/tested on a general .NET host. MAUI target builds require corresponding workloads/platform hosts.
 
 ## 3. Unit tests
 
@@ -25,9 +25,10 @@ Cover pure/domain behavior:
 - currency-aware major/minor money conversion including 0-, 2-, and 3-decimal currencies;
 - rounding boundaries and integer overflow;
 - currency normalization/validation;
-- transaction sign/domain validation;
+- transaction sign/domain/deletion-state validation;
 - transfer invariants;
 - split sign/total invariants;
+- category/tag metadata rules;
 - account credit-card field invariants;
 - budget kind/category/threshold/period rules;
 - explicit budget-period overlap rejection;
@@ -37,10 +38,14 @@ Cover pure/domain behavior:
 - non-positive/overflowing effective rollover plan rejection;
 - savings goal/contribution rules;
 - recurrence next-occurrence calculations across month/year boundaries;
+- recurrence occurrence structural state rules;
+- attachment/revision/reconciliation/notification metadata rules;
 - decimal calculator precedence/parentheses/division/error cases;
 - locale normalization/application helpers;
 - PIN attempt escalation/lockout policy;
-- ViewModel base busy/error/command behavior where platform-neutral.
+- ViewModel busy/error/command behavior;
+- safe error mapper preserves short validation text but redacts path/database/crypto/provider details;
+- unexpected `AsyncCommand` failures are contained and routed through the privacy hook.
 
 ## 4. Database integration tests
 
@@ -68,7 +73,7 @@ Use isolated SQLite databases per test.
 ### Transactions
 
 - create/edit/delete/restore expense/income/refund/adjustment;
-- persistence-boundary invalid sign/currency writes are rejected;
+- persistence-boundary invalid sign/currency/deletion-state writes are rejected;
 - zero/`long.MinValue` money is rejected;
 - critical edits create revision history;
 - bulk categorization creates revisions;
@@ -79,6 +84,22 @@ Use isolated SQLite databases per test.
 - tag linking and removal;
 - duplicate detection does not delete data automatically;
 - search/filter by account/category/type/date/text.
+
+### Schema-v2 metadata persistence boundary
+
+Direct `FinoraDbContext.SaveChanges` tests must prove that Added/Modified rows cannot bypass structural rules:
+
+- attachment traversal/unsupported content/invalid size/hash metadata rejected;
+- empty/oversized notification fields rejected;
+- recurrence occurrence paid/postponed state contradictions rejected;
+- a paid occurrence may retain a valid historical postponed date;
+- reconciliation difference/adjustment-state mismatch rejected;
+- invalid category/tag metadata rejected;
+- invalid transaction revision metadata rejected;
+- invalid app setting/audit/backup metadata rejected;
+- invalid transaction deletion timestamp state rejected.
+
+These tests complement relational services, foreign keys, backup graph validation, and the integrity checker rather than replacing them.
 
 ### Categories/tags
 
@@ -105,7 +126,7 @@ Use isolated SQLite databases per test.
 - rollover applies only when enabled;
 - effective planned amount remains positive;
 - warning-threshold arithmetic cannot overflow;
-- failed explicit-period replacement rolls back the prior persisted period set.
+- failed explicit-period replacement rolls back prior persisted period set.
 
 ### Savings goals
 
@@ -127,6 +148,7 @@ Use isolated SQLite databases per test.
 - generated recurring transfer pair must remain complete/balanced/account-correct;
 - recurring transfer creates a balanced pair;
 - skip/postpone/reopen state transitions;
+- paid-after-postponement preserves useful history without violating state validation;
 - paused rule creates no due occurrences;
 - paused → resume re-enables generation;
 - resume revalidates end date/account/category/currency dependencies;
@@ -134,6 +156,18 @@ Use isolated SQLite databases per test.
 - completed/archived rule cannot be resumed;
 - backlog guard prevents unbounded occurrence generation;
 - end date and custom interval behavior.
+
+### Local notifications
+
+- first schedule persists after OS acceptance;
+- failed deduplicated replacement preserves old enabled reminder and does not cancel it;
+- successful deduplicated replacement disables old DB row only after new OS acceptance;
+- old OS reminder cancellation runs after database commit;
+- platform cancellation failure does not revert DB disabled state;
+- expired enabled rows become disabled during reconciliation;
+- disabled/expired IDs are retried for OS cancellation;
+- pending enabled reminders are rescheduled after reconciliation;
+- generic privacy-safe content remains free of amount/account/merchant/note details.
 
 ### CSV import
 
@@ -148,7 +182,7 @@ Use isolated SQLite databases per test.
 - missing account/fallback behavior;
 - optional category creation;
 - tag linking;
-- duplicate skipping including duplicates within the same import batch;
+- duplicate skipping including duplicates within same import batch;
 - transfer-group/counterparty pair validation;
 - parse errors counted exactly once;
 - transactional failure/rollback.
@@ -161,7 +195,10 @@ Use isolated SQLite databases per test.
 - truncated/oversized backup rejected;
 - future schema rejected;
 - attachment bytes round-trip;
-- attachment path escape rejected with platform-correct path semantics;
+- attachment lexical path escape rejected with platform-correct path semantics;
+- attachment symbolic-link/reparse traversal rejected when host supports test link creation;
+- crash-safe rollback copy refuses linked entries;
+- restore journal/staging/rollback paths refuse linked traversal;
 - attachment size/hash mismatch rejected;
 - account/transaction currency graph drift rejects backup creation/preview/restore;
 - broken transfer/split/category/tag/budget/goal/recurrence/reconciliation graph is rejected;
@@ -169,7 +206,9 @@ Use isolated SQLite databases per test.
 - active recurrence on archived account is rejected;
 - paused historical recurrence on archived account remains compatible;
 - internal restore settings/markers are not imported;
-- serialized plaintext/receipt buffers are cleared after use/failure as far as managed-memory APIs permit;
+- every accumulated receipt buffer is cleared on backup creation success/failure as far as managed-memory APIs permit;
+- decrypted receipt buffers are cleared on authenticated graph-validation failure;
+- UI-side encrypted backup byte array is cleared after write/share;
 - database replacement and attachment-directory swap are consistent;
 - durable restore journal/commit marker recovers interruption;
 - pending marker restores previous attachment tree;
@@ -179,16 +218,29 @@ Use isolated SQLite databases per test.
 - failed restore leaves prior data usable;
 - backup metadata/audit entries do not expose finance contents.
 
+### Diagnostics and temporary artifacts
+
+- privacy logger ignores caller property dictionaries;
+- privacy logger records exception type/event token but never exception message/stack;
+- event tokens are bounded/sanitized;
+- diagnostic log rotates at bounded size;
+- diagnostic log refuses linked/reparse storage paths;
+- stale managed CSV/PDF/backup/integrity-report cache copies older than grace period are removed;
+- fresh managed share copies remain;
+- unrelated cache files and diagnostic logs remain;
+- file symlink share entry deletion does not delete target when host supports links;
+- cleanup failure is best-effort and does not block startup.
+
 ### Migrations
 
 For every released schema version:
 
-1. create a representative synthetic database at that schema;
-2. migrate through the actual production path;
+1. create representative synthetic database at that schema;
+2. migrate through actual production path;
 3. verify schema version advances only on successful migration;
 4. verify all entities/relationships/data remain correct;
-5. verify a failed migration rolls back;
-6. run the data-integrity checker after migration.
+5. verify failed migration rolls back;
+6. run data-integrity checker after migration.
 
 Current required migration coverage includes v1 → v2.
 
@@ -202,12 +254,12 @@ Current required migration coverage includes v1 → v2.
 - category cycle is detected;
 - invalid custom/overlapping budget periods are detected;
 - budget category/subcategory relation drift is detected;
-- invalid savings contribution/link/currency/running-progress state is detected;
+- invalid savings contribution/link/currency/running-progress/completion state is detected;
 - active recurrence on archived/mismatched account is detected;
 - recurrence duplicate/invalid payment/generated-transaction state is detected;
 - reconciliation arithmetic/adjustment-link drift is detected;
 - missing/changed receipt file is detected;
-- unsafe attachment path is detected;
+- unsafe lexical or linked attachment path is detected;
 - sanitized report contains counts/codes only, not account names, merchant/payee names, notes, amounts, or receipt filenames.
 
 ## 5. ViewModel/UI-contract tests
@@ -227,6 +279,10 @@ Cover navigation contracts and state behavior without pretending this is native 
 - dashboard source does not call legacy mixed-currency aggregate API;
 - dashboard displays explicit reporting-currency scope;
 - backup/restore/settings/legal routes;
+- Settings backup password/new PIN/confirm PIN fields remain masked;
+- secret fields are cleared after use;
+- lock PIN field remains masked and screen-reader described;
+- biometric failure uses stable generic text rather than raw provider text;
 - app-lock fallback state;
 - destructive finance/sample reset requires typed confirmation;
 - larger-interface resources remain globally scalable.
@@ -244,9 +300,11 @@ At minimum test a current emulator and a physical device when available:
 - encrypted backup/share/save/restore;
 - interrupted restore/relaunch recovery where practical;
 - notification permission and scheduled reminders;
+- dedupe replacement failure/success behavior where practical;
 - reboot/doze/force-stop reminder limitations;
 - biometric success/cancel/unavailable/lockout with PIN fallback;
 - `FLAG_SECURE` behavior;
+- verify app data is excluded from Android automatic backup/cloud backup/device transfer according to manifest/rules;
 - dark/light/system theme;
 - TalkBack, large font/display scaling, reduced motion;
 - Android back/navigation behavior;
@@ -273,7 +331,7 @@ At minimum test a current emulator and a physical device when available:
 - UserNotifications permission/scheduling and lifecycle cleanup;
 - document picker/share/export/backup/restore/receipt flows;
 - VoiceOver, Dynamic Type, reduced motion, dark mode;
-- platform screenshot-protection limitation is correctly communicated;
+- platform screenshot-protection limitation correctly communicated;
 - upgrade/migration behavior.
 
 ## 9. Mac Catalyst tests
@@ -295,12 +353,15 @@ Exercise:
 - cancelled picker/share flow;
 - permission denial/revocation;
 - corrupted local receipt file;
+- linked/reparse receipt directory/path;
 - locked/unavailable file;
 - wrong/tampered/semantically-invalid backup;
 - interruption before/after restore database commit marker;
 - repeated recurrence processing after restart;
 - pause/resume/archive around pending occurrence state;
 - failed custom-budget period replacement after old period deletion begins;
+- notification replacement OS failure and DB failure paths;
+- secure-storage unavailable/missing/malformed PIN verifier paths;
 - database lock contention;
 - migration interruption using a copied synthetic database.
 
@@ -312,14 +373,18 @@ Verify:
 
 - no network/account requirement for current release;
 - no analytics/telemetry/advertising SDK introduced;
-- logs do not include amounts, account names, merchant/payee names, notes, locations, receipt names/contents, PINs, backup passwords, or encryption material;
+- logs do not include amounts, account names, merchant/payee names, notes, locations, receipt names/contents, PINs, backup passwords, provider exception messages, or encryption material;
+- bound errors and alerts do not expose raw storage/database/crypto/provider paths/messages;
 - local notification text remains generic/privacy-safe;
 - stale local reminders are cancelled when source state is no longer active;
 - backup key material is not persisted;
-- app-lock verifier uses secure storage for small secrets only and fails closed on missing verifier material;
+- app-lock verifier uses secure storage for small secrets only;
+- temporary secure-storage provider failure fails closed when lock-enabled marker exists;
+- readable missing/corrupt verifier cannot permanently trap app behind stale marker;
+- Android app-private data is excluded from ordinary backup/device-transfer paths;
 - local premium remains explicitly non-tamper-proof demo state;
 - no repository/build artifact contains signing credentials or real finance data.
 
 ## 12. Release evidence
 
-For a release candidate, retain CI run links, test result artifacts, platform build logs, migration-test results, backup/recovery failure-path results, and device-smoke-test checklist results. Do not mark a platform gate complete based only on source inspection.
+For a release candidate, retain CI run links, test result artifacts, platform build logs, migration-test results, backup/recovery failure-path results, Android backup-rule packaging evidence, and device-smoke-test checklist results. Do not mark a platform gate complete based only on source inspection or an empty classic commit-status list.
