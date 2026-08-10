@@ -23,7 +23,8 @@ public sealed class AccountDetailViewModel : ViewModelBase
 
     public AccountDetailViewModel(IAccountManagementService accounts, IFinanceStore store)
     {
-        _accounts = accounts; _store = store;
+        _accounts = accounts;
+        _store = store;
         SaveCommand = new AsyncCommand(SaveAsync);
         ArchiveOrRestoreCommand = new AsyncCommand(ArchiveOrRestoreAsync);
     }
@@ -38,7 +39,7 @@ public sealed class AccountDetailViewModel : ViewModelBase
     public string ColorLabel { get => _colorLabel; set => SetProperty(ref _colorLabel, value); }
     public string OpeningBalance { get => _openingBalance; set => SetProperty(ref _openingBalance, value); }
     public string CreditLimit { get => _creditLimit; set => SetProperty(ref _creditLimit, value); }
-    public int BillingDay { get => _billingDay; set => SetProperty(ref _billingDay, Math.Clamp(value, 1, 28)); }
+    public int BillingDay { get => _billingDay; set => SetProperty(ref _billingDay, Math.Clamp(value, 1, 31)); }
     public AccountState State { get => _state; set => SetProperty(ref _state, value); }
     public string Summary { get => _summary; private set => SetProperty(ref _summary, value); }
     public string Status { get => _status; private set => SetProperty(ref _status, value); }
@@ -51,12 +52,17 @@ public sealed class AccountDetailViewModel : ViewModelBase
         var result = await _accounts.GetAccountAsync(id);
         if (!result.IsSuccess || result.Value is null) throw new InvalidOperationException(result.Error);
         var account = result.Value;
-        Name = account.Name; Type = account.Type; Icon = account.Icon; ColorLabel = account.ColorLabel ?? string.Empty;
+        Name = account.Name;
+        Type = account.Type;
+        Icon = account.Icon;
+        ColorLabel = account.ColorLabel ?? string.Empty;
         OpeningBalance = new Money(account.OpeningBalanceMinor, account.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture);
         CreditLimit = account.CreditLimitMinor is long limit ? new Money(limit, account.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture) : string.Empty;
-        BillingDay = account.BillingDay ?? 1; State = account.State;
+        BillingDay = account.BillingDay ?? 1;
+        State = account.State;
         Summary = $"Current balance: {new Money(account.CurrentBalanceMinor, account.Currency).Format()} · {account.TransactionCount} transaction(s)" + (account.LastReconciledAtUtc is DateTimeOffset reconciled ? $" · Last reconciled {reconciled.ToLocalTime():g}" : string.Empty);
-        Transactions.Clear(); foreach (var tx in await _store.SearchTransactionsAsync(accountId: id)) Transactions.Add(tx);
+        Transactions.Clear();
+        foreach (var tx in await _store.SearchTransactionsAsync(accountId: id)) Transactions.Add(tx);
     });
 
     private Task SaveAsync() => RunAsync(async () =>
@@ -70,9 +76,19 @@ public sealed class AccountDetailViewModel : ViewModelBase
             if (!TryParseDecimal(CreditLimit, out var creditMajor) || creditMajor < 0) throw new InvalidOperationException("Enter a valid non-negative credit limit.");
             credit = Money.FromMajorUnits(creditMajor, current.Value.Currency).MinorUnits;
         }
-        var result = await _accounts.UpdateAccountAsync(new AccountUpdateRequest(_accountId, Name, Type, Icon, ColorLabel, Money.FromMajorUnits(opening, current.Value.Currency).MinorUnits, credit, IsCreditCard ? BillingDay : null, State));
+        var result = await _accounts.UpdateAccountAsync(new AccountUpdateRequest(
+            _accountId,
+            Name,
+            Type,
+            Icon,
+            ColorLabel,
+            Money.FromMajorUnits(opening, current.Value.Currency).MinorUnits,
+            credit,
+            IsCreditCard ? BillingDay : null,
+            State));
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        Status = "Account settings saved."; await LoadAsync(_accountId);
+        Status = "Account settings saved.";
+        await LoadAsync(_accountId);
     });
 
     private Task ArchiveOrRestoreAsync() => RunAsync(async () =>
@@ -84,5 +100,7 @@ public sealed class AccountDetailViewModel : ViewModelBase
         Status = wasArchived ? "Account restored." : "Account archived. Existing transactions were preserved.";
     });
 
-    private static bool TryParseDecimal(string value, out decimal result) => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result) || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
+    private static bool TryParseDecimal(string value, out decimal result)
+        => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result)
+           || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
 }
