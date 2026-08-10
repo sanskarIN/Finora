@@ -5,15 +5,17 @@ namespace Finora.Infrastructure;
 public sealed class PrivacyLogger(string directory) : IPrivacyLogger
 {
     private const long MaximumLogBytes = 512 * 1024;
+    private const string CurrentFileName = "finora-diagnostic.log";
+    private const string PreviousFileName = "finora-diagnostic.previous.log";
     private readonly string _directory = Path.GetFullPath(directory);
-    private readonly string _path = Path.Combine(Path.GetFullPath(directory), "finora-diagnostic.log");
-    private readonly string _previousPath = Path.Combine(Path.GetFullPath(directory), "finora-diagnostic.previous.log");
+    private readonly string _path = Path.Combine(Path.GetFullPath(directory), CurrentFileName);
+    private readonly string _previousPath = Path.Combine(Path.GetFullPath(directory), PreviousFileName);
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     public void Information(string eventName, IReadOnlyDictionary<string, object?>? properties = null)
     {
-        // Intentionally ignore caller-supplied properties. This logger is designed for
-        // event/type diagnostics only so private finance values cannot accidentally be serialized.
+        // Caller properties are intentionally ignored. Diagnostics contain only bounded
+        // event/type tokens so finance values cannot accidentally be serialized.
         _ = WriteAsync("INFO", SanitizeToken(eventName));
     }
 
@@ -28,9 +30,10 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            Directory.CreateDirectory(_directory);
+            EnsureSafeStorage();
             if (!File.Exists(_path))
                 await File.WriteAllTextAsync(_path, string.Empty, cancellationToken).ConfigureAwait(false);
+            PathSafety.EnsureNotLinkIfExists(_path, "Diagnostic log cannot be a symbolic link or reparse point.");
             return _path;
         }
         finally
@@ -43,10 +46,10 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
     {
         try
         {
-            Directory.CreateDirectory(_directory);
             await _gate.WaitAsync().ConfigureAwait(false);
             try
             {
+                EnsureSafeStorage();
                 RotateIfNeeded();
                 var line = $"{DateTimeOffset.UtcNow:O}|{level}|{eventToken}{Environment.NewLine}";
                 await File.AppendAllTextAsync(_path, line).ConfigureAwait(false);
@@ -56,10 +59,18 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
                 _gate.Release();
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ObjectDisposedException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ObjectDisposedException or InvalidDataException)
         {
             // Diagnostics must never crash or block core finance workflows.
         }
+    }
+
+    private void EnsureSafeStorage()
+    {
+        Directory.CreateDirectory(_directory);
+        PathSafety.EnsureNotLinkIfExists(_directory, "Diagnostic directory cannot be a symbolic link or reparse point.");
+        PathSafety.EnsureNoLinkTraversal(_directory, _path, "Diagnostic log path is invalid.");
+        PathSafety.EnsureNoLinkTraversal(_directory, _previousPath, "Previous diagnostic log path is invalid.");
     }
 
     private void RotateIfNeeded()
@@ -69,8 +80,9 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
 
         try
         {
-            if (File.Exists(_previousPath))
-                File.Delete(_previousPath);
+            PathSafety.EnsureNotLinkIfExists(_path, "Diagnostic log cannot be a symbolic link or reparse point.");
+            PathSafety.EnsureNotLinkIfExists(_previousPath, "Previous diagnostic log cannot be a symbolic link or reparse point.");
+            if (File.Exists(_previousPath)) File.Delete(_previousPath);
             File.Move(_path, _previousPath);
         }
         catch (IOException)
@@ -81,13 +93,15 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
         {
             // Logging remains best-effort and must not affect finance operations.
         }
+        catch (InvalidDataException)
+        {
+            // Linked/tampered diagnostic paths are never followed.
+        }
     }
 
     private static string SanitizeToken(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return "event";
-
+        if (string.IsNullOrWhiteSpace(value)) return "event";
         var safe = new string(value
             .Where(character => char.IsAsciiLetterOrDigit(character) || character is '.' or '_' or '-')
             .Take(100)
