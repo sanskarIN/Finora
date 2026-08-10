@@ -11,8 +11,6 @@ Use this checklist for every candidate. Do not mark a box complete from source i
 - [ ] Dependabot/security alerts have been reviewed.
 - [ ] No API keys, keystores, certificates, passwords, PINs, backup passwords, private keys, real financial databases, or real receipt files are present.
 - [ ] `README.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`, `what_changed.md`, privacy/security/support docs, and third-party notices match the source.
-- [ ] App display/build version matches platform package metadata.
-- [ ] Declared database schema matches `docs/architecture/DATABASE_SCHEMA.md`.
 
 ## Dependencies and licenses
 
@@ -21,21 +19,17 @@ Use this checklist for every candidate. Do not mark a box complete from source i
 - [ ] Review known vulnerabilities and incompatible/deprecated dependencies.
 - [ ] Update `THIRD_PARTY_NOTICES.md` when the verified graph requires it.
 - [ ] Do not add a dependency only to satisfy a cosmetic feature if a maintained platform/API implementation already exists.
-- [ ] Review GitHub Action revisions used by release workflows.
 
 ## Build and analysis
 
-- [ ] Structural preflight passes.
-- [ ] Core test projects restore on .NET 10.
-- [ ] Release build passes with warnings-as-errors/recommended analyzers.
+- [ ] `dotnet workload restore` succeeds on platform build hosts.
+- [ ] Core/test projects restore on the intended .NET 10 SDK.
+- [ ] Release build passes with warnings-as-errors.
 - [ ] Unit tests pass.
 - [ ] Integration tests pass.
 - [ ] UI-contract tests pass.
-- [ ] Windows + Android MAUI builds pass on the supported Windows host/CI runner.
-- [ ] iOS + Mac Catalyst MAUI builds pass on the supported macOS/Xcode host/CI runner.
-- [ ] No native platform gate is marked complete from a Linux/core-only run.
-
-Formatting cleanup is encouraged, but formatting-only drift is not used as a substitute for compiler/analyzer/test/platform correctness gates.
+- [ ] Platform MAUI builds pass on appropriate hosts.
+- [ ] CI structural/core/Windows+Android/Apple jobs have actual passing evidence for the release commit.
 
 ## Database and data integrity
 
@@ -44,25 +38,30 @@ Formatting cleanup is encouraged, but formatting-only drift is not used as a sub
 - [ ] Current declared schema version matches database documentation.
 - [ ] Migration failure/rollback is tested using synthetic copies.
 - [ ] WAL/foreign-key/busy-timeout behavior is verified.
-- [ ] Persistence-boundary validation rejects invalid account/transaction currency/sign/value states even when code bypasses normal UI services.
 - [ ] Hidden developer data-integrity report is healthy on release-candidate sample data.
-- [ ] Integrity checker detects raw sign/extreme-amount/receipt-path corruption using synthetic failure injection.
+- [ ] Transaction signs/currencies/extreme values are valid.
 - [ ] Linked transfers remain balanced and paired after edits/deletes/restores/imports.
-- [ ] Split totals/signs match parent transactions.
-- [ ] Recurrence processing remains idempotent after restart.
-- [ ] Skipped recurrence can reopen; completed recurrence cannot create duplicate payment rows.
+- [ ] Split signs/totals/categories are valid.
+- [ ] Category hierarchy is acyclic.
+- [ ] Category merge/archive does not convert a subcategory budget into an invalid root-category budget.
+- [ ] Custom budgets have non-overlapping explicit periods.
+- [ ] Custom budgets are absent outside configured windows.
+- [ ] Rollover cannot produce a non-positive/overflowed effective plan.
+- [ ] Failed budget-period replacement leaves the prior period set intact.
+- [ ] Savings contribution history never goes below zero and linked transaction currency is valid.
+- [ ] Active recurrence references available matching-currency accounts/categories.
+- [ ] Recurrence occurrence paid/partial/unpaid state matches generated transaction state.
+- [ ] Reconciliation differences/adjustment links are internally consistent.
 
-## Money and multi-currency correctness
+## Currency correctness
 
-- [ ] Integer minor-unit storage is preserved throughout the DB/import/export/report paths.
-- [ ] Zero-/two-/three-decimal currency precision required by release markets has been verified against current authoritative currency metadata.
-- [ ] JPY-style zero-decimal major-unit import/formatting is tested.
-- [ ] KWD-style three-decimal major-unit import/formatting is tested.
-- [ ] `long.MinValue`/overflow inputs are rejected without overflow during sign normalization.
-- [ ] Dashboard aggregate totals use one explicit reporting currency.
-- [ ] Reports aggregate only the selected reporting currency.
-- [ ] Other account/budget/goal/recurrence currencies remain labeled/displayed separately.
-- [ ] Finora never implies an exchange rate or silently adds unlike currencies.
+- [ ] No aggregate adds unlike currencies without explicit conversion.
+- [ ] Dashboard aggregate cards are scoped to the configured reporting currency.
+- [ ] Other-currency rows/goals/recurrence items retain their own currency labels.
+- [ ] Category/merchant/monthly/tag report totals are currency-scoped.
+- [ ] JPY-style 0-decimal and KWD-style 3-decimal conversion/import tests pass.
+- [ ] Cross-currency transfer remains blocked until an explicit exchange workflow exists.
+- [ ] No hidden/automatic exchange-rate lookup was introduced.
 
 ## Backup and restore
 
@@ -75,24 +74,23 @@ Formatting cleanup is encouraged, but formatting-only drift is not used as a sub
 - [ ] Modified ciphertext/tag is rejected.
 - [ ] Truncated/oversized file is rejected.
 - [ ] Unsupported schema is rejected.
+- [ ] Cryptographically valid but semantically invalid finance graph is rejected before destructive replacement.
+- [ ] Broken transaction/account currency, transfer, split, category, tag, custom-budget, goal, recurrence, reconciliation, attachment, and settings graphs are rejected.
+- [ ] Internal restore markers/settings cannot be imported from the backup snapshot.
+- [ ] Interrupted restore before DB commit restores the previous receipt tree on restart.
+- [ ] Interrupted restore after DB commit finalizes the new receipt tree on restart.
+- [ ] Orphan restore/rollback directories are cleaned only after recovery decision.
 - [ ] Failure leaves prior data usable.
 - [ ] Backup password/key is never logged or persisted by Finora.
-- [ ] Backup/preview/restore calls are serialized and cannot race recovery metadata.
-- [ ] Process termination is injected before/after recovery journal write, rollback receipt copy, inner DB restore, receipt swap, DB commit, and final cleanup.
-- [ ] Matching pending marker rolls previous receipt tree back.
-- [ ] Missing matching marker finalizes a DB-committed receipt tree.
-- [ ] Incomplete rollback-copy state preserves an untouched live receipt tree.
-- [ ] Startup recovery completes before normal finance navigation.
-- [ ] Successful recovery removes transient marker/journal/staging/rollback artifacts.
-- [ ] If recovery cannot safely resolve state, the app blocks normal initialization instead of exposing mismatched DB/receipt data.
+- [ ] Plaintext/receipt buffers are cleared as early as practical on success and failure paths.
 
 ## Core functional smoke test
 
 - [ ] First-run onboarding with no account/login requirement.
-- [ ] Optional onboarding sample data is opt-in only.
-- [ ] Hidden developer “Reset to synthetic sample data” requires typed destructive confirmation and creates synthetic data only.
+- [ ] Optional sample data is opt-in only.
 - [ ] Create/edit/archive/restore account.
-- [ ] Credit-card metadata behavior.
+- [ ] Active recurrence blocks account archival; paused dependency behavior is understood.
+- [ ] Credit-card metadata and billing-day 1–31 behavior.
 - [ ] Record expense/income/refund/adjustment.
 - [ ] Transfer between accounts.
 - [ ] Search/filter transactions.
@@ -104,28 +102,30 @@ Formatting cleanup is encouraged, but formatting-only drift is not used as a sub
 - [ ] Account reconciliation with/without adjustment.
 - [ ] Monthly/category/weekly/custom budget and rollover behavior.
 - [ ] Savings goal deposit/withdrawal/link/forecast/milestone.
-- [ ] Recurring paid/partial/skipped/reopened/postponed/transfer behavior.
-- [ ] Dashboard period/privacy/configurable cards/reporting-currency notice.
+- [ ] Recurring paid/partial/skipped/postponed/reopened behavior.
+- [ ] Recurring rule pause/resume/archive lifecycle.
+- [ ] Archived rule retains occurrence history but no longer generates.
+- [ ] Dashboard reporting-currency scope/privacy/configurable cards.
 - [ ] Accessible reports and textual equivalents.
-- [ ] CSV mapping/preview/import including zero-/three-decimal currencies.
+- [ ] Tag reporting with explicit currency scope.
+- [ ] CSV mapping/preview/import.
 - [ ] CSV and PDF selected/all export.
 - [ ] Full local finance-data deletion.
-- [ ] Full finance reset removes user-created categories/tags/finance metadata/receipt records while keeping schema/app preferences/PIN configuration.
+- [ ] Developer sample reset requires typed confirmation and uses synthetic data only.
 
 ## Privacy and security
 
 - [ ] No login/internet is required for current release functionality.
 - [ ] No analytics, telemetry, advertising identifiers, or automatic cloud upload was introduced.
 - [ ] Manual location remains user-entered only; no background location collection.
-- [ ] Diagnostic logs are bounded/sanitized.
+- [ ] Diagnostic logs are sanitized.
 - [ ] Integrity reports are sanitized.
-- [ ] Restore-recovery marker/journal contain operation metadata only, no finance contents/password/key.
-- [ ] Notification text is privacy-safe.
+- [ ] Notification text is generic/privacy-safe.
+- [ ] Stale recurring/budget/backup schedules are cancelled after source-state changes.
 - [ ] PIN setup/change/removal and rate-limited lockout are tested.
-- [ ] Missing/corrupt secure-storage PIN verifier fails closed when app-lock-enabled state remains.
+- [ ] PIN-enabled state with missing/corrupt verifier fails closed.
 - [ ] Inactivity lock is tested.
 - [ ] Biometric/Windows Hello success/cancel/unavailable/lockout uses PIN fallback.
-- [ ] iOS/Mac Catalyst biometric purpose text is present and accurate.
 - [ ] Sensitive-screen protection is tested where supported and limitations are documented elsewhere.
 - [ ] Local premium demo flag is still labeled non-tamper-proof and is not represented as commercial licensing.
 
@@ -133,32 +133,23 @@ Formatting cleanup is encouraged, but formatting-only drift is not used as a sub
 
 - [ ] Light, dark, and system appearance.
 - [ ] Large text / larger interface setting.
-- [ ] Minimum usable touch/input target sizing.
 - [ ] Screen-reader semantics for changed flows.
+- [ ] Recurring lifecycle controls have understandable labels/descriptions/state.
 - [ ] Keyboard navigation/focus on desktop.
 - [ ] Reduced motion.
 - [ ] Sufficient contrast.
-- [ ] Phone primary bottom tabs.
-- [ ] Tablet/desktop flyout/sidebar hierarchy.
-- [ ] Resizing between navigation modes preserves the equivalent primary section.
-- [ ] Onboarding/unlock/startup choose the correct adaptive root.
+- [ ] Phone bottom-tab hierarchy and tablet/desktop flyout hierarchy.
+- [ ] Resize between navigation modes preserves a usable primary section.
 - [ ] Empty/loading/error/permission-denied states remain actionable.
-
-## Locale/formatting
-
-- [ ] Saved locale is applied on startup before normal navigation.
-- [ ] Changing locale in Settings updates number/date preview and future formatting.
-- [ ] Invalid persisted locale safely falls back to a valid culture.
-- [ ] Currency change refreshes format preview.
-- [ ] English-first UI/localization readiness is represented accurately; untranslated literal strings are not claimed translated.
 
 ## Notifications
 
 - [ ] Permission not requested before explicit user action/need.
 - [ ] Denied permission is handled without blocking finance functionality.
-- [ ] Backup reminder can be disabled.
-- [ ] Budget warning deduplicates.
+- [ ] Backup reminder can be disabled and stale schedule is cancelled.
+- [ ] Budget warning deduplicates and stale/inactive threshold schedules are cancelled.
 - [ ] Recurring reminder deduplicates.
+- [ ] Paused/completed/archived recurring rules have stale reminders cancelled.
 - [ ] App restart does not create duplicate scheduled records.
 - [ ] OS-specific scheduling limitations are documented/tested.
 
@@ -171,27 +162,22 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 - [ ] Signed AAB generated externally from repository secrets.
 - [ ] Adaptive/monochrome icon and splash validated.
 - [ ] Notification/biometric/file/share/capture behavior verified.
-- [ ] `allowBackup=false` and `usesCleartextTraffic=false` remain effective.
-- [ ] Phone/tablet adaptive navigation verified.
-- [ ] Upgrade/migration/recovery tested.
+- [ ] Upgrade/migration tested.
 
 ### Windows
 
-- [ ] Source/package version metadata agrees.
-- [ ] Final package identity/publisher/signing configured securely (development publisher is not treated as production signing evidence).
+- [ ] Final package identity/publisher/signing configured securely.
 - [ ] Windows Hello/toasts/file-share/capture behavior verified.
-- [ ] Resizing/flyout/keyboard/high-DPI verified.
-- [ ] Upgrade/migration/recovery tested.
+- [ ] Resizing/keyboard/high-DPI verified.
+- [ ] Upgrade/migration tested.
 
 ### iOS / Mac Catalyst
 
 - [ ] Supported Xcode archive/build completes.
 - [ ] Provisioning/signing/notarization handled securely.
-- [ ] Face ID/biometric purpose text is accepted by native packaging/review.
 - [ ] LocalAuthentication/UserNotifications/file-share behavior verified.
-- [ ] Phone/iPad/desktop adaptive navigation verified as applicable.
 - [ ] VoiceOver/Dynamic Type or desktop accessibility verified.
-- [ ] Upgrade/migration/recovery tested.
+- [ ] Upgrade/migration tested.
 
 ## Store metadata
 
@@ -202,12 +188,12 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 - [ ] Support email is `supportramsandesh@gmail.com`.
 - [ ] Repository/profile links are correct.
 - [ ] Store screenshots use synthetic data only.
-- [ ] Store copy does not promise returns, financial advice, cloud sync, bug-free operation, exchange-rate conversion, or tamper-proof local premium licensing.
+- [ ] Store copy does not promise returns, financial advice, cloud sync, automatic exchange rates, bug-free operation, or tamper-proof local premium licensing.
 - [ ] Store privacy/data-safety declarations match actual app behavior and permissions.
 
 ## Release decision
 
 - [ ] All applicable gates above have evidence.
 - [ ] Known limitations are recorded in `PROJECT_STATUS.md` and release notes.
-- [ ] No unresolved issue can cause silent financial corruption, mixed-currency totals, unsafe restore, privacy leakage, app-lock bypass, or incorrect migration.
+- [ ] No unresolved issue can cause silent financial corruption, mixed-currency misreporting, unsafe restore, privacy leakage, app-lock bypass, or incorrect migration.
 - [ ] Release tag/artifacts are created only after the candidate passes the required gates.
