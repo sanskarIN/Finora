@@ -57,6 +57,65 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
             .ConfigureAwait(false);
     }
 
+    public async Task<Result> PauseRuleAsync(Guid ruleId, CancellationToken cancellationToken = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var rule = await db.RecurrenceRules.SingleOrDefaultAsync(x => x.Id == ruleId, cancellationToken).ConfigureAwait(false);
+        if (rule is null) return Result.Failure("Recurring rule not found.");
+        if (rule.Status == RecurrenceStatus.Paused) return Result.Success();
+        if (rule.Status is RecurrenceStatus.Completed or RecurrenceStatus.Archived)
+            return Result.Failure("Completed or archived recurring rules cannot be paused.");
+
+        rule.Status = RecurrenceStatus.Paused;
+        rule.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        db.AuditEntries.Add(new AuditEntry { EntityType = "RecurrenceRule", EntityId = rule.Id, Action = "Paused" });
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    public async Task<Result> ResumeRuleAsync(Guid ruleId, CancellationToken cancellationToken = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var rule = await db.RecurrenceRules.SingleOrDefaultAsync(x => x.Id == ruleId, cancellationToken).ConfigureAwait(false);
+        if (rule is null) return Result.Failure("Recurring rule not found.");
+        if (rule.Status == RecurrenceStatus.Active) return Result.Success();
+        if (rule.Status != RecurrenceStatus.Paused)
+            return Result.Failure("Only a paused recurring rule can be resumed.");
+
+        try { DomainRules.ValidateRecurrenceRule(rule); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure($"Recurring rule is invalid: {exception.Message}");
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        if (rule.EndsOn is DateOnly endsOn && endsOn < today)
+            return Result.Failure("This recurring rule has already passed its end date and cannot be resumed.");
+        var relationError = await ValidateRuleRelationsAsync(db, rule, cancellationToken).ConfigureAwait(false);
+        if (relationError is not null) return Result.Failure(relationError);
+
+        if (rule.NextDueOn is null) rule.NextDueOn = rule.StartsOn;
+        rule.Status = RecurrenceStatus.Active;
+        rule.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        db.AuditEntries.Add(new AuditEntry { EntityType = "RecurrenceRule", EntityId = rule.Id, Action = "Resumed" });
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
+    public async Task<Result> ArchiveRuleAsync(Guid ruleId, CancellationToken cancellationToken = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var rule = await db.RecurrenceRules.SingleOrDefaultAsync(x => x.Id == ruleId, cancellationToken).ConfigureAwait(false);
+        if (rule is null) return Result.Failure("Recurring rule not found.");
+        if (rule.Status == RecurrenceStatus.Archived) return Result.Success();
+
+        rule.Status = RecurrenceStatus.Archived;
+        rule.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        db.AuditEntries.Add(new AuditEntry { EntityType = "RecurrenceRule", EntityId = rule.Id, Action = "Archived" });
+        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+
     public async Task<Result> MarkPaidAsync(Guid occurrenceId, long? paidAmountMinor = null, CancellationToken cancellationToken = default)
     {
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
