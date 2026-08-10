@@ -9,8 +9,8 @@ public sealed class RecurringViewModel : ViewModelBase
 {
     private readonly IFinanceStore _store;
     private readonly IRecurringWorkflowService _workflow;
-    private readonly ILocalNotificationService _notifications;
     private readonly IAppSettingsService _settings;
+    private readonly ReminderCoordinator _reminders;
     private string _name = string.Empty;
     private string _amount = string.Empty;
     private AccountSummary? _account;
@@ -26,20 +26,28 @@ public sealed class RecurringViewModel : ViewModelBase
     private int _reminderMinutesBefore = 60;
     private string _merchant = string.Empty;
     private string _note = string.Empty;
+    private RecurrenceRule? _selectedRule;
     private RecurrenceOccurrenceInfo? _selectedOccurrence;
     private string _paidAmount = string.Empty;
     private DateTime _postponeDate = DateTime.Today.AddDays(1);
     private string _processingResult = string.Empty;
 
-    public RecurringViewModel(IFinanceStore store, IRecurringWorkflowService workflow, ILocalNotificationService notifications, IAppSettingsService settings)
+    public RecurringViewModel(
+        IFinanceStore store,
+        IRecurringWorkflowService workflow,
+        IAppSettingsService settings,
+        ReminderCoordinator reminders)
     {
         _store = store;
         _workflow = workflow;
-        _notifications = notifications;
         _settings = settings;
+        _reminders = reminders;
         RefreshCommand = new AsyncCommand(LoadAsync);
         AddCommand = new AsyncCommand(AddAsync);
         ProcessNowCommand = new AsyncCommand(ProcessNowAsync);
+        PauseRuleCommand = new AsyncCommand(PauseRuleAsync);
+        ResumeRuleCommand = new AsyncCommand(ResumeRuleAsync);
+        ArchiveRuleCommand = new AsyncCommand(ArchiveRuleAsync);
         MarkPaidCommand = new AsyncCommand(MarkPaidAsync);
         SkipCommand = new AsyncCommand(SkipAsync);
         PostponeCommand = new AsyncCommand(PostponeAsync);
@@ -68,27 +76,26 @@ public sealed class RecurringViewModel : ViewModelBase
     public int ReminderMinutesBefore { get => _reminderMinutesBefore; set => SetProperty(ref _reminderMinutesBefore, Math.Clamp(value, 0, 10080)); }
     public string Merchant { get => _merchant; set => SetProperty(ref _merchant, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-
+    public RecurrenceRule? SelectedRule { get => _selectedRule; set => SetProperty(ref _selectedRule, value); }
     public RecurrenceOccurrenceInfo? SelectedOccurrence
     {
         get => _selectedOccurrence;
         set
         {
-            if (!SetProperty(ref _selectedOccurrence, value)) return;
-            OnPropertyChanged(nameof(CanReopenSelectedOccurrence));
-            if (value is null) return;
-            PaidAmount = new Money(value.AmountMinor, value.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture);
+            if (!SetProperty(ref _selectedOccurrence, value) || value is null) return;
+            PaidAmount = new Money(value.AmountMinor, value.Currency).ToMajorUnits().ToString($"N{CurrencyMinorUnits.GetDecimalPlaces(value.Currency)}", CultureInfo.CurrentCulture);
             PostponeDate = (value.PostponedTo ?? value.DueOn).ToDateTime(TimeOnly.MinValue).AddDays(1);
         }
     }
-
-    public bool CanReopenSelectedOccurrence => SelectedOccurrence?.Status == OccurrenceStatus.Skipped;
     public string PaidAmount { get => _paidAmount; set => SetProperty(ref _paidAmount, value); }
     public DateTime PostponeDate { get => _postponeDate; set => SetProperty(ref _postponeDate, value.Date); }
     public string ProcessingResult { get => _processingResult; private set => SetProperty(ref _processingResult, value); }
     public System.Windows.Input.ICommand RefreshCommand { get; }
     public System.Windows.Input.ICommand AddCommand { get; }
     public System.Windows.Input.ICommand ProcessNowCommand { get; }
+    public System.Windows.Input.ICommand PauseRuleCommand { get; }
+    public System.Windows.Input.ICommand ResumeRuleCommand { get; }
+    public System.Windows.Input.ICommand ArchiveRuleCommand { get; }
     public System.Windows.Input.ICommand MarkPaidCommand { get; }
     public System.Windows.Input.ICommand SkipCommand { get; }
     public System.Windows.Input.ICommand PostponeCommand { get; }
@@ -141,25 +148,36 @@ public sealed class RecurringViewModel : ViewModelBase
             Note = string.IsNullOrWhiteSpace(Note) ? null : Note.Trim()
         };
         await _store.SaveRecurrenceRuleAsync(rule);
-
-        if (_settings.NotificationsEnabled)
-        {
-            var triggerLocal = StartsOn.Date.AddHours(9).AddMinutes(-ReminderMinutesBefore);
-            var trigger = new DateTimeOffset(DateTime.SpecifyKind(triggerLocal, DateTimeKind.Local)).ToUniversalTime();
-            if (trigger > DateTimeOffset.UtcNow)
-                await _notifications.ScheduleAsync(LocalReminderKind.RecurringItem, Name.Trim(), "A recurring Finora item is approaching.", trigger, $"recurrence:{rule.Id}");
-        }
-
         Name = Amount = Merchant = Note = string.Empty;
+        SelectedRule = rule;
+        await SyncRemindersIfEnabledAsync();
         await LoadRulesCoreAsync();
         await LoadOccurrencesCoreAsync();
+        ProcessingResult = "Recurring item saved.";
     });
 
     private Task ProcessNowAsync() => RunAsync(async () =>
     {
         var count = await _store.ProcessDueRecurrencesAsync(DateOnly.FromDateTime(DateTime.Today));
         ProcessingResult = $"Prepared {count} due occurrence(s). No transaction is created until you mark an occurrence paid.";
+        await SyncRemindersIfEnabledAsync();
         await LoadRulesCoreAsync();
+        await LoadOccurrencesCoreAsync();
+    });
+
+    private Task PauseRuleAsync() => ChangeRuleStateAsync(_workflow.PauseRuleAsync, "Recurring rule paused.");
+    private Task ResumeRuleAsync() => ChangeRuleStateAsync(_workflow.ResumeRuleAsync, "Recurring rule resumed.");
+    private Task ArchiveRuleAsync() => ChangeRuleStateAsync(_workflow.ArchiveRuleAsync, "Recurring rule archived. Existing occurrence history was preserved.");
+
+    private Task ChangeRuleStateAsync(Func<Guid, CancellationToken, Task<Finora.Shared.Result>> change, string successMessage) => RunAsync(async () =>
+    {
+        if (SelectedRule is null) throw new InvalidOperationException("Choose a recurring rule.");
+        var selectedId = SelectedRule.Id;
+        var result = await change(selectedId, CancellationToken.None);
+        if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
+        ProcessingResult = successMessage;
+        await SyncRemindersIfEnabledAsync();
+        await LoadRulesCoreAsync(selectedId);
         await LoadOccurrencesCoreAsync();
     });
 
@@ -201,21 +219,29 @@ public sealed class RecurringViewModel : ViewModelBase
         await LoadOccurrencesCoreAsync();
     });
 
-    private async Task LoadRulesCoreAsync()
+    private async Task LoadRulesCoreAsync(Guid? preferredId = null)
     {
+        var selectedId = preferredId ?? SelectedRule?.Id;
         Rules.Clear();
         foreach (var rule in await _store.GetRecurrenceRulesAsync()) Rules.Add(rule);
+        SelectedRule = Rules.FirstOrDefault(x => x.Id == selectedId) ?? Rules.FirstOrDefault();
     }
 
     private async Task LoadOccurrencesCoreAsync()
     {
+        var selectedId = SelectedOccurrence?.Id;
         Occurrences.Clear();
         foreach (var occurrence in await _workflow.GetOccurrencesAsync(DateOnly.FromDateTime(DateTime.Today.AddMonths(-1)), DateOnly.FromDateTime(DateTime.Today.AddMonths(6)), true))
             Occurrences.Add(occurrence);
-        SelectedOccurrence = Occurrences.FirstOrDefault(x => x.Status is OccurrenceStatus.Pending or OccurrenceStatus.Postponed or OccurrenceStatus.PartiallyPaid);
+        SelectedOccurrence = Occurrences.FirstOrDefault(x => x.Id == selectedId)
+            ?? Occurrences.FirstOrDefault(x => x.Status is OccurrenceStatus.Pending or OccurrenceStatus.Postponed or OccurrenceStatus.PartiallyPaid or OccurrenceStatus.Skipped)
+            ?? Occurrences.FirstOrDefault();
     }
 
+    private Task SyncRemindersIfEnabledAsync()
+        => _settings.NotificationsEnabled ? _reminders.SyncAsync() : Task.CompletedTask;
+
     private static bool TryParse(string value, out decimal result)
-        => decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out result) ||
-           decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+        => decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out result)
+           || decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
 }
