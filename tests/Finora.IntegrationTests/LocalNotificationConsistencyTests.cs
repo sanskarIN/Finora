@@ -43,7 +43,7 @@ public sealed class LocalNotificationConsistencyTests : IAsyncLifetime
             DateTimeOffset.UtcNow.AddMinutes(10),
             "backup:weekly");
         Assert.True(first.IsSuccess);
-        var originalId = first.Value!.Value;
+        var originalId = first.Value;
 
         _gateway.FailScheduling = true;
         var replacement = await _service.ScheduleAsync(
@@ -72,7 +72,7 @@ public sealed class LocalNotificationConsistencyTests : IAsyncLifetime
             DateTimeOffset.UtcNow.AddMinutes(10),
             "recurring:test");
         Assert.True(first.IsSuccess);
-        var originalId = first.Value!.Value;
+        var originalId = first.Value;
 
         var second = await _service.ScheduleAsync(
             LocalReminderKind.RecurringItem,
@@ -81,7 +81,7 @@ public sealed class LocalNotificationConsistencyTests : IAsyncLifetime
             DateTimeOffset.UtcNow.AddMinutes(20),
             "recurring:test");
         Assert.True(second.IsSuccess);
-        var replacementId = second.Value!.Value;
+        var replacementId = second.Value;
 
         await using var db = await _factory.CreateDbContextAsync();
         var rows = await db.NotificationSchedules.AsNoTracking().OrderBy(x => x.CreatedAtUtc).ToListAsync();
@@ -102,7 +102,7 @@ public sealed class LocalNotificationConsistencyTests : IAsyncLifetime
             DateTimeOffset.UtcNow.AddMinutes(10),
             "generic:test");
         Assert.True(scheduled.IsSuccess);
-        var id = scheduled.Value!.Value;
+        var id = scheduled.Value;
         _gateway.ThrowOnCancel = true;
 
         await _service.CancelAsync(id);
