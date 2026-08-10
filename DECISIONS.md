@@ -6,7 +6,9 @@ This file records architectural choices that should not be silently changed by l
 
 Persist monetary amounts as signed 64-bit integer minor units plus currency code. Parse/format user-entered major units with `decimal`. Do not introduce `float`/`double` money arithmetic.
 
-Reason: binary floating point is inappropriate for financial correctness and can create silent rounding drift.
+Currency precision is resolved from the currency code. Do not assume every currency has two decimal places.
+
+Reason: binary floating point and a universal two-decimal assumption are both unsafe for financial correctness.
 
 ## 2. SQLite is the current local system of record
 
@@ -30,13 +32,19 @@ Cross-currency movement is **not** emulated by this model and requires a future 
 
 Persist a unique occurrence for `(RecurrenceRuleId, DueOn)`. Due processing must not blindly create finance transactions. Paid/partial-paid workflow creates the transaction once.
 
-Reason: repeated startup/scheduler runs must not duplicate obligations or money movement.
+Recurring rules have explicit lifecycle state. Active rules can be paused, paused rules can be resumed only after their current account/category/currency dependencies are revalidated, and archived rules preserve occurrence history without continuing generation.
+
+Reason: repeated startup/scheduler runs and lifecycle changes must not duplicate obligations or silently target unavailable accounts.
 
 ## 6. Backups use established authenticated cryptography
 
 Encrypted backups use password-derived keys with PBKDF2-SHA256 and AES-GCM authenticated encryption. Never invent a Finora encryption primitive.
 
 Receipt bytes are validated/staged during backup/restore and restore uses transactional/rollback controls.
+
+Authenticated encryption proves that a backup has not been modified without the password, but it does not prove that the authenticated snapshot contains a valid Finora financial graph. Therefore authenticated snapshots must pass domain/relation validation before preview/restore.
+
+Sensitive plaintext and receipt byte buffers must be cleared as early as practical after use, including validation-failure paths.
 
 ## 7. Backup upload is explicit-user-only
 
@@ -45,6 +53,8 @@ Finora may create an encrypted backup locally and invoke the system share/save s
 ## 8. Receipts live in app-private files, not database BLOB columns
 
 Store receipt/document bytes under app-private attachment storage and keep path/type/size/checksum metadata in SQLite. Confine paths to the attachment root and verify SHA-256 where integrity matters.
+
+Path confinement must use platform-correct path comparison semantics. Windows paths are case-insensitive; Unix-style Android/Apple paths are case-sensitive.
 
 Reason: large file lifecycle/storage is easier to control without bloating routine relational queries/backups of the raw DB file.
 
@@ -64,9 +74,13 @@ Persist reminder schedules/dedupe keys separately from OS scheduling APIs. Platf
 
 Notification content stays generic because it can appear outside Finora's app lock.
 
+Pausing/archiving/completing a recurring rule, disabling a reminder, or removing an active budget condition must remove stale native schedules instead of leaving an obsolete reminder registered with the OS.
+
 ## 12. Biometrics/Windows Hello do not replace PIN fallback
 
 Biometric unlock can be enabled only with a configured Finora PIN. Cancellation/unavailability/lockout returns to PIN rather than bypassing the app lock.
+
+PIN verification fails closed when secure-storage verifier material is missing or corrupt while PIN-enabled state is present.
 
 ## 13. Capture protection is platform-capability-based
 
@@ -86,76 +100,66 @@ Current charts use MAUI drawing + textual equivalents; notification/biometric pl
 
 A visual chart cannot be the only representation of financial meaning. Expose equivalent labels/tables/summaries and avoid misleading scales.
 
-## 17. Local premium is not secure licensing
+## 17. Financial aggregation is currency-scoped
+
+Never add monetary values from different currencies and then label the total as one currency unless a reviewed exchange-rate workflow explicitly performed that conversion.
+
+Dashboard/report/tag totals are scoped to a chosen reporting currency. Rows that naturally belong to another currency retain their own currency display. Finora currently does not invent or silently fetch exchange rates.
+
+## 18. Category reporting follows split allocations
+
+If a transaction has category splits, category/budget reporting uses the split allocations rather than double-counting or attributing the full parent amount to its top-level category.
+
+Category-budget descendants are resolved recursively, not only one level deep.
+
+## 19. Budget period semantics are centralized
+
+`BudgetPeriodPolicy` is the shared source for resolving effective budget windows.
+
+- weekly generated windows run Monday through Sunday;
+- monthly generated windows use calendar months;
+- explicit periods take precedence;
+- rollover affects planned amount only when enabled;
+- effective planned amount must remain positive;
+- explicit periods cannot overlap;
+- custom-cadence budgets are active only inside an explicit period and must not invent fallback one-day periods.
+
+Replacing persisted explicit periods must be transactional so a failed replacement does not erase the previously valid period set.
+
+## 20. Local premium is not secure licensing
 
 The current local premium flag is a development/demo capability. It is explicitly not tamper-proof. Commercial entitlement needs future store/server validation and must not be faked by obfuscating a local boolean.
 
-## 18. Diagnostics are privacy-safe by design
+## 21. Diagnostics are privacy-safe by design
 
 Diagnostic logs and integrity reports must exclude account names, merchant/payee names, notes, amounts, manually entered locations, receipt names/contents, PINs, backup passwords, and cryptographic/signing secrets.
 
-## 19. Data integrity is independently checkable
+## 22. Data integrity is independently checkable
 
-Provide an on-device privacy-safe diagnostic for SQLite integrity, foreign keys, transfer pairs, split totals, category cycles, recurrence references, and receipt path/size/hash state.
+Provide an on-device privacy-safe diagnostic for SQLite integrity, foreign keys, transaction/account currency, transfer pairs, split totals, category cycles, budget configuration/category relationships, savings contribution histories, recurrence rule/payment state, reconciliation links, and receipt path/size/hash state.
 
 Reason: source-level validation is not enough for a long-lived local financial database.
 
-## 20. System pickers/share sheets are explicit trust-boundary transitions
+## 23. System pickers/share sheets are explicit trust-boundary transitions
 
 Import/export/backup/receipt operations use system selection/share surfaces after user action. Once exported/shared to another destination, protection depends on the user-selected app/location.
 
-## 21. Warnings and analyzers are quality gates
+## 24. Warnings and analyzers are quality gates
 
 Nullable reference types, warnings-as-errors, deterministic builds, and latest-recommended analysis are repository defaults. Broad analyzer disabling is not an acceptable shortcut.
 
-## 22. Structural preflight does not replace compilation
+## 25. Structural preflight does not replace compilation
 
-`build/scripts/verify_structure.py` exists so malformed XAML/project wiring can be caught without a .NET SDK. A passing preflight is not evidence that C# compiles or a MAUI platform works.
+`build/scripts/verify_structure.py` exists so malformed XAML/project wiring, project references, version/schema drift, required repository files, money-representation violations, and selected privacy/platform contract errors can be caught without a .NET SDK. A passing preflight is not evidence that C# compiles or a MAUI platform works.
 
-## 23. Platform behavior requires platform validation
+## 26. Platform behavior requires platform validation
 
 Notification scheduling, biometric APIs, screen-capture controls, file picker/share behavior, packaging, signing, accessibility, and store behavior require builds/tests on the matching platform.
 
-## 24. Signing secrets stay outside the repository
+## 27. Signing secrets stay outside the repository
 
 Keystores, private keys, certificates, provisioning profiles containing secrets, and passwords belong in secure release infrastructure—not Git history.
 
-## 25. Open source license remains Apache-2.0
+## 28. Open source license remains Apache-2.0
 
 Finora source is Apache-2.0 licensed. Third-party dependencies retain their own licenses and require exact release-time dependency/license review.
-
-## 26. Currency precision is currency-aware
-
-Stored values remain integer minor units, but major/minor conversion and formatting use currency-specific decimal precision where Finora has built-in metadata. Zero-decimal and three-decimal currencies are not forced through a two-decimal assumption.
-
-Release QA must verify the built-in currency precision table against the currency metadata required by the targeted release markets. No exchange-rate conversion is implied by this metadata.
-
-## 27. Unlike currencies are never silently aggregated
-
-Dashboards and aggregate reports use an explicit reporting currency. Accounts, budgets, goals, transactions, and recurrence rows with another currency retain that currency and are displayed separately rather than converted or added together.
-
-Finora does not invent exchange rates. A future cross-currency aggregate requires an explicit exchange-rate source, timestamp semantics, user disclosure, and a new architecture decision.
-
-## 28. Restore spans SQLite and receipt files through a recovery protocol
-
-Encrypted restore touches both the relational database and app-private attachment files, so a SQLite transaction alone is insufficient for crash safety. Production restore uses a durable app-private recovery journal, a transient `internal.restore.commit` marker, a verified pre-restore receipt copy, and startup recovery.
-
-If the pending marker remains, the database replacement did not commit and receipt files roll back. If the marker was removed by the committed restore transaction, startup finalizes the new receipt tree. Recovery metadata contains no backup password or financial contents.
-
-## 29. Primary navigation adapts by device class and width
-
-Phones use bottom primary tabs. Tablet/desktop layouts expose the equivalent primary hierarchy through a flyout/sidebar. Route helpers keep onboarding, unlock, startup, and resize transitions on the correct root without changing finance state.
-
-Native resize, keyboard, focus, and accessibility behavior remain platform-release validation requirements.
-
-## 30. Locale preference controls runtime formatting
-
-The saved locale is validated and applied to process/thread culture before normal UI navigation. Date and number formatting follows the active culture while stored money remains integer minor units and stored timestamps remain explicit UTC/date values as designed.
-
-Localization readiness does not mean every literal UI string has already been translated; translation completeness is a separate release concern.
-
-## 31. Destructive reset and sample reset have distinct guarantees
-
-“Delete all local finance data” removes finance-domain records, audit/backup metadata, reminder records, and receipt metadata/files while preserving schema metadata, app preferences, and app-lock configuration.
-
-The hidden developer “Reset to synthetic sample data” action first performs the same safe finance reset, then creates a deterministic synthetic dataset. It requires an explicit typed confirmation and must never silently overwrite real local finance data.
