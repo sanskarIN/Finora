@@ -41,6 +41,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<IBiometricService, PlatformBiometricService>();
         builder.Services.AddSingleton<ISensitiveScreenService, SensitiveScreenService>();
         builder.Services.AddSingleton<ReminderCoordinator>();
-        return builder.Build();
+
+        var app = builder.Build();
+        var privacyLogger = app.Services.GetRequiredService<IPrivacyLogger>();
+        AsyncCommand.UnexpectedFailureHandler = exception => privacyLogger.Error(exception, "AsyncCommand.ExecutionFailed");
+        return app;
     }
 }
