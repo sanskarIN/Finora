@@ -37,7 +37,7 @@ public sealed class LockViewModel : ViewModelBase
         var result = await _biometric.AuthenticateAsync("Unlock your local Finora finance data.");
         if (!result.IsSuccess)
         {
-            Status = result.Error ?? "Biometric verification was not completed.";
+            Status = "Biometric verification was not completed. Use your Finora PIN to continue.";
             return;
         }
 
@@ -48,6 +48,7 @@ public sealed class LockViewModel : ViewModelBase
     {
         if (_lock.RemainingLockout > TimeSpan.Zero)
         {
+            Pin = string.Empty;
             UpdateStatus();
             return;
         }
