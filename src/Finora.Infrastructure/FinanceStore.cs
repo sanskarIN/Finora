@@ -53,9 +53,14 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
         }
         else
         {
-            var hasTransactions = await db.Transactions.AnyAsync(x => x.AccountId == account.Id, cancellationToken).ConfigureAwait(false);
-            if (hasTransactions && !string.Equals(existing.Currency, account.Currency, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("Account currency cannot change after financial records exist.");
+            var currencyChanged = !string.Equals(existing.Currency, account.Currency, StringComparison.OrdinalIgnoreCase);
+            if (currencyChanged)
+            {
+                var hasTransactions = await db.Transactions.AnyAsync(x => x.AccountId == account.Id || x.CounterpartyAccountId == account.Id, cancellationToken).ConfigureAwait(false);
+                var hasRecurrence = await db.RecurrenceRules.AnyAsync(x => x.AccountId == account.Id || x.DestinationAccountId == account.Id, cancellationToken).ConfigureAwait(false);
+                if (hasTransactions || hasRecurrence)
+                    throw new InvalidOperationException("Account currency cannot change after financial or recurring records reference the account.");
+            }
             db.Entry(existing).CurrentValues.SetValues(account);
         }
 
@@ -67,6 +72,8 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
     public async Task ArchiveAccountAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        if (await db.RecurrenceRules.AsNoTracking().AnyAsync(rule => rule.Status == RecurrenceStatus.Active && (rule.AccountId == accountId || rule.DestinationAccountId == accountId), cancellationToken).ConfigureAwait(false))
+            throw new InvalidOperationException("Pause, complete, or archive recurring items that use this account before archiving the account.");
         var account = await db.Accounts.SingleAsync(x => x.Id == accountId, cancellationToken).ConfigureAwait(false);
         account.State = AccountState.Archived;
         account.UpdatedAtUtc = DateTimeOffset.UtcNow;
@@ -141,6 +148,14 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
         if (transaction.CategoryId is Guid categoryId &&
             !await db.Categories.AnyAsync(x => x.Id == categoryId && !x.IsArchived, cancellationToken).ConfigureAwait(false))
             throw new InvalidOperationException("Category unavailable.");
+
+        var splitCategoryIds = transaction.Splits.Where(x => x.CategoryId is not null).Select(x => x.CategoryId!.Value).Distinct().ToList();
+        if (splitCategoryIds.Count > 0)
+        {
+            var activeSplitCategories = await db.Categories.CountAsync(x => splitCategoryIds.Contains(x.Id) && !x.IsArchived, cancellationToken).ConfigureAwait(false);
+            if (activeSplitCategories != splitCategoryIds.Count)
+                throw new InvalidOperationException("One or more split categories are unavailable.");
+        }
 
         await using var scope = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         var existing = await db.Transactions
@@ -360,9 +375,9 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
         foreach (var budget in budgets)
         {
             DomainRules.ValidateBudget(budget);
-            var period = ResolveBudgetPeriod(budget, periodDate);
-            var from = new DateTimeOffset(period.Start.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-            var to = new DateTimeOffset(period.End.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+            if (!BudgetPeriodPolicy.TryResolve(budget, periodDate, out var period)) continue;
+            var from = new DateTimeOffset(period.StartsOn.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+            var to = new DateTimeOffset(period.EndsOn.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
             var transactions = await db.Transactions.AsNoTracking()
                 .Include(x => x.Splits)
                 .Where(x => !x.IsDeleted && x.Currency == budget.Currency && x.Type != TransactionType.Transfer && x.OccurredAtUtc >= from && x.OccurredAtUtc < to)
@@ -405,7 +420,7 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
                 }
             }
 
-            snapshots.Add(new BudgetSnapshot(budget.Id, budget.Name, period.Planned, actual, budget.Currency, budget.WarningThresholdPercent));
+            snapshots.Add(new BudgetSnapshot(budget.Id, budget.Name, period.PlannedMinor, actual, budget.Currency, budget.WarningThresholdPercent));
         }
 
         return snapshots;
@@ -413,6 +428,8 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
 
     public async Task<Guid> SaveBudgetAsync(Budget budget, CancellationToken cancellationToken = default)
     {
+        if (budget.Cadence == BudgetCadence.Custom && budget.Periods.Count == 0)
+            throw new InvalidOperationException("Custom budgets require at least one explicit period.");
         DomainRules.ValidateBudget(budget);
         budget.Name = budget.Name.Trim();
         budget.Currency = budget.Currency.Trim().ToUpperInvariant();
@@ -430,8 +447,20 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
         }
 
         var existing = await db.Budgets.SingleOrDefaultAsync(x => x.Id == budget.Id, cancellationToken).ConfigureAwait(false);
-        if (existing is null) db.Budgets.Add(budget);
-        else db.Entry(existing).CurrentValues.SetValues(budget);
+        if (existing is null)
+        {
+            db.Budgets.Add(budget);
+        }
+        else
+        {
+            db.Entry(existing).CurrentValues.SetValues(budget);
+            await db.BudgetPeriods.Where(x => x.BudgetId == existing.Id).ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+            foreach (var period in budget.Periods)
+            {
+                period.BudgetId = existing.Id;
+                db.BudgetPeriods.Add(period);
+            }
+        }
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return budget.Id;
     }
@@ -684,23 +713,4 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
 
     private static string? NormalizeOptional(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-
-    private static (DateOnly Start, DateOnly End, long Planned) ResolveBudgetPeriod(Budget budget, DateOnly date)
-    {
-        var explicitPeriod = budget.Periods.FirstOrDefault(x => x.StartsOn <= date && x.EndsOn >= date);
-        if (explicitPeriod is not null)
-            return (explicitPeriod.StartsOn, explicitPeriod.EndsOn, checked(explicitPeriod.PlannedMinor + (budget.RolloverEnabled ? explicitPeriod.RolloverMinor : 0)));
-        if (budget.Cadence == BudgetCadence.Weekly)
-        {
-            var offset = ((int)date.DayOfWeek + 6) % 7;
-            var start = date.AddDays(-offset);
-            return (start, start.AddDays(6), budget.LimitMinor);
-        }
-        if (budget.Cadence == BudgetCadence.Monthly)
-        {
-            var start = new DateOnly(date.Year, date.Month, 1);
-            return (start, new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)), budget.LimitMinor);
-        }
-        return (date, date, budget.LimitMinor);
-    }
 }
