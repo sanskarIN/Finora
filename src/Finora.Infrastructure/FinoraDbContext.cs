@@ -1,5 +1,6 @@
 using Finora.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Finora.Infrastructure;
 
