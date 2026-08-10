@@ -27,10 +27,11 @@ Current product rules preserved throughout this continuation:
 - no automatic backup upload;
 - no analytics/advertising telemetry dependency added;
 - no background location collection;
-- location remains manually entered transaction text;
+- transaction location remains manually entered text;
 - money remains signed 64-bit integer minor units;
 - user major-unit arithmetic/conversion remains `decimal` based;
-- same-currency transfer model remains explicit; no invented exchange rates;
+- current transfer model remains same-currency only;
+- no automatic exchange-rate lookup or invented FX rate;
 - Apache-2.0 remains the repository license;
 - attribution remains **Made by the Sanskar**.
 
@@ -38,1120 +39,1173 @@ Intentionally later-version boundaries remain:
 
 - remote Finora account/login;
 - cloud synchronization;
-- collaboration/shared remote finance data;
-- mobile-number authentication;
-- server-backed commercial entitlement;
-- automatic exchange-rate conversion.
+- collaboration/shared-finance server flows;
+- server/store-backed commercial entitlement validation;
+- automatic exchange-rate conversion;
+- analytics/advertising telemetry by default.
 
-These are not silently implemented as hidden network dependencies in the current local-first line.
-
----
-
-## 2. Git commit identity limitation
-
-Requested Git commit email: `sanskarin@outlook.in`.
-
-The GitHub connector available in this ChatGPT session can create/update repository content and commits but does **not** expose an author/committer-email override for connector-created commits. Therefore the connector-created commits in this session cannot truthfully be represented as having been forced to `sanskarin@outlook.in`.
-
-For local Git commits, configure:
-
-```bash
-git config user.email "sanskarin@outlook.in"
-```
-
-This limitation remains explicitly documented rather than hidden.
+These are deliberate product boundaries, not silent unfinished claims for the current local-first source line.
 
 ---
 
-## 3. Continuation goal
+## 2. Architecture and repository structure
 
-This continuation concentrated on source correctness/reliability rather than cosmetic expansion. The audit walked through persisted money, account dependencies, recurrence state, budget windows, reporting currency boundaries, backup/restore graphs, app-private path confinement, integrity diagnostics, adaptive UI contracts, platform manifests/APIs, test coverage, and release documentation.
+Current solution projects:
 
-Where an invariant could be bypassed by direct EF/import/restore paths, validation was moved toward shared domain/persistence/backup/integrity boundaries instead of relying only on UI validation.
+- `src/Finora.Shared`
+- `src/Finora.Domain`
+- `src/Finora.Application`
+- `src/Finora.Infrastructure`
+- `src/Finora.App`
+- `tests/Finora.UnitTests`
+- `tests/Finora.IntegrationTests`
+- `tests/Finora.UiTests`
 
----
+Dependency direction remains:
 
-## 4. Platform-correct app-private path confinement
+`App -> Application / Infrastructure -> Domain -> Shared`
 
-### New shared storage-path policy
+Repository engineering remains in place:
 
-Added `src/Finora.Infrastructure/PathSafety.cs`.
-
-The path helper centralizes:
-
-- root normalization;
-- descendant resolution;
-- path traversal rejection;
-- platform-correct path comparison behavior.
-
-Windows is treated with case-insensitive path comparison. Unix-style Android/Apple paths remain case-sensitive.
-
-### Attachment service hardening
-
-`AttachmentService` now uses the shared path policy for receipt/document paths rather than treating every platform as case-insensitive.
-
-### Backup/restore path hardening
-
-Backup attachment path validation and staged restore path resolution use the same policy.
-
-### Restore-journal and integrity path hardening
-
-Restore recovery and integrity diagnostics use the same app-private path semantics, preventing one subsystem from accepting a path another subsystem rejects.
-
-### Tests
-
-Added path-safety regression coverage including sibling-prefix/path traversal behavior and platform-aware comparisons.
-
-Representative commits in this area include:
-
-- `fix(storage): add platform-correct path confinement primitive`
-- `fix(attachments): enforce platform-correct receipt path confinement`
-- backup/restore/integrity path-confinement updates
-- attachment path-safety regression tests.
+- `Finora.sln`;
+- central package versions;
+- warnings-as-errors/latest recommended analysis;
+- structural dependency-free verifier;
+- staged GitHub Actions CI;
+- Dependabot;
+- CodeQL;
+- dependency review;
+- CODEOWNERS;
+- issue templates;
+- PR template;
+- `.gitattributes` / `.gitignore` hardening;
+- legal/privacy/security/support/contribution documentation;
+- release/test/store-readiness documentation.
 
 ---
 
-## 5. Startup/recovery ordering
+## 3. Finance model and monetary invariants
 
-Application activation was hardened so database initialization and restore recovery complete before finance navigation becomes reachable.
+Finora continues to use signed `long` minor units for stored/calculated money.
 
-The startup path now serializes activation work rather than allowing overlapping activation/lifecycle calls to race the database/recovery state.
+Current hardening includes:
 
-This is important because a crash-interrupted restore can leave a durable recovery journal/marker requiring deterministic resolution before pages query finance data or receipt files.
+- no floating-point monetary persistence path;
+- known currency precision handled during decimal major/minor conversion;
+- `long.MinValue` rejected where sign negation/magnitude would be unsafe;
+- checked arithmetic for balances, reports, reconciliations, budgets, goal histories and transfer totals;
+- account currency must match transaction currency;
+- account currency cannot change after transaction or recurrence dependencies exist;
+- unrelated currencies are not silently aggregated;
+- no automatic FX conversion.
 
-Representative commit:
+The legacy aggregate dashboard API fails closed for multi-currency callers; the actual Dashboard UI no longer calls that legacy mixed-currency aggregate path.
 
-- `fix(app): serialize startup initialization and restore recovery before navigation`
-
----
-
-## 6. Domain and persistence invariants
-
-### Transaction invariants
-
-Current domain/persistence checks cover:
-
-- amount cannot be zero;
-- amount cannot be `long.MinValue`;
-- currency must be valid;
-- account ID must be present;
-- transaction timestamp must be present;
-- Expense amount must be negative;
-- Income/Refund amount must be positive;
-- transfer rows require transfer group + counterparty;
-- transfer counterparty cannot equal the row account;
-- non-transfer rows cannot carry transfer linkage;
-- transfer rows cannot contain category splits;
-- split amounts cannot be zero/`long.MinValue`;
-- split sign must match the parent;
-- checked split sum must equal the parent amount.
-
-### Account invariants
-
-Current checks cover:
-
-- account name/currency;
-- billing day 1–31;
-- credit limit nonnegative;
-- credit-card metadata only on credit-card account types.
-
-### Budget invariants
-
-Current checks cover:
-
-- positive budget limit;
-- valid currency;
-- warning threshold 1–100;
-- correct category requirement for Overall/Category/Subcategory kinds;
-- explicit period validity;
-- non-overlapping explicit periods.
-
-### Savings invariants
-
-Current checks cover:
-
-- positive target;
-- starting amount in 0..target;
-- valid currency;
-- contribution/withdrawal nonzero/non-`long.MinValue`;
-- valid contribution timestamp;
-- running progress cannot fall below zero.
-
-### Recurrence invariants
-
-Current checks cover:
-
-- rule name/interval/positive amount/currency;
-- valid source account;
-- start/end date relationship;
-- day-of-month bounds;
-- grace/reminder bounds;
-- no recurring Adjustment template;
-- transfer destination must exist/differ from source;
-- transfer recurrence cannot carry category;
-- non-transfer recurrence cannot carry destination account;
-- next-occurrence movement must advance.
-
-### EF persistence boundary
-
-`FinoraDbContext` validation now acts as an additional protection layer so invalid account/transaction state cannot be committed through tracked EF writes merely because it bypassed the normal ViewModel/service path.
-
-Direct-EF integration tests intentionally exercise this boundary.
+Dashboard/report/tag totals use explicit reporting currency scope.
 
 ---
 
-## 7. Account lifecycle, recurrence dependencies, and reconciliation
+## 4. Accounts and transfers
 
-### Account currency immutability after dependencies
+Current source includes:
 
-Account currency change is rejected after either:
+- account create/edit/archive/restore;
+- account types including cash, bank, credit card, wallet, savings, investment placeholder and custom;
+- opening/current balance;
+- account detail and transaction history;
+- credit-card limit and billing-day metadata;
+- billing day range aligned to 1–31;
+- reconciliation history;
+- paired same-currency transfers;
+- transfer pair zero-sum validation;
+- reciprocal counterparty validation;
+- linked transfer edit/delete/restore behavior;
+- generic single-transaction editing blocked from silently mutating a transfer half.
 
-- transactions reference the account; or
-- recurrence rules reference it as source/destination.
+Additional lifecycle safety:
 
-This prevents historical minor-unit values or recurring templates from being silently reinterpreted under a new currency label.
-
-### Account archival and recurrence
-
-An account used by an **Active** recurring rule cannot be archived until that rule is paused/completed/archived.
-
-Both the account-management service and the direct FinanceStore archive path enforce this boundary.
-
-Paused historical recurrence can remain linked to an archived account, but a future Resume operation must revalidate current dependencies.
-
-### Account editor
-
-Credit-card billing-day editing now consistently supports the domain range 1–31 rather than truncating valid days at 28.
-
-### Reconciliation hardening
-
-Reconciliation now fails closed for:
-
-- invalid dates;
-- arithmetic overflow;
-- unresolved difference without explicit adjustment handling;
-- inconsistent adjustment state.
-
-Reconciled opening-balance changes are protected from silently rewriting already-reconciled history.
-
-### Tests
-
-Added account lifecycle dependency tests covering:
-
-- active recurrence blocks Archive action;
-- state-picker archival is also blocked;
-- paused recurrence permits archival;
-- reconciliation overflow/date behavior;
-- reconciled opening-balance protection.
-
-Representative commits include:
-
-- `fix(accounts): block archival while active recurring rules depend on account`
-- `fix(accounts): allow full domain billing-day range in account editor`
-- `test(accounts): cover recurring dependencies during account archival`
-- reconciliation hardening/tests.
+- active recurring source/destination dependency blocks account archival;
+- paused/completed/archived recurrence history may remain linked to archived accounts;
+- resume revalidates account availability and currency;
+- account currency mutation is blocked once financial/recurring dependencies exist.
 
 ---
 
-## 8. Recurrence occurrence/payment integrity
+## 5. Transactions, splits, tags and revisions
 
-Recurring payment mutation now validates the rule and related account/category state before changing money.
+Implemented transaction paths include:
 
-### Generated ordinary payment checks
+- expense;
+- income;
+- refund;
+- adjustment;
+- transfer pair workflow;
+- decimal-only calculator;
+- account/category/date/time;
+- merchant/payee;
+- payment method;
+- manually entered location;
+- note;
+- advanced filters;
+- detailed editing;
+- privacy-safe revision snapshots;
+- bulk categorization;
+- duplicate review without automatic deletion;
+- splits;
+- tags;
+- receipts;
+- soft delete/restore;
+- selected/all CSV export;
+- selected/all PDF export.
 
-Existing generated payment rows must still:
+Current invariants include:
 
-- exist;
-- remain non-deleted;
-- belong to the same recurrence rule;
-- match rule transaction type;
-- match source account;
-- match currency;
-- not unexpectedly carry transfer linkage.
-
-### Generated recurring transfer checks
-
-Existing transfer payments must still form a complete transfer pair and match the rule's configured source/destination/currency relationships.
-
-### State behavior
-
-- repeated full payment is idempotent when the existing completed state already matches;
-- incompatible mutation of a fully paid occurrence is rejected;
-- a skipped occurrence must be reopened before payment/postponement;
-- full-paid occurrence cannot be skipped/postponed;
-- skipped occurrence has an explicit Reopen transition;
-- payment links are not silently recreated around an inconsistent generated row.
-
-### Tests
-
-State-transition tests cover skip → reopen → paid, repeated full-payment idempotency, generated-link checks, and account availability.
-
----
-
-## 9. Recurring-rule lifecycle completed
-
-The recurrence contract/service/UI now exposes rule lifecycle rather than only occurrence lifecycle.
-
-### Application contract
-
-Added:
-
-- `PauseRuleAsync`;
-- `ResumeRuleAsync`;
-- `ArchiveRuleAsync`.
-
-### Pause
-
-- Active → Paused;
-- Paused is idempotent;
-- Completed/Archived cannot be paused;
-- audit metadata recorded;
-- paused rules do not generate new occurrences.
-
-### Resume
-
-Only Paused rules resume.
-
-Before activation, Resume revalidates:
-
-- domain rule validity;
-- configured end date has not already passed;
-- source account exists/is available;
-- destination account exists/is available where required;
-- account currencies match the rule;
-- referenced category remains active.
-
-### Archive
-
-- transitions rule to Archived;
-- preserves occurrence history;
-- archived rule disappears from active rule listing;
-- repeated archive is idempotent;
-- archived rule cannot be resumed.
-
-### UI
-
-Recurring page now includes:
-
-- selected-rule picker;
-- selected rule status/type/frequency/amount/next-due summary;
-- Pause button;
-- Resume button;
-- Archive button;
-- state-sensitive enablement;
-- accessibility descriptions;
-- existing skipped-occurrence Reopen button.
-
-### Reminder integration
-
-Create/process/pause/resume/archive paths synchronize reminders when notifications are enabled.
-
-### Tests
-
-Added recurring-rule lifecycle integration tests for:
-
-- pause prevents due generation;
-- resume restores generation;
-- archive hides active rule while keeping occurrence history;
-- resume fails after source account becomes archived;
-- resume fails after rule end date;
-- completed/archived rules cannot resume.
-
-Representative commits:
-
-- `feat(recurring): add rule pause resume and archive contracts`
-- `feat(recurring): implement pause resume and archive rule lifecycle`
-- `feat(recurring): add pause resume archive lifecycle commands to viewmodel`
-- `fix(recurring): restore occurrence binding and expose rule lifecycle state`
-- `feat(recurring): add accessible pause resume and archive controls`
-- `test(recurring): cover pause resume archive and due-generation lifecycle`.
+- expense negative;
+- income/refund positive;
+- zero/extreme unsupported amount rejected;
+- transfer linkage only on transfer rows;
+- deletion state must agree with deletion timestamp;
+- split amount nonzero/non-`long.MinValue`;
+- split sign must match parent;
+- split total must equal parent;
+- split categories must be valid/available;
+- transaction revision metadata validated before persistence.
 
 ---
 
-## 10. Reminder synchronization and privacy
+## 6. Categories and tags
 
-Reminder synchronization now treats native schedules as derived state, not append-only state.
+Current functionality includes:
 
-### Backup reminder
+- parent/subcategory create/update;
+- hierarchy cycle prevention;
+- reorder;
+- archive/restore;
+- merge/reassign;
+- unsafe delete/reassign prevention;
+- tag create/update/archive/restore;
+- currency-scoped tag reporting.
 
-If backup reminders are disabled, the stale `backup:weekly` schedule is cancelled.
+Hardening added earlier/currently preserved:
 
-### Budget reminders
-
-- threshold arithmetic avoids multiplying a potentially large minor-unit amount before division;
-- threshold calculation uses checked/overflow-safe decomposition;
-- notification content is generic/privacy-safe;
-- inactive/stale `budget:` dedupe keys are cancelled.
-
-### Recurrence reminders
-
-- only Active rules with a future trigger are scheduled;
-- Paused/Completed/Archived rules cancel stale dedupe schedules;
-- stale recurrence keys no longer present in the active rule set are removed;
-- notification content stays generic and does not contain private merchant/amount/note data.
-
-Representative commit:
-
-- `fix(reminders): synchronize recurring lifecycle and stale local schedules`.
+- subcategory-budget semantics are protected during category archive/merge/reassignment;
+- root-category reassignment cannot silently turn a subcategory budget invalid;
+- tag report uses checked arithmetic;
+- category/tag metadata now participates in Domain/EF persistence validation.
 
 ---
 
-## 11. Category mutation safety
+## 7. Reconciliation
 
-Category archive/merge workflows were hardened around all dependent finance records.
+Reconciliation source includes:
 
-### Reassignment protections
+- preview;
+- book balance;
+- statement balance;
+- explicit difference;
+- optional adjustment transaction;
+- history;
+- note;
+- completed timestamp.
 
-When a `BudgetKind.Subcategory` budget uses the source category, archive/merge cannot reassign that budget to a root category and silently invalidate budget semantics.
+Safety rules:
 
-### Existing protections retained
-
-Category archive/merge continues to handle:
-
-- transactions;
-- transaction splits;
-- budgets;
-- recurrence rules;
-- children;
-- cycle prevention;
-- active/archived state.
-
-### Tests
-
-Added mutation-safety tests for subcategory-budget reassignment/merge and corrected a `Result<Guid>.Value` access mistake caught during the compile-readiness review.
-
-Representative commits:
-
-- category reassignment safety changes;
-- `test(categories): fix Result Guid access in mutation safety suite`.
+- difference is checked `StatementBalanceMinor - BookBalanceMinor`;
+- extreme overflow fails closed;
+- adjustment-state flag and adjustment transaction ID must agree;
+- linked adjustment transaction must be the correct adjustment/account/amount;
+- reconciled opening balance cannot be silently rewritten;
+- persistence boundary and backup graph validator both validate reconciliation metadata.
 
 ---
 
-## 12. Tag reporting now has explicit currency scope
+## 8. Budgets and custom periods
 
-The prior tag-report contract returned money totals without a currency dimension and could therefore combine unlike currencies for the same tag.
+Implemented budget features:
 
-### Contract change
+- overall/category/subcategory;
+- weekly/monthly/custom cadence;
+- explicit periods;
+- warning threshold;
+- rollover;
+- descendant category accounting;
+- split-aware actuals;
+- reminder coordination.
 
-`TagSpendSummary` now includes `Currency`.
+`BudgetPeriodPolicy` centralizes interpretation:
 
-`GetTagReportAsync` now requires an explicit currency argument.
-
-### Infrastructure change
-
-Tag report queries now:
-
-- normalize/validate requested currency;
-- filter linked transactions to that currency;
-- ignore transfer rows for income/expense aggregation;
-- use checked arithmetic;
-- reject `long.MinValue` stored amounts.
-
-### Tests
-
-Added regression coverage showing the same tag on INR and USD transactions returns separate currency-scoped totals rather than adding raw minor units together.
-
-Representative commits:
-
-- `fix(reports): add explicit currency scope to tag reporting contract`
-- `fix(reports): filter tag totals by explicit reporting currency`
-- `test(reports): cover explicit currency isolation in tag reports`.
+- weekly generated windows are Monday–Sunday;
+- monthly generated windows use calendar month;
+- custom cadence is active only inside explicit periods;
+- explicit periods cannot overlap;
+- rollover participates only when enabled;
+- effective planned amount must remain positive;
+- checked arithmetic is used;
+- custom cadence requires explicit period data;
+- explicit-period replacement is transactional;
+- failed replacement is covered by rollback regression tests.
 
 ---
 
-## 13. Currency-aware money/import/reporting hardening retained and extended
+## 9. Savings goals
 
-Earlier 0.2.0 hardening introduced `CurrencyMinorUnits` and currency-aware `Money` helpers.
+Current goal functionality:
 
-This continuation audited all aggregate/report paths against that model.
+- target amount;
+- starting amount;
+- target date;
+- icon/note;
+- contributions;
+- withdrawals;
+- optional linked transaction;
+- forecast/milestone text;
+- completion state;
+- reduced-motion-friendly celebration text.
 
-Current behavior includes:
+Safety rules:
 
-- 0-decimal known currencies such as JPY-style data;
-- 2-decimal default/common currencies;
-- 3-decimal known currencies such as KWD-style data;
-- decimal-safe conversion;
-- no binary floating-point persistence;
-- checked integer minor-unit aggregation;
-- no implicit exchange-rate conversion.
+- target positive;
+- starting amount between zero and target;
+- contribution/withdrawal nonzero and not `long.MinValue`;
+- running history uses checked arithmetic;
+- running progress cannot fall below zero;
+- linked transaction must exist, not be deleted, and match goal currency;
+- completion state must match validated progress.
 
-CSV import uses the row currency's minor-unit precision for major-unit input.
+Current continuation fixed a derived-state edge case:
+
+- new goal creation sets `IsCompleted` when starting progress already reaches target;
+- startup initialization repairs only stale derived completion flags when the underlying goal/contribution history validates;
+- invalid/overflowing/negative histories are not silently repaired and remain visible to the integrity checker.
 
 ---
 
-## 14. CSV import correctness retained
+## 10. Recurring items
 
-The importer now/continues to cover:
+Implemented recurrence functionality includes:
 
-- explicit mapping;
-- UTF-8/file-size/row-count validation;
-- quoted CSV fields;
-- currency-aware major-unit conversion;
-- exact minor-unit import;
-- account resolution/fallback;
+- expense/income/transfer/refund templates;
+- daily/weekly/monthly/yearly/custom interval;
+- source account;
+- destination account for transfers;
+- category;
+- amount/currency;
+- merchant/payee;
+- note;
+- start/end;
+- grace period;
+- reminder lead;
+- persisted due occurrence;
+- paid;
+- partially paid;
+- skipped;
+- postponed;
+- reopened skipped occurrence;
+- generated transaction linkage;
+- paired recurring transfers;
+- pause/resume/archive rule lifecycle.
+
+Safety behavior:
+
+- pending occurrence is persisted before financial transaction creation;
+- repeated generation is idempotent through unique rule/due-date constraint;
+- paid/partial state requires generated transaction/payment data;
+- generated payment must still belong to the rule;
+- generated transfer pair must remain complete/balanced/reciprocal;
+- pending/skipped occurrence cannot silently contain payment/postponement data;
+- postponed state requires a valid later date;
+- paid/partial history may retain a valid historical postponed date;
+- paused/archived/completed rules stop generation;
+- resume revalidates dependencies and end date;
+- stale recurring reminders are cancelled during synchronization.
+
+---
+
+## 11. Dashboard and reports
+
+Dashboard remains configurable/privacy-aware with cards for:
+
+- balance;
+- income/spending/net;
+- remaining budget;
+- upcoming recurring;
+- top categories;
+- savings goals;
+- recent transactions;
+- six-month cash flow.
+
+Privacy mode/hide amounts remain supported.
+
+Report source includes:
+
+- category spending;
+- income vs expense;
+- account balance trend;
+- budget performance;
+- merchant/payee;
+- monthly comparison;
+- tag report.
+
+Hardening:
+
+- report aggregation is checked;
+- category/budget reporting is split-aware;
+- category-budget descendants resolve recursively;
+- custom-budget windows use the same policy as FinanceStore;
+- tag reports require currency scope;
+- Dashboard aggregate cards use selected/default reporting currency and explicitly keep other currencies separate.
+
+---
+
+## 12. CSV import and export
+
+CSV import includes:
+
+- mapping;
+- preview;
+- validation;
+- Date/Type/Amount/Account required columns;
+- optional Currency/Category/Merchant/Note/Payment Method/Location/Transfer Group/Counterparty/Tags;
+- major/minor unit mode;
+- currency-aware major-unit decimal conversion;
+- fallback account;
 - optional category creation;
-- tag linking;
-- duplicate detection;
-- duplicate detection within the same import batch;
-- transfer group and counterparty validation;
-- `long.MinValue` rejection before sign normalization;
-- transaction/account currency validation;
-- parse errors counted exactly once;
+- duplicate protection including same-batch duplicates;
+- transfer group validation;
+- UTF-8 validation;
+- 50 MB / 100k-row limits;
 - transactional persistence.
 
-Currency-aware import tests include 0-/3-decimal currency cases and malformed extreme values.
+Export includes:
+
+- CSV;
+- dependency-free multipage PDF;
+- selected/all transaction modes.
+
+This continuation additionally added bounded stale cache cleanup for user-requested share copies.
 
 ---
 
-## 15. Split-aware reports and recursive category budgets
+## 13. Temporary share-artifact cleanup
 
-Category spending and budget reporting were previously hardened so splits are the allocation source when present.
+New Application contract:
 
-This continuation preserved those semantics while adding shared budget-window policy.
+- `ITemporaryArtifactCleaner`
 
-Current reporting rules:
+New Infrastructure service:
 
-- transaction with splits: use split amounts by split category;
-- no split: use parent transaction category;
-- do not count both parent and splits;
-- category-budget descendant resolution is recursive, not only one child level;
-- all monetary aggregation is checked;
-- `long.MinValue` is rejected instead of passed through absolute-value arithmetic.
+- `TemporaryArtifactCleaner`
 
----
+Managed cache patterns:
 
-## 16. Dashboard mixed-currency regression removed
+- `Finora-transactions-*.csv`;
+- `Finora-transactions-*.pdf`;
+- `Finora-*.finora-backup`;
+- `Finora-integrity-*.txt`.
 
-The Dashboard had already introduced currency-safe calculations, but the audit found it still called the legacy `IFinanceStore.GetDashboardAsync` first. That legacy API intentionally fails closed when multiple currencies exist, so merely having another-currency account could break the page before the safe calculations ran.
+Behavior:
 
-### Fix
+- serialized startup runs best-effort cleanup after database initialization and interrupted-restore recovery;
+- only managed files older than 24 hours are deleted;
+- fresh share copies remain to avoid racing system share sheets;
+- unrelated cache files remain;
+- diagnostic logs remain;
+- file symlink entries are removed as entries rather than recursively following their target;
+- cleanup failure cannot block finance startup.
 
-Dashboard no longer calls the legacy mixed-currency aggregate API.
+Added regression tests cover:
 
-Aggregate cards now derive from:
+- stale managed files removed;
+- fresh managed files preserved;
+- unrelated files preserved;
+- diagnostic logs preserved;
+- symlink target preservation where link creation is supported.
 
-- currency-scoped income/expense report;
-- currency-scoped category report;
-- direct account summaries filtered to reporting currency;
-- budget performance filtered to reporting currency;
-- currency-scoped monthly comparison.
-
-Other-currency rows continue to display their own currency.
-
-`CurrencyScope` explicitly tells the user when other-currency accounts are excluded from aggregate cards because Finora does not invent exchange rates.
-
-### Performance follow-up
-
-Dashboard balance calculation uses direct account summaries rather than loading all-history balance trend series merely to obtain the latest balance.
-
-### UI contract
-
-UI source-contract tests now explicitly fail if Dashboard regresses to a `GetDashboardAsync(` call.
-
-Representative commits:
-
-- `fix(dashboard): remove legacy mixed-currency aggregate dependency`
-- `perf(dashboard): use direct account balances instead of all-history trend queries`
-- `test(ui): lock recurring lifecycle and currency-safe dashboard contracts`.
+Once a user explicitly saves/shares a copy outside Finora cache, destination lifecycle is controlled by that destination.
 
 ---
 
-## 17. Custom budget-period policy centralized
+## 14. Attachment storage and physical path safety
 
-Added `src/Finora.Domain/BudgetPeriodPolicy.cs`.
+Receipt/document storage remains app-private.
 
-### Shared window semantics
+Existing controls:
 
-- explicit periods take precedence;
-- weekly generated windows are Monday through Sunday;
-- monthly generated windows are calendar months;
-- custom cadence has **no fabricated fallback window**;
-- custom budget is active only when the selected date falls inside an explicit period;
-- rollover contributes only if `RolloverEnabled`;
-- checked effective planned amount must remain positive.
+- generated internal names;
+- MIME allowlist: JPEG/PNG/WebP/HEIC/HEIF/PDF;
+- 20 MB/file limit;
+- original display filename metadata;
+- byte size;
+- SHA-256;
+- list/open/delete/storage usage/orphan cleanup.
 
-### Overlap prevention
+This continuation substantially hardened physical filesystem handling.
 
-`DomainRules.ValidateBudget` rejects overlapping explicit periods.
+`PathSafety` now includes:
 
-Inclusive date boundaries mean one period starting on the previous period's end date is considered an overlap.
+- platform-correct comparison;
+- canonical descendant resolution;
+- `ResolveDescendantWithoutLinks`;
+- `EnsureNoLinkTraversal`;
+- `EnsureNotLinkIfExists`;
+- `IsSymbolicLink`;
+- `EnumerateFilesWithoutLinks`.
 
-### Store behavior
+No-link physical-path policy is now used by:
 
-`GetBudgetsAsync` uses the shared policy.
+- attachment open/write/delete/cleanup;
+- encrypted backup attachment validation;
+- restore staging/rollback paths;
+- restore recovery journal;
+- crash-safe rollback copying;
+- interrupted-restore cleanup;
+- data-integrity attachment checks;
+- privacy diagnostic log paths.
 
-Custom budgets outside the selected date are omitted rather than reported as a synthetic one-day budget.
+This protects against a path that is lexically inside `attachments/...` but physically escapes through a symbolic link/reparse point.
 
-`SaveBudgetAsync` requires at least one explicit period for Custom cadence.
-
-### Report behavior
-
-`AdvancedReportService.GetBudgetPerformanceAsync` uses the same shared policy, removing duplicated period interpretation.
-
-### Backup/integrity behavior
-
-Backup graph validation and on-device integrity diagnostics validate custom-period presence/overlap.
-
-### Tests
-
-Added:
-
-- explicit overlap rejection;
-- custom in-window/out-of-window resolution;
-- rollover enabled/disabled behavior;
-- Monday–Sunday weekly window;
-- non-positive effective rollover rejection;
-- effective-plan overflow rejection;
-- custom budget persistence;
-- out-of-window store/report omission;
-- explicit-period replacement coverage;
-- failure-path rollback regression coverage.
-
-Representative commits:
-
-- `fix(budgets): reject overlapping explicit budget periods`
-- `feat(budgets): centralize explicit weekly monthly and custom period resolution`
-- `fix(budgets): reject non-positive effective rollover plans`
-- `fix(reports): share custom budget period policy with finance store`
-- `test(budgets): cover explicit overlap rollover and custom period activation`
-- `test(budgets): cover custom period persistence and inactive-window behavior`
-- `test(budgets): prove failed explicit-period replacement rolls back prior periods`
-- `test(budgets): cover effective-plan rollover boundaries`.
+Optional regression tests create symlinks where the host permits them and prove fail-closed behavior.
 
 ---
 
-## 18. FinanceStore relationship hardening
+## 15. Encrypted backup and restore
 
-The FinanceStore path now/continues to enforce:
+Current backup crypto remains:
 
-- account currency immutability after transactions/recurrence reference it;
-- account archival blocked by active recurrence;
-- transaction category validity;
-- every split category must exist and be active;
-- transaction/account currency match;
-- transfers through paired atomic transfer workflow;
-- savings linked transaction exists/is nondeleted/currency matches goal;
-- recurrence source/destination accounts exist and match currency;
-- recurrence category exists/is active;
-- custom budget explicit-period requirements;
-- shared budget-window resolution;
-- checked sums and overflow protection;
-- bounded recurrence backlog generation.
-
----
-
-## 19. Backup graph validation expanded
-
-Cryptographic authentication is necessary but not sufficient for a financial restore. A backup can be correctly encrypted and still contain semantically invalid data produced by an old defect, external manipulation before backup creation, or future compatibility mistake.
-
-`BackupGraphValidator` validates the supported schema-v2 graph before encryption and after authenticated decryption.
-
-### IDs/settings
-
-- unique/non-empty entity IDs;
-- unique setting keys;
-- reject snapshot-provided `schema.version`;
-- reject internal restore-marker settings.
-
-### Accounts/transactions
-
-- account domain validation;
-- transaction domain validation;
-- transaction account exists;
-- transaction currency matches account;
-- category/recurrence links exist;
-- transfer pairs are complete/balanced/reciprocal/same currency/deletion-consistent.
-
-### Splits/tags/categories
-
-- split parent/category exists;
-- split sign/total valid;
-- transfer cannot have splits;
-- transaction-tag links reference existing rows and are unique;
-- category parent exists;
-- category hierarchy is acyclic.
-
-### Budgets
-
-- budget domain rules;
-- category relationship valid;
-- Subcategory budget targets a child category;
-- period parent exists;
-- duplicate/overlapping periods rejected;
-- Custom budget requires explicit period.
-
-### Goals
-
-- savings goal domain state;
-- contribution domain state;
-- goal parent exists;
-- linked transaction exists and matches goal currency;
-- chronological running progress never falls below zero.
-
-### Recurrence
-
-- recurrence domain state;
-- source/destination account exists and currency matches;
-- Active rule cannot point to archived account;
-- category exists/is active;
-- occurrence uniqueness;
-- due/postpone relationship;
-- generated transaction exists and belongs to rule;
-- Paid/PartiallyPaid states require valid payment values/generated transaction;
-- Pending/Skipped/Postponed must not carry hidden payment/generated state.
-
-Historical Paused/Completed/Archived recurrence is allowed to retain an account link after that account is later archived; Active recurrence is not.
-
-### Reconciliation
-
-- account exists;
-- timestamps valid;
-- checked `statement - book == difference`;
-- adjustment flag/link consistency;
-- adjustment transaction is the correct account/type/amount.
-
-### Attachments/notifications
-
-- attachment parent/size/path metadata;
-- notification metadata shape.
-
-### Tests
-
-Added backup graph validation tests for currency drift, split drift, active recurrence on archived account, and paused-history compatibility.
-
-Representative commits:
-
-- backup graph validator additions;
-- `test(backup): cover financial graph validation before encrypted snapshot creation`
-- `fix(backup): validate custom budget periods and overlap in snapshot graph`.
-
----
-
-## 20. Backup sensitive-buffer cleanup
-
-Backup creation now places receipt buffers and serialized plaintext under cleanup logic intended to clear them even when validation/encryption/metadata persistence fails rather than only after the successful validation path.
-
-Receipt bytes read before a later attachment failure are also included in cleanup handling.
-
-Encrypted input buffers and decrypted plaintext are cleared after decrypt/deserialize processing as far as managed-memory APIs permit.
-
-Representative commit:
-
-- `fix(backup): clear receipt buffers on every backup creation failure path`.
-
-Managed-runtime memory cannot provide the same zeroization guarantees as dedicated unmanaged locked memory, so this is documented as best-effort cleanup rather than a false absolute guarantee.
-
----
-
-## 21. Crash-safe restore retained and integrated with graph validation
-
-The crash-safe restore design from the previous continuation remains:
-
-- serialized backup/restore operation gate;
-- pre-restore receipt-directory snapshot;
-- durable restore journal;
-- pending DB marker;
-- underlying authenticated/validated restore;
-- marker removal after successful DB commit;
-- startup recovery before finance UI;
-- pre-commit failure restores old receipt tree;
-- post-commit state finalizes new receipt tree;
-- stale restore/rollback directory cleanup after recovery decision.
-
-Expanded graph validation occurs before destructive replacement.
-
----
-
-## 22. Data-integrity checker expanded to aggregate finance state
-
-`DataIntegrityService` now checks substantially more than SQLite/transactions/attachments.
-
-### Existing checks retained
-
-- SQLite `integrity_check`;
-- foreign-key check;
-- transaction amount/sign/currency/transfer-link state;
-- transaction/account currency references;
-- transfer pairing;
-- split signs/totals;
-- category cycles;
-- attachment path/presence/size/SHA-256.
-
-### New budget checks
-
-- budget domain state;
-- custom budget requires explicit period;
-- overlapping periods rejected;
-- category exists/is active;
-- Subcategory budget points to child category.
-
-Privacy-safe codes include:
-
-- `BUDGET_INVALID`;
-- `BUDGET_CATEGORY_INVALID`.
-
-### New savings checks
-
-- goal domain state;
-- contribution domain state;
-- checked running progress;
-- linked transaction exists/is not deleted;
-- linked transaction currency matches goal.
-
-Codes include:
-
-- `SAVINGS_GOAL_INVALID`;
-- `GOAL_CONTRIBUTION_INVALID`.
-
-### New recurrence checks
-
-- rule domain state;
-- source/destination account relationship/currency;
-- Active rule cannot depend on archived account;
-- category availability;
-- duplicate occurrence;
-- due/postpone relation;
-- generated transaction belongs to rule;
-- paid/partial/unpaid state consistency.
-
-Codes include:
-
-- `RECURRENCE_RULE_INVALID`;
-- `RECURRENCE_RELATION_INVALID`;
-- `RECURRENCE_DUPLICATE`;
-- `RECURRENCE_STATE_INVALID`.
-
-### New reconciliation checks
-
-- reconciliation account exists;
-- timestamps valid;
-- checked difference arithmetic;
-- adjustment flag/link/type/account/amount consistency.
-
-Code:
-
-- `RECONCILIATION_INVALID`.
-
-### Tests
-
-Added aggregate integrity regression tests injecting synthetic corruption for:
-
-- custom budget missing period;
-- linked goal transaction currency drift;
-- Active recurrence on archived account;
-- reconciliation difference drift;
-- Paid occurrence missing generated transaction.
-
-Representative commit:
-
-- `feat(integrity): validate budgets goals recurrence and reconciliation relations`
-- `test(integrity): detect budget goal recurrence and reconciliation corruption`.
-
----
-
-## 23. PIN/app-lock hardening retained
-
-The previous hardening remains in source:
-
-- 4–12 digit PIN;
+- user-triggered only;
+- PBKDF2-SHA256;
 - random salt;
-- PBKDF2-SHA256 verifier;
-- fixed-time compare;
-- OS secure storage;
-- persistent PIN-enabled marker;
-- missing/corrupt verifier fails closed;
-- bounded escalating lockout policy;
-- shared tested `PinAttemptPolicy`;
-- biometric/Windows Hello requires PIN fallback;
-- PIN removal clears biometric preference;
-- inactivity lock.
+- 210,000 iterations;
+- AES-GCM;
+- random nonce/tag;
+- Finora format magic as authenticated associated data.
 
-Apple platform manifests include a Face ID purpose string.
+Backup snapshot includes schema-v2 supported finance graph plus receipt bytes.
 
----
+Validation before encryption/preview/restore includes:
 
-## 24. Adaptive navigation and locale work retained
-
-### Navigation
-
-- mobile bottom-tab hierarchy;
-- tablet/desktop flyout hierarchy;
-- adaptive root switching;
-- primary-section preservation across mode changes;
-- onboarding/unlock routes use adaptive destination.
-
-### Accessibility/UI scaling
-
-- global scalable control height/font resources;
-- larger-interface setting;
-- reduced-motion setting;
-- report text equivalents;
-- recurring lifecycle accessibility descriptions.
-
-### Locale
-
-- saved locale normalized/validated;
-- runtime process/current/default thread culture application;
-- safe fallback;
-- Settings number/date formatting preview;
-- onboarding locale application.
-
----
-
-## 25. Data reset/sample data retained
-
-### Full finance reset
-
-A dedicated transactional finance reset service clears all supported finance/schema-v2 data, including user-created categories, while preserving schema metadata/preferences needed for a valid app profile.
-
-Settings uses typed destructive confirmation and cleans receipt orphans only after database deletion succeeds.
-
-### Developer sample reset
-
-A separate hidden developer flow uses typed confirmation and deterministic synthetic data.
-
-It resets finance data then seeds a coherent demo dataset for development/test use.
-
----
-
-## 26. Platform source audit
-
-This continuation re-read the declared platform TFMs/minimums and key native implementation source.
-
-### Declared targets
-
-- `net10.0-android`;
-- `net10.0-ios`;
-- `net10.0-maccatalyst`;
-- `net10.0-windows10.0.19041.0`.
-
-### Platform source audited
-
-- Android notification scheduling/channel/runtime permission path;
-- Android biometric API guard/imports;
-- Android secure-window capture protection;
-- Apple LocalAuthentication/UserNotifications;
-- Apple Face ID purpose text;
-- Windows Hello;
-- Windows scheduled toast;
-- Windows display-affinity capture protection;
-- package version metadata;
-- MAUI picker/share/page-handler source.
-
-Source review does not replace native compilation/device validation.
-
----
-
-## 27. Test additions/changes in this continuation
-
-New/expanded test areas include:
-
-### Path/storage
-
-- attachment/path confinement behavior.
-
-### Domain/persistence
-
-- transaction signs/extreme values;
-- split total/sign/category state;
+- format/magic/length;
+- schema;
+- unique IDs;
 - account/currency relations;
-- direct EF persistence rejection.
+- transfer pairs;
+- splits;
+- category hierarchy;
+- transaction-tag links;
+- budgets/periods;
+- goals/contributions/completion state;
+- recurrence rules/occurrences/generated payments;
+- attachment metadata/path/size/hash;
+- transaction revisions;
+- reconciliation metadata/adjustment link;
+- notification metadata;
+- settings boundaries;
+- internal restore setting exclusion;
+- new Domain metadata rules shared with EF persistence.
 
-### Accounts/reconciliation
+Crash-safe restore remains layered through:
 
-- active recurrence blocks archival;
-- paused recurrence permits archival;
-- state-picker archive path;
-- reconciliation overflow/date;
-- reconciled opening balance.
+- `CrashSafeBackupService`;
+- `RestoreRecoveryService`;
+- `RestoreRecoveryJournal`;
+- pre-restore receipt rollback copy;
+- database commit marker;
+- staged receipt replacement;
+- startup recovery before finance navigation.
 
-### Recurrence
+This continuation added:
 
-- generated payment-link safety;
-- skip/reopen/payment transitions;
-- repeated full-payment idempotency;
-- Pause → no generation;
-- Resume → generation;
-- Archive history preservation;
-- resume blocked by archived account;
-- resume blocked by expired end date;
-- completed/archived resume rejection.
+- no-link traversal for live receipt root;
+- no-link restore staging/rollback/journal paths;
+- no-link rollback copying;
+- link-aware cleanup;
+- accumulated receipt byte buffer clearing on **every** backup-creation exit path, including later-file/query/validation failure;
+- decrypted receipt buffer clearing when authenticated graph validation rejects a backup;
+- UI-side encrypted backup byte-array clearing after write/share handling;
+- masked backup password UI and field clearing.
 
-### Categories/tags
-
-- subcategory-budget mutation safety;
-- tag range/extreme amount;
-- explicit INR/USD tag-report isolation.
-
-### Budgets
-
-- explicit period overlap;
-- custom active/inactive periods;
-- rollover enable/disable;
-- weekly window;
-- custom persistence;
-- report/store out-of-window omission;
-- explicit period replacement;
-- failed replacement rollback;
-- non-positive/overflow effective plan.
-
-### Reports/dashboard
-
-- split-aware category spending;
-- recursive category budget;
-- range boundaries;
-- currency isolation;
-- Dashboard source contract forbids legacy mixed-currency aggregate call.
-
-### Import
-
-- currency-specific major-unit conversion;
-- `long.MinValue` handling;
-- error counting;
-- duplicate/counterparty behavior.
-
-### Backup/recovery
-
-- graph validation currency/split/recurrence cases;
-- paused historical rule compatibility;
-- attachment encrypted roundtrip;
-- restore journal pre-/post-commit recovery.
-
-### Integrity
-
-- custom-budget corruption;
-- goal link currency drift;
-- active recurrence/account drift;
-- reconciliation drift;
-- impossible occurrence payment state.
-
-### UI contracts
-
-- adaptive navigation;
-- destructive confirmations;
-- locale preview;
-- recurrence Reopen;
-- recurrence Pause/Resume/Archive;
-- currency-safe Dashboard source;
-- scalable UI resources.
+Managed `string` password values cannot be deterministically zeroed by C#, but Finora no longer persists the backup password and clears the UI field after the operation.
 
 ---
 
-## 28. Documentation aligned in this continuation
+## 16. Local notifications and reminder consistency
+
+Current local notification system remains permission-gated and platform-specific:
+
+- Android alarms/BroadcastReceiver;
+- Apple UserNotifications;
+- Windows scheduled toasts.
+
+Reminder coordinator covers:
+
+- weekly backup;
+- budget threshold;
+- recurring rules;
+- stale schedule reconciliation;
+- generic privacy-safe notification text.
+
+This continuation fixed deduplicated replacement ordering:
+
+1. schedule replacement with OS first;
+2. if OS scheduling fails, preserve old enabled reminder;
+3. if OS scheduling succeeds, persist replacement and disable old row inside DB transaction;
+4. commit DB state;
+5. best-effort cancel stale OS reminders;
+6. if DB write fails after OS scheduling, best-effort cancel the newly scheduled OS reminder.
+
+Additional reconciliation behavior:
+
+- expired enabled rows are disabled;
+- disabled/expired IDs receive best-effort OS cancellation retry;
+- pending enabled rows are rescheduled;
+- cancellation failure no longer restores a DB row to enabled state.
+
+New integration coverage tests:
+
+- failed dedupe replacement;
+- successful dedupe replacement;
+- cancellation failure;
+- expired reminder cleanup;
+- reconciliation behavior.
+
+---
+
+## 17. App lock, PIN and biometric security
+
+Current app-lock model remains:
+
+- optional PIN;
+- PBKDF2-SHA256 verifier;
+- random salt;
+- OS secure storage;
+- fixed-time comparison;
+- escalating local lockout;
+- inactivity auto-lock;
+- biometric/Windows Hello where supported;
+- PIN fallback required.
+
+This continuation hardened PIN handling:
+
+- direct PIN inputs must be 4–12 ASCII digits before PBKDF2;
+- secure verifier/salt/derived byte arrays are cleared where managed APIs permit;
+- an explicit lock-enabled marker remains for fail-closed behavior;
+- if secure-storage provider temporarily throws and marker says lock enabled, `HasPinAsync` fails closed;
+- if secure storage is readable but verifier is truly missing/corrupt, stale marker/failure state is cleared so app cannot become permanently trapped on LockPage;
+- PIN removal only reports success after secure verifier removal succeeds;
+- PIN removal failure is logged privacy-safely and reports generic failure;
+- biometric failure no longer surfaces raw provider error text;
+- PIN fallback remains available.
+
+Settings secret entry changed from ordinary prompts to masked fields:
+
+- `BackupPasswordEntry`;
+- `NewPinEntry`;
+- `ConfirmPinEntry`.
+
+Lock PIN entry remains masked.
+
+Fields are cleared after attempts.
+
+---
+
+## 18. Android automatic backup / device-transfer exclusion
+
+Android manifest continues to include:
+
+- `android:allowBackup="false"`;
+- `android:usesCleartextTraffic="false"`.
+
+This continuation added explicit backup resources:
+
+- `Platforms/Android/Resources/xml/backup_rules.xml`;
+- `Platforms/Android/Resources/xml/data_extraction_rules.xml`.
+
+Legacy full-backup exclusions cover:
+
+- root;
+- file;
+- database;
+- shared preferences;
+- external domain.
+
+Android 12+ cloud-backup/device-transfer exclusions cover the same domains.
+
+Structural preflight now requires these files and manifest wiring.
+
+Important validation boundary:
+
+- source/configuration is present;
+- final merged-manifest/AAB behavior and actual device/cloud-transfer behavior still require native Android build/device evidence.
+
+---
+
+## 19. Privacy logger and user-visible error handling
+
+Privacy logger already recorded only bounded event/type tokens and ignored arbitrary properties.
+
+This continuation added:
+
+- no-link/reparse protection for diagnostic directory/current/previous log paths;
+- regression tests proving caller properties are not serialized;
+- regression tests proving exception messages are not serialized;
+- rotation tests;
+- optional linked-log rejection test.
+
+`ViewModelBase` now maps infrastructure failures safely:
+
+- storage I/O;
+- unauthorized access;
+- cryptographic errors;
+- JSON/provider/database errors;
+- path-like/stack-like technical text.
+
+Short deliberate validation messages remain user-visible when safe.
+
+`AsyncCommand` now:
+
+- prevents parallel execution as before;
+- contains unexpected non-fatal failures;
+- invokes a privacy-safe failure hook;
+- is wired in `MauiProgram` to `IPrivacyLogger`;
+- does not use `ConfigureAwait(false)` for UI command continuations.
+
+Primary Reports/Settings infrastructure alerts now use generic user-facing text while exception type/event is logged separately.
+
+---
+
+## 20. Data integrity diagnostics
+
+A major correctness gap was found and fixed in this continuation:
+
+- regression tests had been added for budgets/goals/recurrence/reconciliation corruption;
+- the service implementation had not actually gained all corresponding checks.
+
+`DataIntegrityService` now implements aggregate checks for:
+
+- SQLite `PRAGMA integrity_check`;
+- foreign keys;
+- accounts;
+- transaction amounts/signs/currencies/dates/linkage;
+- transaction-account currency;
+- transaction categories;
+- transfer pairs;
+- splits/signs/totals/categories;
+- category parent/cycle validity;
+- budgets/periods/category semantics/effective plan;
+- goals/contributions/linked transaction currency/running progress/completion state;
+- recurrence rule account/destination/category/currency relations;
+- recurrence occurrence duplicate/payment/postponement/generated transaction state;
+- reconciliation arithmetic/adjustment link;
+- attachment parent/path/no-link/existence/size/hash metadata.
+
+Sanitized report remains count/code based and avoids:
+
+- account names;
+- merchant/payee names;
+- notes;
+- amounts;
+- receipt filenames;
+- transaction contents.
+
+Existing tests incorrectly referenced `IntegrityIssue.Count`; those stale assertions were corrected to the actual `AffectedRecords` contract.
+
+---
+
+## 21. Expanded Domain and EF persistence-boundary validation
+
+This continuation added schema-v2 metadata validation to `DomainRules`.
+
+New/expanded validators cover:
+
+- transaction split;
+- category;
+- tag;
+- transaction-tag link;
+- budget period;
+- savings goal icon/metadata;
+- recurrence occurrence state;
+- attachment metadata;
+- transaction revision;
+- reconciliation;
+- notification schedule;
+- app setting;
+- audit entry;
+- backup metadata;
+- transaction deletion-state/timestamp agreement.
+
+`FinoraDbContext.SaveChanges` / `SaveChangesAsync` now validates Added/Modified tracked entities before SQLite persistence.
+
+Covered entity types:
+
+- Account;
+- FinanceTransaction;
+- TransactionSplit;
+- Category;
+- Tag;
+- TransactionTag;
+- Budget;
+- BudgetPeriod;
+- SavingsGoal;
+- GoalContribution;
+- RecurrenceRule;
+- RecurrenceOccurrence;
+- Attachment;
+- TransactionRevision;
+- AccountReconciliation;
+- NotificationSchedule;
+- AppSetting;
+- AuditEntry;
+- BackupMetadata.
+
+Model max-length declarations were aligned for metadata fields.
+
+This is deliberately layered with, not substituted for:
+
+- foreign keys;
+- unique indexes;
+- service-level relation validation;
+- backup graph validation;
+- data integrity diagnostics.
+
+Direct-DbContext integration tests now prove malformed schema-v2 metadata is rejected before persistence.
+
+A positive regression case confirms paid recurrence history may retain a valid postponed date.
+
+---
+
+## 22. Safe derived savings-goal state repair
+
+Earlier source behavior could create/persist a goal whose starting amount already met target while `IsCompleted` remained false.
+
+Current fixes:
+
+- Savings ViewModel sets `IsCompleted` from starting progress on creation;
+- `DatabaseInitializer` performs safe normalization after schema initialization;
+- it validates goal/contribution history first;
+- it uses checked running arithmetic;
+- it repairs only the derived completion flag;
+- corrupt/overflowing/negative-running histories are not modified;
+- such invalid history remains detectable by `DataIntegrityService`.
+
+Added tests cover:
+
+- valid stale completion flag repaired;
+- invalid negative-running history left untouched;
+- integrity checker still reports invalid contribution history.
+
+---
+
+## 23. Accessibility improvements
+
+Current continuation improved security-surface semantics:
+
+Settings:
+
+- heading levels;
+- security switch descriptions;
+- masked backup password description;
+- masked PIN setup/confirm descriptions.
+
+Lock screen:
+
+- Level1 heading;
+- live status description;
+- biometric/Windows Hello description with PIN fallback;
+- masked PIN semantic guidance;
+- PIN unlock button description.
+
+Native TalkBack/VoiceOver/Narrator/large-text/keyboard/high-contrast validation remains an external release gate.
+
+---
+
+## 24. Structural preflight expansion
+
+`build/scripts/verify_structure.py` continues to validate:
+
+- required files;
+- XML/XAML/RESX/project parseability;
+- non-empty source/resource files;
+- TODO/FIXME/NotImplemented/placeholder markers;
+- project references;
+- solution project references;
+- XAML partial classes;
+- XAML event handler presence;
+- application version consistency;
+- database schema documentation consistency;
+- floating-point monetary-field patterns.
+
+This continuation added privacy/security configuration gates:
+
+- Android `allowBackup=false`;
+- Android no-cleartext setting;
+- legacy backup-rule wiring;
+- Android 12+ data-extraction-rule wiring;
+- full-domain excludes for root/file/database/sharedpref/external;
+- required backup-rule resources;
+- `BackupPasswordEntry` must remain masked;
+- `NewPinEntry` must remain masked;
+- `ConfirmPinEntry` must remain masked;
+- secret password/PIN flows must not regress to ordinary `DisplayPromptAsync`;
+- raw `ex.Message`/`exception.Message` must not be passed into user alerts.
+
+A Settings XAML/code-behind handler mismatch discovered during this continuation was corrected (`OnDeleteAllClicked`).
+
+---
+
+## 25. Tests added or expanded in this continuation
+
+### Notification tests
+
+`LocalNotificationConsistencyTests.cs`
+
+Covers:
+
+- failed replacement preserves old reminder;
+- successful dedupe replacement;
+- cancellation failure persistence;
+- expired-row disable;
+- reconciliation retry/reschedule behavior.
+
+### Receipt/path tests
+
+`AttachmentPathSafetyTests.cs`
+
+Expanded to cover:
+
+- lexical traversal rejection;
+- platform case behavior;
+- symbolic-link receipt directory rejection when supported;
+- attachment open fails closed;
+- integrity report detects unsafe path;
+- encrypted backup refuses linked receipt path.
+
+### Integrity tests
+
+Existing integrity assertion property names fixed.
+
+Aggregate integrity regression tests now correspond to actual service implementation.
+
+### ViewModel/command tests
+
+`ViewModelBaseTests.cs` expanded for:
+
+- busy/error lifecycle;
+- validation message preservation;
+- path/database technical text redaction;
+- cryptographic error redaction;
+- cancellation text;
+- concurrent invocation guard;
+- AsyncCommand parallel-execution guard;
+- AsyncCommand unexpected failure containment/privacy hook;
+- property notification behavior.
+
+### Privacy logger tests
+
+`PrivacyLoggerTests.cs`
+
+Covers:
+
+- caller property redaction;
+- exception message redaction;
+- event token sanitization;
+- bounded log rotation;
+- linked diagnostic file refusal where supported.
+
+### Temporary cache tests
+
+`TemporaryArtifactCleanerTests.cs`
+
+Covers:
+
+- stale managed cleanup;
+- fresh managed preservation;
+- unrelated file preservation;
+- diagnostic file preservation;
+- negative age validation;
+- symlink-entry target preservation where supported.
+
+### Metadata persistence tests
+
+`MetadataPersistenceInvariantTests.cs`
+
+Covers direct EF rejection of:
+
+- attachment traversal metadata;
+- empty notification title;
+- paid occurrence without generated transaction;
+- incorrect reconciliation difference;
+- negative category sort order;
+- missing revision snapshot;
+- deleted transaction without deletion timestamp.
+
+Also covers a valid paid-after-postponement history case.
+
+### Derived goal-state tests
+
+`DerivedGoalStateRepairTests.cs`
+
+Covers:
+
+- safe completion flag repair;
+- corrupt negative-running contribution history left untouched;
+- integrity detection remains active.
+
+Previously-added/currently-retained test suites also cover:
+
+- account lifecycle dependencies;
+- reconciliation safety;
+- aggregate integrity;
+- backup graph validation;
+- budget rollback;
+- category mutation safety;
+- custom-budget persistence;
+- finance relation invariants;
+- recurring lifecycle/state transitions;
+- report consistency;
+- budget effective plan;
+- budget period policy;
+- Domain rules;
+- migration paths;
+- backup/attachment round trips;
+- UI route/contracts.
+
+---
+
+## 26. Documentation updated in this continuation
 
 Updated documentation includes:
 
-- `DECISIONS.md`;
-- `docs/architecture/DATABASE_SCHEMA.md`;
-- `docs/security/THREAT_MODEL.md`;
-- `docs/TEST_PLAN.md`;
-- `docs/releases/RELEASE_CHECKLIST.md`;
-- `docs/releases/STORE_READINESS.md`;
-- `docs/privacy/DATA_LIFECYCLE.md`;
-- `docs/setup/TROUBLESHOOTING.md`;
-- `PROJECT_STATUS.md`;
-- `CHANGELOG.md`;
-- `README.md`;
-- this `what_changed.md`.
+- `README.md`
+- `CHANGELOG.md`
+- `PROJECT_STATUS.md`
+- `docs/security/THREAT_MODEL.md`
+- `docs/TEST_PLAN.md`
+- `docs/releases/RELEASE_CHECKLIST.md`
+- `docs/releases/STORE_READINESS.md`
+- `docs/privacy/DATA_LIFECYCLE.md`
+- `docs/architecture/DATABASE_SCHEMA.md`
+- this `what_changed.md`
 
-These documents now explicitly cover:
+Documentation now explicitly covers:
 
-- currency-scoped aggregation;
-- no implicit exchange rates;
-- custom budget period policy;
-- recurrence rule lifecycle;
-- stale reminder cleanup;
-- account/recurrence dependencies;
-- full backup graph validation;
-- crash-safe restore recovery;
+- symlink/reparse threat model;
+- masked secret entry;
+- PIN secure-storage consistency;
+- generic provider error behavior;
+- notification replacement consistency;
+- Android backup/device-transfer exclusion;
+- stale share cache cleanup;
+- EF metadata persistence boundary;
 - expanded integrity diagnostics;
-- platform-correct path confinement;
-- fail-closed PIN behavior;
-- compiler/device/store validation boundaries.
+- safe derived goal completion repair;
+- backup receipt-buffer memory hygiene;
+- external/native validation boundaries.
 
 ---
 
-## 29. Repository quality/CI state
+## 27. Focused commit ledger — current continuation
 
-The repository contains:
+The continuation intentionally used many focused commits. Known commit IDs/messages include:
 
-- dependency-free structural preflight;
-- project/XML/XAML/RESX checks;
-- project-reference checks;
-- placeholder/unfinished marker checks;
-- XAML event-handler checks;
-- version/package/schema consistency checks;
-- money-representation guard checks;
-- selected Android privacy/platform checks;
-- unit/integration/UI-contract projects;
-- GitHub Actions structural/core/MAUI jobs;
-- CodeQL;
-- dependency review;
-- Dependabot;
-- CODEOWNERS;
-- release/test/security documentation.
+- `0f3a2b29271eb4ddfb78190df83341f236a96c74` — `fix(privacy): prevent raw exception details from reaching UI alerts`
+- `9678ae1515f7da36cacf8a25b999474d01c7faa5` — `fix(notifications): make dedupe replacement failure-safe across database and OS`
+- `9ce9e7dfad5077303905dc6dff4e47e8087aa87e` — `test(notifications): cover dedupe failure cancellation and reconciliation consistency`
+- `fb266f4c8e04755a459eb1acbaf49557377093c5` — `test(notifications): fix result value handling in consistency suite`
+- `12f39d8838b71141339f88c12f3aa1186b19e160` — `fix(storage): reject symbolic-link traversal in app-private paths`
+- `563878f6ebf9300186193680be7a851dc0c0eac0` — `fix(attachments): reject linked receipt paths and safe-walk cleanup`
+- `0bb81100b95ff0c5bf661d12450a3a278742b0f6` — `fix(backup): clear receipt buffers on validation failure and reject linked paths`
+- `f210c6ab6b886f9d11c087a99d5d55ea5a3c86bb` — `fix(recovery): reject linked restore journals and recovery directories`
+- `999bb3486bf018fe6a24189ece287bca45f8f4b9` — `fix(recovery): make receipt rollback copies symlink-safe`
+- `b15c24fad552017a11bc94d9116cf1779eeaa037` — `fix(recovery): make interrupted-restore cleanup link-aware`
+- `6c8d1693f40d5bb3ffa42e65c670cd4a80ff86f5` — `test(integrity): fix issue-count assertions to current contract`
+- `46e0b7d27b99062ea9c06342c287f65e6ee8d4dc` — `fix(integrity): implement missing aggregate graph checks and linked-path detection`
+- `1a5ea99c0f157dbd500ae4e12d027a7586a825d3` — `test(storage): cover symbolic-link receipt traversal and fix integrity assertions`
+- `df26a2a06994b385bc5d1efcb77a1c9aef98abc4` — `fix(ui): sanitize bound errors and contain async command failures`
+- `4efe78963f7267d3d1e1c852fab5bcf03e46e8b1` — `fix(ui): preserve UI synchronization context for viewmodel commands`
+- `57cde60e25d5b8853ee821da08b8f9356acb997e` — `feat(diagnostics): route async command failures to privacy-safe logger`
+- `2956a185ace5059a956f4bfa8d0ab068015c2fee` — `test(ui): cover safe error mapping and async command failure containment`
+- `9ec975582ff481f2e22146cf478afd125f4323b4` — `fix(backup): zero all accumulated receipt buffers on every creation exit`
+- `cdc120c75cc0c8b07735c523cac5263302dbf10e` — `fix(diagnostics): harden privacy log storage against linked paths`
+- `e428c39e4cc9b2aec94e0f6f1492b37237641b9e` — `test(diagnostics): verify privacy logger redaction rotation and linked-path refusal`
+- `728089c89564157bc630a4eba4ded4a252f30493` — `test(diagnostics): avoid framework-specific timeout assertion helper`
+- `75b91e023371632faf335329dbc9360ffb042ef7` — `feat(storage): add stale temporary artifact cleanup contract`
+- `24e31c45487b9ee2096657a8a95e7e980133f866` — `feat(storage): implement bounded cleanup for stale shared Finora artifacts`
+- focused DI registration + immediate typo-correction commits for the temporary artifact cleaner;
+- focused startup integration commit for stale share cleanup;
+- focused integration test commit for stale share cleanup behavior;
+- `9511a9494b0ae461d2998f956e571d84ae451194` — `feat(android): exclude all Finora private domains from legacy full backup`
+- `427eca35bcb5d9965d6b890c0da106f5af86489c` — `feat(android): exclude private finance data from cloud and device transfer`
+- `695929ee9e5880be5980ae386c4917dd15ee2b7c` — `feat(android): wire explicit no-backup and no-transfer rules`
+- `4874cb946a4624e2720c08f25577be45470322c5` — `feat(security): use masked settings fields for backup passwords and PIN setup`
+- `a6a722c89c788b2bb0c1d945e87b2304d2b403d6` — `fix(security): consume and clear masked backup password and PIN fields`
+- `5d358a93c1febe4137ec681e0993c94c44034ead` — `fix(ui): align Settings delete handler with code-behind`
+- `b857f19904867052b7f561553ba3968b3adb8832` — `ci: guard Android backup rules secret prompts and raw exception alerts`
+- `431ea67efb8a5ebd2c38fd80482c65022c42a72d` — `fix(security): harden PIN verifier consistency and input bounds`
+- `2ac1daafefdece1089420f7d27a966aae7a6ad7f` — `fix(security): handle PIN removal failures without false success`
+- `c00cd2df71ababb8a0317f3681123a2541666b77` — `fix(security): route PIN removal through failure-safe handler`
+- focused Domain commit adding schema-v2 metadata validation rules;
+- focused Domain correction preserving paid postponement history/legacy hash compatibility;
+- focused EF persistence-boundary validation commit;
+- focused EF change-tracking import correction;
+- focused metadata persistence integration tests;
+- focused lock-screen biometric provider-text sanitization;
+- focused lock-screen accessibility semantics;
+- focused threat-model update;
+- focused test-plan update;
+- focused release-checklist update;
+- focused data-lifecycle update;
+- focused store-readiness update;
+- focused backup graph/domain metadata alignment;
+- focused new-goal completion initialization;
+- focused startup derived-goal-state repair;
+- focused derived-goal-state repair tests;
+- focused database-schema documentation update;
+- focused public project-status update;
+- focused changelog update;
+- focused README update;
+- final `what_changed.md` ledger commit.
 
-The CI topology was previously adjusted so core Ubuntu jobs do not require a restored MAUI solution merely for a formatting gate, while MAUI builds remain on their appropriate Windows/macOS hosts.
+The GitHub connector used for this work does not expose a supported author/committer-email override on its file-commit actions, so it cannot force `sanskarin@outlook.in` into Git commit metadata. The requested email remains documented as Finora business/security contact.
 
 ---
 
-## 30. Validation that is NOT claimed complete
+## 28. Earlier source baseline retained from previous continuations
 
-The ChatGPT execution environment used for this work does not provide a usable local `dotnet` SDK/toolchain.
+The current continuation did not remove the large previously implemented Finora feature set, including:
 
-Therefore this continuation does **not** claim local success for:
+- schema-v2 migration runner;
+- transaction revisions;
+- reconciliation records;
+- notification schedule persistence;
+- account management/detail;
+- receipt attachment service;
+- category/tag management;
+- recurring workflow/payment states;
+- advanced reports;
+- mapped CSV import;
+- finance store/domain invariant hardening;
+- encrypted backup/restore;
+- CSV/PDF export;
+- reminder coordinator;
+- biometric/Windows Hello integration;
+- sensitive-screen protection;
+- configurable Dashboard;
+- settings/onboarding/legal surfaces;
+- deterministic synthetic sample data;
+- English baseline/Hindi common-resource localization readiness;
+- branding icon/splash resources;
+- privacy-safe exception coordinator;
+- repository structural preflight/CI/dependency/security automation;
+- comprehensive architecture/privacy/security/release documentation.
+
+---
+
+## 29. Verification state
+
+### What is source-verified in this continuation
+
+The repository was audited/updated through GitHub file reads/writes and focused regression tests were added for identified logic/failure paths.
+
+Structural source checks and invariants were strengthened so CI can detect more classes of regression.
+
+### What is **not** claimed from this execution environment
+
+A usable local `.NET` / MAUI SDK/toolchain is not available in this ChatGPT execution environment.
+
+Therefore this continuation does **not** claim that current head has locally passed:
 
 - `dotnet restore`;
-- C# compiler/analyzer execution;
-- `dotnet test`;
-- MAUI workload restore;
-- Android Release build/package;
-- Windows Release package;
+- `dotnet workload restore`;
+- C# compilation;
+- analyzers;
+- unit tests executed by `dotnet test`;
+- integration tests executed by `dotnet test`;
+- UI-contract tests executed by `dotnet test`;
+- Android MAUI build;
+- Windows MAUI build;
 - iOS build/archive;
 - Mac Catalyst build/archive;
-- emulator/simulator testing;
-- physical-device testing;
-- signing/notarization;
-- Play/App/Microsoft store validation.
+- emulator/simulator tests;
+- physical-device tests;
+- signing;
+- MSIX/AAB/IPA/package generation;
+- store-console validation.
 
-Source/tests/docs have been expanded specifically so those external gates have concrete checks to run once a matching toolchain is available.
+Web search is disabled in this environment, so live package/runner/toolchain compatibility was not independently web-verified.
 
-Do not represent Finora 0.2.0 as a production store release until those gates have passing evidence.
+The available GitHub connector does not provide a workflow-dispatch action in this session.
 
-No claim is made that Finora is bug-free.
+GitHub Actions generally report through Check Runs rather than the classic combined-status endpoint. An empty classic `statuses` list must **not** be interpreted as either a pass or proof that Actions never ran.
 
----
-
-## 31. Current release boundaries still intentionally deferred
-
-The following remain later-version work rather than hidden/incomplete current-release features:
-
-- cloud synchronization;
-- remote user account/login;
-- collaboration/shared remote finance data;
-- mobile-number authentication;
-- server-backed entitlement/licensing;
-- remote key escrow/recovery;
-- automatic exchange-rate conversion.
-
-Any future implementation requires corresponding architecture, threat-model, privacy, retention/deletion, migration, authentication, and server-security work.
+Release evidence must come from actual workflow/check-run/build/device/store results.
 
 ---
 
-## 32. Product identity
+## 30. Required external release gates still pending evidence
+
+Before calling Finora store-ready, execute/retain evidence for:
+
+1. dependency-free structural preflight;
+2. `.NET 10` restore;
+3. MAUI workload restore;
+4. format/analyzer verification;
+5. Release core build;
+6. unit tests;
+7. integration tests;
+8. UI-contract tests;
+9. Android MAUI build;
+10. Windows MAUI build;
+11. iOS/Mac Catalyst builds on supported macOS/Xcode host;
+12. v1→v2 migration tests through actual production path;
+13. data-integrity regression suite;
+14. notification replacement/reconciliation tests;
+15. encrypted backup/restore/tamper/graph/path/failure tests;
+16. interrupted-restore recovery tests;
+17. symbolic-link/reparse tests on representative filesystems;
+18. app-lock secure-storage/provider-failure tests;
+19. PIN/biometric/Windows Hello/capture tests;
+20. masked-secret-entry behavior on native platforms;
+21. Android merged-manifest verification;
+22. Android ordinary backup/cloud-backup/device-transfer exclusion behavior;
+23. local notification permission/reboot/doze/packaging tests;
+24. stale cache share-copy cleanup behavior on packaged/native app;
+25. TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast tests;
+26. package signing/install/upgrade/uninstall tests;
+27. exact dependency vulnerability/license review;
+28. final privacy/data-safety/store metadata review.
+
+---
+
+## 31. Branding, repository and contact identity
 
 - Product: **Finora**
 - Attribution: **Made by the Sanskar**
 - Repository: https://github.com/sanskarIN/Finora
 - Creator/open-source profile: https://www.github.com/sanskarIN
-- Business/security email: `sanskarin@outlook.in`
-- Support email: `supportramsandesh@gmail.com`
+- Business/security: `sanskarin@outlook.in`
+- Support: `supportramsandesh@gmail.com`
 - License: Apache-2.0
 
 ---
 
-## 33. Final continuation state
+## 32. Current conclusion
 
-The 2026-08-10 continuation substantially hardened Finora's current local-first source around financial graph correctness, recurrence lifecycle, budget periods, mixed-currency reporting, backup/restore validation, storage path safety, integrity diagnostics, notification cleanup, account dependencies, and regression coverage.
+The current source line is materially more defensive than the previous `what_changed.md` baseline, particularly around:
 
-The next objective is not to invent cloud/login/server functionality inside this release. The next required release work is to run the repository's compiler/tests/MAUI builds and native-device/store matrices on the appropriate toolchains, fix any failures they reveal, and only then prepare signed production artifacts.
+- notification replacement ordering;
+- physical private-path confinement;
+- encrypted backup buffer hygiene;
+- restore/recovery symlink safety;
+- data-integrity aggregate coverage;
+- schema-v2 metadata persistence validation;
+- Android automatic-backup/device-transfer exclusion;
+- masked secret entry;
+- PIN/secure-storage consistency;
+- generic user-facing infrastructure errors;
+- privacy-safe diagnostics;
+- stale share-cache retention;
+- safe derived savings-goal state repair;
+- regression-test coverage;
+- release documentation.
+
+Native compilation/test/device/signing/store evidence remains a separate release gate and is intentionally not overstated here.
