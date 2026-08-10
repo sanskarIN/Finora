@@ -64,59 +64,85 @@ public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) :
         modelBuilder.Entity<FinanceTransaction>().Property(x => x.Currency).HasMaxLength(8);
         modelBuilder.Entity<FinanceTransaction>().Property(x => x.Merchant).HasMaxLength(240);
         modelBuilder.Entity<Category>().Property(x => x.Name).HasMaxLength(120);
+        modelBuilder.Entity<Category>().Property(x => x.Icon).HasMaxLength(80);
         modelBuilder.Entity<Tag>().Property(x => x.Name).HasMaxLength(80);
+        modelBuilder.Entity<Tag>().Property(x => x.ColorLabel).HasMaxLength(32);
         modelBuilder.Entity<Budget>().Property(x => x.Name).HasMaxLength(120);
         modelBuilder.Entity<Budget>().Property(x => x.Currency).HasMaxLength(8);
         modelBuilder.Entity<SavingsGoal>().Property(x => x.Name).HasMaxLength(120);
         modelBuilder.Entity<SavingsGoal>().Property(x => x.Currency).HasMaxLength(8);
+        modelBuilder.Entity<SavingsGoal>().Property(x => x.Icon).HasMaxLength(80);
         modelBuilder.Entity<RecurrenceRule>().Property(x => x.Name).HasMaxLength(120);
         modelBuilder.Entity<RecurrenceRule>().Property(x => x.Currency).HasMaxLength(8);
+        modelBuilder.Entity<Attachment>().Property(x => x.RelativePath).HasMaxLength(1024);
         modelBuilder.Entity<Attachment>().Property(x => x.OriginalFileName).HasMaxLength(240);
+        modelBuilder.Entity<Attachment>().Property(x => x.ContentType).HasMaxLength(80);
+        modelBuilder.Entity<TransactionRevision>().Property(x => x.ChangeKind).HasMaxLength(80);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Kind).HasMaxLength(64);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Title).HasMaxLength(160);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Body).HasMaxLength(500);
+        modelBuilder.Entity<NotificationSchedule>().Property(x => x.DedupeKey).HasMaxLength(200);
+        modelBuilder.Entity<AppSetting>().Property(x => x.Key).HasMaxLength(200);
+        modelBuilder.Entity<AuditEntry>().Property(x => x.EntityType).HasMaxLength(80);
+        modelBuilder.Entity<AuditEntry>().Property(x => x.Action).HasMaxLength(200);
+        modelBuilder.Entity<BackupMetadata>().Property(x => x.BackupId).HasMaxLength(100);
     }
 
     private void ValidateTrackedFinanceEntries()
     {
-        foreach (var entry in ChangeTracker.Entries<Account>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        static IEnumerable<T> Pending<T>(ChangeTracker tracker) where T : class
+            => tracker.Entries<T>()
+                .Where(entry => entry.State is EntityState.Added or EntityState.Modified)
+                .Select(entry => entry.Entity);
+
+        foreach (var account in Pending<Account>(ChangeTracker))
         {
-            entry.Entity.Name = entry.Entity.Name.Trim();
-            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
-            DomainRules.ValidateAccount(entry.Entity);
+            account.Name = account.Name.Trim();
+            account.Currency = account.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateAccount(account);
         }
 
-        foreach (var entry in ChangeTracker.Entries<FinanceTransaction>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        foreach (var transaction in Pending<FinanceTransaction>(ChangeTracker))
         {
-            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
-            DomainRules.ValidateTransaction(entry.Entity);
+            transaction.Currency = transaction.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateTransaction(transaction);
         }
 
-        foreach (var entry in ChangeTracker.Entries<Budget>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        foreach (var split in Pending<TransactionSplit>(ChangeTracker)) DomainRules.ValidateTransactionSplit(split);
+        foreach (var category in Pending<Category>(ChangeTracker)) { category.Name = category.Name.Trim(); category.Icon = category.Icon.Trim(); DomainRules.ValidateCategory(category); }
+        foreach (var tag in Pending<Tag>(ChangeTracker)) { tag.Name = tag.Name.Trim(); tag.ColorLabel = string.IsNullOrWhiteSpace(tag.ColorLabel) ? null : tag.ColorLabel.Trim(); DomainRules.ValidateTag(tag); }
+        foreach (var link in Pending<TransactionTag>(ChangeTracker)) DomainRules.ValidateTransactionTag(link);
+
+        foreach (var budget in Pending<Budget>(ChangeTracker))
         {
-            entry.Entity.Name = entry.Entity.Name.Trim();
-            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
-            DomainRules.ValidateBudget(entry.Entity);
+            budget.Name = budget.Name.Trim();
+            budget.Currency = budget.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateBudget(budget);
         }
+        foreach (var period in Pending<BudgetPeriod>(ChangeTracker)) DomainRules.ValidateBudgetPeriod(period);
 
-        foreach (var entry in ChangeTracker.Entries<BudgetPeriod>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
-            DomainRules.ValidateBudgetPeriod(entry.Entity);
-
-        foreach (var entry in ChangeTracker.Entries<SavingsGoal>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        foreach (var goal in Pending<SavingsGoal>(ChangeTracker))
         {
-            entry.Entity.Name = entry.Entity.Name.Trim();
-            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
-            DomainRules.ValidateSavingsGoal(entry.Entity);
+            goal.Name = goal.Name.Trim();
+            goal.Currency = goal.Currency.Trim().ToUpperInvariant();
+            goal.Icon = goal.Icon.Trim();
+            DomainRules.ValidateSavingsGoal(goal);
         }
+        foreach (var contribution in Pending<GoalContribution>(ChangeTracker)) DomainRules.ValidateGoalContribution(contribution);
 
-        foreach (var entry in ChangeTracker.Entries<GoalContribution>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
-            DomainRules.ValidateGoalContribution(entry.Entity);
-
-        foreach (var entry in ChangeTracker.Entries<RecurrenceRule>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        foreach (var rule in Pending<RecurrenceRule>(ChangeTracker))
         {
-            entry.Entity.Name = entry.Entity.Name.Trim();
-            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
-            DomainRules.ValidateRecurrenceRule(entry.Entity);
+            rule.Name = rule.Name.Trim();
+            rule.Currency = rule.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateRecurrenceRule(rule);
         }
+        foreach (var occurrence in Pending<RecurrenceOccurrence>(ChangeTracker)) DomainRules.ValidateRecurrenceOccurrence(occurrence);
+        foreach (var attachment in Pending<Attachment>(ChangeTracker)) DomainRules.ValidateAttachmentMetadata(attachment);
+        foreach (var revision in Pending<TransactionRevision>(ChangeTracker)) DomainRules.ValidateTransactionRevision(revision);
+        foreach (var reconciliation in Pending<AccountReconciliation>(ChangeTracker)) DomainRules.ValidateReconciliation(reconciliation);
+        foreach (var notification in Pending<NotificationSchedule>(ChangeTracker)) DomainRules.ValidateNotificationSchedule(notification);
+        foreach (var setting in Pending<AppSetting>(ChangeTracker)) DomainRules.ValidateAppSetting(setting);
+        foreach (var audit in Pending<AuditEntry>(ChangeTracker)) DomainRules.ValidateAuditEntry(audit);
+        foreach (var metadata in Pending<BackupMetadata>(ChangeTracker)) DomainRules.ValidateBackupMetadata(metadata);
     }
 }
