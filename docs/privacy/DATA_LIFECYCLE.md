@@ -1,114 +1,218 @@
 # Finora Data Lifecycle
 
-Finora's current release is local-first and requires no account/login. This document describes how user finance data is created, stored, transformed, exported, backed up, restored and deleted.
+This document describes how current-release data enters, moves through, leaves, and is deleted from Finora. The current product is local-first and does not require a Finora cloud account.
 
 ## 1. Creation
 
-Finance data is created only through local app actions such as onboarding/opening balance, accounts, transactions/transfers, categories/tags, budgets, savings goals, recurring items, reconciliation, CSV import and optional receipt attachment.
+Data can enter Finora through:
 
-Transaction location is manually entered. Finora does not collect background location in the current release.
+- onboarding preferences and optional opening balance;
+- user-created accounts/categories/tags/budgets/goals/recurring rules;
+- transaction quick-add/detail/edit workflows;
+- linked transfers;
+- reconciliation workflow;
+- receipt/document selection;
+- CSV import selected through system UI;
+- encrypted backup restore selected through system UI;
+- local platform permission/settings choices.
 
-The hidden developer sample-reset action is separate from normal user data creation. It requires typed destructive confirmation and creates deterministic **synthetic** records only after clearing existing finance data.
+Location data is not collected automatically. The transaction location field exists only when the user manually enters text.
 
-## 2. Local persistence
+## 2. Primary local storage
 
-Structured finance records are stored in the app-private SQLite database. Monetary values use integer minor units plus currency code. Major-unit parsing/formatting uses decimal arithmetic and currency-aware precision metadata.
+### SQLite
 
-Receipt/document bytes are stored under the app-private `attachments` tree. SQLite stores receipt metadata such as transaction link, safe relative path, original filename, content type, size and SHA-256 checksum.
+The local SQLite database stores structured finance data including accounts, transactions, categories/tags, budgets, goals, recurrence state, transaction revisions, reconciliation history, reminder scheduling metadata, settings, audit metadata, and backup metadata.
 
-Small PIN verifier material is stored with OS secure storage. Non-secret app preferences use platform preferences. The full database/receipt tree is not stored in secure storage.
+Money is stored as signed integer minor units plus currency code. Major-unit input is converted with `decimal`; known currency precision is not universally assumed to be two decimals.
 
-## 3. Runtime processing
+### App-private receipt storage
 
-Dashboard/report aggregation requires one explicit reporting currency. Other currencies remain separate; Finora does not silently convert/add them or automatically fetch exchange rates.
+Receipt/document bytes are stored as files under Finora's app-private `attachments` data area rather than arbitrary external paths. SQLite stores metadata such as relative path, original filename, content type, byte size, and SHA-256 checksum.
 
-Runtime locale affects date/number formatting, not stored integer financial values.
+Path resolution is confined to that attachment root using platform-correct case sensitivity.
 
-Recurring processing creates persisted unique occurrences first. A finance transaction is created only from paid/partial-paid workflow, preventing restart-driven duplication.
+### OS secure storage
 
-## 4. Notifications
+Small app-lock verifier/security values can be stored using platform secure storage. Large financial datasets, the SQLite database, receipts, and backups are not placed in secure storage.
 
-Opt-in local notification schedule state is stored locally. Notification content is intentionally generic because it may appear outside Finora's app lock. Finance records remain the source of truth; notification delivery is not.
+A separate local PIN-enabled preference is used so missing/corrupt secure-storage verifier material fails closed instead of silently disabling the lock.
 
-## 5. Receipt lifecycle
+### Cache storage
 
-A selected receipt is copied into app-private storage after validation. Finora can open/delete the local attachment and clean orphan files. Integrity checks can validate path confinement, existence, byte size and checksum.
+Temporary export/diagnostic/integrity files can be written to Finora's cache directory before the user explicitly shares/saves them through system UI. Cache files are not the system of record and may be removed by the operating system.
 
-A receipt leaves app-private storage only through an explicit user export/share/backup path.
+## 3. Updates
 
-## 6. CSV import
+Ordinary writes use asynchronous SQLite/file operations. Multi-record workflows use relational/database transactions where atomicity matters.
 
-The user explicitly selects a CSV and maps columns. Finora validates/normalizes rows locally and commits valid supported records transactionally. Import does not automatically upload the CSV.
+Examples:
 
-Currency precision, overflow/extreme values, account/category/tag/transfer relationships and likely duplicates are checked before commit.
+- transfers update/create both linked rows together;
+- critical transaction edits create local revision history;
+- reconciliation can create an explicit adjustment and history entry;
+- recurrence due processing persists unique occurrence state;
+- recurring-rule pause/resume/archive changes persisted lifecycle state;
+- custom-budget explicit-period replacement is treated as one logical database operation;
+- mapped CSV import commits validated rows transactionally;
+- database migrations update supported schemas transactionally.
 
-## 7. Export/share
+Account currency is not allowed to change after transaction/recurrence dependencies exist. Active recurrence must be paused/completed/archived before its account can be archived.
 
-CSV/PDF exports and sanitized diagnostics are created only after user action and then handed to the system share/save UI.
+## 4. Currency-scoped aggregation
 
-Once the user chooses an external destination/app, that destination's privacy/security/storage behavior applies. Finora does not automatically transmit the export elsewhere.
+Finora does not silently convert currencies or invent exchange rates.
 
-## 8. Encrypted backup creation
+- Dashboard aggregate totals use the configured reporting currency.
+- Other-currency transaction/goal/recurrence rows retain their own currency.
+- Category/merchant/monthly/tag report aggregates are currency-scoped.
+- Same-currency transfer remains the only current transfer model.
+- CSV major-unit conversion respects currency-specific minor-unit precision.
 
-The user explicitly requests a backup and supplies a password. Finora serializes supported local finance data plus validated receipt bytes, derives an encryption key using PBKDF2-SHA256 with a random salt and protects the payload with AES-GCM authenticated encryption.
+This prevents unrelated minor-unit values such as INR and USD from being added and presented as one valid total.
 
-The derived key is not persisted. The backup file is handed to a system share/save surface only after explicit user action. Finora does not automatically upload backups.
+## 5. Integrity metadata and diagnostics
 
-## 9. Backup preview/restore
+Finora keeps local controls to detect inconsistency:
 
-Preview decrypts/validates the selected backup locally using the supplied password and shows safe metadata such as schema/counts. Restore validates schema, attachment metadata/bytes and encrypted integrity before replacement.
+- SQLite foreign keys/indexes;
+- account/transaction currency relationships;
+- transfer group/counterparty relationships;
+- split signs/totals/category links;
+- category hierarchy;
+- unique recurrence occurrence key;
+- budget/custom-period relationships;
+- savings contribution/link state;
+- reconciliation arithmetic/adjustment link;
+- receipt byte size and SHA-256 checksum;
+- schema-version setting.
 
-Production restore spans SQLite plus the receipt file tree, so it uses a crash-recovery protocol:
+The hidden developer data-integrity check can inspect SQLite integrity, foreign keys, transaction values, transfer pairs, split totals, category cycles, budgets/periods, savings contributions, recurrence dependencies/payment state, reconciliation links, and receipt path/size/checksum state.
 
-1. recover any previous interrupted restore;
-2. write a transient random restore-operation marker in local app settings;
-3. write an app-private recovery journal containing operation/directory state only;
-4. copy the current receipt tree to an app-private rollback directory;
-5. execute the validated encrypted database/receipt restore;
-6. infer DB commit from the transient marker's presence/absence;
-7. roll receipts back when DB replacement did not commit or finalize new receipts when it did;
-8. remove recovery artifacts after safe resolution.
+Its exported report contains only health codes/counts rather than private finance contents.
 
-Startup performs recovery before normal finance navigation. If safe automatic recovery cannot complete, Finora blocks normal initialization rather than silently exposing a database/receipt mismatch.
+## 6. Notifications
 
-Recovery journal/marker metadata does **not** contain backup passwords, derived keys, account names, merchant/payee names, notes, amounts, manual locations or receipt contents.
+Local reminder schedules are stored locally and mapped to platform notification APIs after permission is granted. Notification title/body is intentionally generic because it can be visible outside the Finora app lock.
 
-## 10. Diagnostics/integrity reports
+Reminder synchronization is stateful:
 
-Diagnostic logs are bounded and intentionally omit private finance payloads. The local integrity report exposes issue codes/counts rather than names/amounts/notes/receipt filenames.
+- disabling backup reminders cancels the stale backup schedule;
+- budget schedules are removed when no current threshold condition needs them;
+- paused/completed/archived recurring rules have stale recurrence schedules cancelled;
+- duplicate dedupe keys are not intentionally accumulated.
 
-Unhandled/unobserved exception capture records event/type metadata only, not exception messages/stacks containing potential private context.
+No notification workflow uploads the user's finance database.
 
-## 11. App lock
+## 7. Recurring lifecycle
 
-When a PIN is enabled, small verifier material is held in OS secure storage and a non-secret enabled marker is retained in preferences. If verifier material is missing/malformed while the marker remains enabled, verification fails closed rather than bypassing app lock.
+A recurring rule may be Active, Paused, Completed, or Archived.
 
-Removing the PIN explicitly clears verifier material and lockout state.
+- Active rules can prepare due occurrences.
+- Paused rules stop generation without deleting history.
+- Resume revalidates end date/account/category/currency dependencies.
+- Archived rules are removed from active rule lists but occurrence history remains.
+- A due occurrence persists independently and can be Pending, Paid, PartiallyPaid, Skipped, or Postponed; skipped occurrences can be explicitly reopened.
+- Paid/partial state must have a valid generated transaction; unpaid/skipped/postponed state must not silently carry generated payment data.
 
-## 12. Full finance-data deletion
+## 8. Budget period lifecycle
 
-The Settings destructive reset requires explicit confirmation. `FinanceDataResetService` removes finance-domain records, transaction revisions, reconciliation/reminder/audit/backup metadata, user category/tag data and receipt metadata transactionally/dependency-safely. Receipt files are cleaned only after DB reset commit.
+Budget periods use one shared interpretation policy:
 
-It intentionally preserves:
+- explicit periods cannot overlap;
+- weekly generated windows are Monday–Sunday;
+- monthly generated windows are calendar months;
+- custom budgets require explicit periods and are inactive outside them;
+- rollover applies only when enabled;
+- checked effective planned amount must remain positive.
 
-- `schema.version`;
-- non-finance app preferences;
-- app-lock/PIN configuration.
+Replacing explicit periods is intended to be atomic so a failed replacement does not leave the budget without its prior valid period set.
 
-Self-referencing categories are deleted leaves-first. A category cycle causes reset rollback instead of partial deletion.
+## 9. Import trust boundary
 
-## 13. Developer synthetic reset
+CSV import begins after explicit file selection. Finora reads the selected file, validates/normalizes mapping/rows locally, shows preview/validation information, and then writes accepted records to SQLite.
 
-The hidden developer reset requires typing `RESET SAMPLE`. It first performs complete finance reset, reseeds system categories and then creates deterministic synthetic accounts/transactions/transfer/budget/goal/recurrence records.
+Import controls include UTF-8/file/row limits, currency-specific decimal conversion, account/category/tag resolution, duplicate protection, transfer pair/counterparty checks, and `long.MinValue` rejection before sign normalization.
 
-It must not be treated as a backup/restore mechanism and must not be run against wanted data without a separately saved encrypted backup.
+The selected source file remains controlled by its original storage/provider; Finora does not delete it.
 
-## 14. Uninstall/device loss
+## 10. Export trust boundary
 
-Uninstalling the app or clearing app storage may remove SQLite data, receipts, preferences and secure-storage material according to platform behavior. Android app-data backup is explicitly disabled in the current manifest.
+CSV/PDF exports are generated locally. The user explicitly invokes system share/save UI.
 
-Finora cannot recover local records after loss/uninstall unless the user separately saved a usable encrypted backup.
+Once another application or location receives an export, the destination's privacy/security/storage lifecycle applies. Finora cannot automatically revoke the exported copy.
 
-## 15. No automatic cloud lifecycle in current release
+## 11. Encrypted backup creation
 
-Current source has no required Finora account service, automatic cloud sync, analytics/advertising telemetry pipeline or automatic backup upload. Adding any later requires explicit architecture/privacy/security changes and updated user/store disclosures.
+When requested by the user:
+
+1. Finora reads the supported local finance graph.
+2. Receipt paths/files/size/checksums are validated.
+3. Financial graph relationships/invariants are validated before encryption.
+4. The snapshot plus receipt bytes is serialized.
+5. A key is derived from the user-entered backup password using PBKDF2-SHA256 with a random salt.
+6. The payload is encrypted/authenticated with AES-GCM using a random nonce/tag.
+7. Finora records privacy-safe local backup metadata/audit state.
+8. Sensitive plaintext/receipt buffers are cleared as early as practical after use/failure.
+9. The encrypted bytes are offered to system share/save UI.
+
+Finora does not automatically upload the backup and does not persist the backup password/derived key.
+
+## 12. Encrypted backup preview/restore
+
+When requested by the user:
+
+1. System file picker supplies the selected backup stream.
+2. Finora validates basic format/size and authenticates/decrypts it with the entered password.
+3. Schema, unique identifiers, attachment metadata/bytes, and the complete supported financial graph are validated.
+4. Invalid account/currency, transfer, split, category/tag, budget/period, goal/contribution, recurrence, reconciliation, notification, or settings relationships fail before destructive replacement.
+5. Internal restore markers/settings are not accepted from the snapshot.
+6. A preview is displayed before replacement.
+7. Receipt files are staged in a private temporary directory.
+8. A crash-safe wrapper snapshots the prior receipt tree and records recovery state.
+9. Supported local database records are replaced inside a database transaction.
+10. A local DB commit marker distinguishes pre-commit from post-commit recovery.
+11. Attachment directories are swapped/finalized with rollback handling.
+12. On next startup, recovery runs before finance navigation: pending marker restores the previous tree; committed marker absence finalizes the new tree.
+13. Stale staging/rollback directories are cleaned only after the recovery decision.
+14. Invalid/tampered/incompatible backups fail instead of being silently accepted.
+
+## 13. Diagnostics
+
+The privacy logger stores sanitized event/type tokens only. Caller-supplied private properties, exception messages, and stack traces are intentionally not serialized by this logger.
+
+Unobserved task exceptions are captured in the sanitized path and marked observed after handling to prevent duplicate runtime escalation.
+
+Sanitized diagnostic and integrity exports are user-initiated. They must not contain account names, merchant/payee names, notes, amounts, manually entered locations, receipt names/contents, PINs, backup passwords, or signing/encryption secrets.
+
+## 14. App lock/security values
+
+PIN setup stores verifier material rather than plaintext PIN. Failed PIN attempts can trigger bounded escalating local lockout. Biometric/Windows Hello uses platform authentication and requires PIN fallback in the current design.
+
+Removing local finance data does not necessarily remove security/preferences automatically; the UI explains which data categories are being deleted.
+
+## 15. Full local finance-data deletion
+
+The explicit Settings deletion flow removes supported local finance records, including user-created categories and schema-v2 finance tables, and invokes receipt-file cleanup. Schema metadata/preferences needed to keep the application operable are not silently reinterpreted as finance records.
+
+The confirmation is intentionally destructive/explicit and uses a typed confirmation phrase.
+
+Deletion from Finora cannot delete copies the user previously exported/shared/saved elsewhere.
+
+## 16. Deterministic sample-data reset
+
+The hidden developer reset uses synthetic local data only and requires a separate typed destructive confirmation. It is intended for development/testing, not for preserving real user finance history.
+
+## 17. Uninstall/reset
+
+The operating system can remove Finora app-private SQLite data, receipts, preferences, secure-storage values, and/or cache data during uninstall/reset depending on platform behavior.
+
+Users who need to preserve finance records should save and verify an external encrypted backup before uninstall/reset. Finora has no automatic cloud recovery service in the current release.
+
+## 18. Logs/cache retention
+
+Finora's privacy diagnostic log is bounded/rotated. Cache exports are temporary and may be removed by the OS. Release/device QA should verify cache cleanup behavior but must not treat cache artifacts as durable records.
+
+## 19. Future cloud/account/exchange features
+
+Cloud synchronization, remote account authentication, collaboration, mobile-number authentication, server-backed entitlement validation, and automatic exchange-rate conversion are outside the current lifecycle. Adding any of them requires a new server/network data-flow design, privacy update, threat-model update, retention/deletion policy, user-consent treatment, and migration strategy before release.
