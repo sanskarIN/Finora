@@ -101,6 +101,6 @@ public sealed class PrivacyLoggerTests : IDisposable
             if (await predicate()) return;
             await Task.Delay(25);
         }
-        Assert.Fail("Timed out waiting for asynchronous diagnostic write.");
+        Assert.True(false, "Timed out waiting for asynchronous diagnostic write.");
     }
 }
