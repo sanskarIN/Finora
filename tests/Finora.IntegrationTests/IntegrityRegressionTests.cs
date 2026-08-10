@@ -43,7 +43,7 @@ public sealed class IntegrityRegressionTests : IAsyncLifetime
 
         var report = await new DataIntegrityService(_factory, _root).CheckAsync();
 
-        Assert.Contains(report.Issues, issue => issue.Code == "TRANSACTION_SIGN_INVALID" && issue.Count == 1);
+        Assert.Contains(report.Issues, issue => issue.Code == "TRANSACTION_SIGN_INVALID" && issue.AffectedRecords == 1);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class IntegrityRegressionTests : IAsyncLifetime
 
         var report = await new DataIntegrityService(_factory, _root).CheckAsync();
 
-        Assert.Contains(report.Issues, issue => issue.Code == "TRANSACTION_AMOUNT_INVALID" && issue.Count == 1);
+        Assert.Contains(report.Issues, issue => issue.Code == "TRANSACTION_AMOUNT_INVALID" && issue.AffectedRecords == 1);
     }
 
     [Fact]
@@ -81,6 +81,6 @@ public sealed class IntegrityRegressionTests : IAsyncLifetime
 
         var report = await new DataIntegrityService(_factory, _root).CheckAsync();
 
-        Assert.Contains(report.Issues, issue => issue.Code == "ATTACHMENT_PATH_UNSAFE" && issue.Count == 1);
+        Assert.Contains(report.Issues, issue => issue.Code == "ATTACHMENT_PATH_UNSAFE" && issue.AffectedRecords == 1);
     }
 }
