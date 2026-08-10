@@ -14,6 +14,8 @@ public partial class App : Microsoft.Maui.Controls.Application
     private readonly ReminderCoordinator _reminders;
     private readonly AppExceptionCoordinator _exceptions;
     private DateTimeOffset? _deactivatedAtUtc;
+    private Task _initializationTask = Task.CompletedTask;
+    private bool _initializationSucceeded;
 
     public App(
         IFinanceStore store,
@@ -48,9 +50,9 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         var shell = new AppShell();
         var window = new Window(shell);
+        _initializationTask = InitializeAsync(shell);
         window.Deactivated += (_, _) => _deactivatedAtUtc = DateTimeOffset.UtcNow;
         window.Activated += async (_, _) => await OnActivatedSafelyAsync();
-        _ = InitializeAsync(shell);
         return window;
     }
 
@@ -58,6 +60,7 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         try
         {
+            _initializationSucceeded = false;
             await _store.InitializeAsync().ConfigureAwait(false);
             var recovery = await _storageRecovery.RecoverAsync().ConfigureAwait(false);
             if (!recovery.IsSuccess)
@@ -75,15 +78,17 @@ public partial class App : Microsoft.Maui.Controls.Application
                     await _reminders.SyncAsync();
 
                 if (await _appLock.HasPinAsync())
-                    await Shell.Current.GoToAsync("//lock");
+                    await shell.GoToAsync("//lock");
                 else if (!_settings.OnboardingComplete)
-                    await Shell.Current.GoToAsync("//onboarding");
+                    await shell.GoToAsync("//onboarding");
                 else
-                    await Shell.Current.GoToAsync(AppRoutes.DashboardRoot);
+                    await shell.GoToAsync(AppRoutes.DashboardRoot);
             });
+            _initializationSucceeded = true;
         }
         catch (Exception ex)
         {
+            _initializationSucceeded = false;
             _exceptions.Report(ex, "app_initialize_failed");
             await MainThread.InvokeOnMainThreadAsync(() =>
                 shell.DisplayAlertAsync(
@@ -97,6 +102,8 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         try
         {
+            await _initializationTask;
+            if (!_initializationSucceeded) return;
             await OnActivatedAsync();
         }
         catch (Exception ex)
