@@ -14,7 +14,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
     private readonly IDbContextFactory<FinoraDbContext> _factory = factory;
     private readonly string _appDataRoot = Path.GetFullPath(appDataRoot);
-    private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
+    private string AttachmentRoot => Path.GetFullPath(Path.Combine(_appDataRoot, "attachments"));
 
     public async Task<byte[]> CreateEncryptedBackupAsync(string password, CancellationToken cancellationToken = default)
     {
@@ -58,6 +58,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
 
         var plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
         var encrypted = Encrypt(plaintext, password);
+        CryptographicOperations.ZeroMemory(plaintext);
         var metadata = new BackupMetadata { BackupId = Guid.NewGuid().ToString("N"), SchemaVersion = AppConstants.DatabaseSchemaVersion, CreatedOnUtc = snapshot.CreatedAtUtc, Sha256Hex = Convert.ToHexString(SHA256.HashData(encrypted)) };
         db.BackupMetadata.Add(metadata);
         db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = metadata.Id, Action = "CreatedEncryptedBackup" });
@@ -74,7 +75,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             return Result<BackupPreview>.Success(new BackupPreview(snapshot.SchemaVersion, snapshot.CreatedAtUtc, snapshot.Accounts.Count, snapshot.Transactions.Count, snapshot.Budgets.Count, snapshot.Goals.Count));
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or ArgumentException or IOException) { return Result<BackupPreview>.Failure("The backup could not be verified. Check the file and password."); }
+        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or ArgumentException or IOException or InvalidOperationException) { return Result<BackupPreview>.Failure("The backup could not be verified. Check the file and password."); }
     }
 
     public async Task<Result> RestoreEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
@@ -157,7 +158,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             return Result.Success();
         }
         catch (OperationCanceledException) { Cleanup(stagedDirectory); Cleanup(rollbackDirectory); throw; }
-        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException or InvalidOperationException)
         {
             Cleanup(stagedDirectory); Cleanup(rollbackDirectory);
             return Result.Failure("Restore failed safely; the existing database was not committed with incomplete backup data.");
@@ -174,18 +175,58 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         await stream.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (buffer.Length > MaximumEncryptedBytes) throw new InvalidDataException("Backup file is too large.");
         var plaintext = Decrypt(buffer.ToArray(), password);
-        var snapshot = JsonSerializer.Deserialize<Snapshot>(plaintext, Json) ?? throw new InvalidDataException("Backup payload is empty.");
-        if (snapshot.SchemaVersion <= 0) throw new InvalidDataException("Backup schema is invalid.");
-        if (snapshot.Attachments.Count != snapshot.AttachmentBlobs.Count) throw new InvalidDataException("Backup attachment metadata is incomplete.");
-        foreach (var attachment in snapshot.Attachments)
+        try
         {
-            _ = ResolveAttachmentPath(attachment.RelativePath);
-            var blob = snapshot.AttachmentBlobs.SingleOrDefault(x => x.AttachmentId == attachment.Id) ?? throw new InvalidDataException("Backup attachment data is incomplete.");
-            if (blob.Data.LongLength != attachment.SizeBytes) throw new InvalidDataException("Backup attachment size is invalid.");
-            var hash = SHA256.HashData(blob.Data);
-            if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256)) throw new InvalidDataException("Backup attachment integrity check failed.");
+            var snapshot = JsonSerializer.Deserialize<Snapshot>(plaintext, Json) ?? throw new InvalidDataException("Backup payload is empty.");
+            if (snapshot.SchemaVersion <= 0) throw new InvalidDataException("Backup schema is invalid.");
+            ValidateUniqueIds(snapshot);
+            if (snapshot.Attachments.Count != snapshot.AttachmentBlobs.Count) throw new InvalidDataException("Backup attachment metadata is incomplete.");
+            foreach (var attachment in snapshot.Attachments)
+            {
+                _ = ResolveAttachmentPath(attachment.RelativePath);
+                var blob = snapshot.AttachmentBlobs.Single(x => x.AttachmentId == attachment.Id);
+                if (blob.Data.LongLength != attachment.SizeBytes) throw new InvalidDataException("Backup attachment size is invalid.");
+                var hash = SHA256.HashData(blob.Data);
+                if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256)) throw new InvalidDataException("Backup attachment integrity check failed.");
+            }
+            return snapshot;
         }
-        return snapshot;
+        finally
+        {
+            CryptographicOperations.ZeroMemory(plaintext);
+        }
+    }
+
+    private static void ValidateUniqueIds(Snapshot snapshot)
+    {
+        EnsureUnique(snapshot.Accounts.Select(x => x.Id), "accounts");
+        EnsureUnique(snapshot.Transactions.Select(x => x.Id), "transactions");
+        EnsureUnique(snapshot.Splits.Select(x => x.Id), "transaction splits");
+        EnsureUnique(snapshot.Categories.Select(x => x.Id), "categories");
+        EnsureUnique(snapshot.Tags.Select(x => x.Id), "tags");
+        EnsureUnique(snapshot.Budgets.Select(x => x.Id), "budgets");
+        EnsureUnique(snapshot.BudgetPeriods.Select(x => x.Id), "budget periods");
+        EnsureUnique(snapshot.Goals.Select(x => x.Id), "savings goals");
+        EnsureUnique(snapshot.Contributions.Select(x => x.Id), "goal contributions");
+        EnsureUnique(snapshot.Rules.Select(x => x.Id), "recurrence rules");
+        EnsureUnique(snapshot.Occurrences.Select(x => x.Id), "recurrence occurrences");
+        EnsureUnique(snapshot.Attachments.Select(x => x.Id), "attachments");
+        EnsureUnique(snapshot.AttachmentBlobs.Select(x => x.AttachmentId), "attachment blobs");
+        EnsureUnique(snapshot.Revisions.Select(x => x.Id), "transaction revisions");
+        EnsureUnique(snapshot.Reconciliations.Select(x => x.Id), "reconciliations");
+        EnsureUnique(snapshot.Notifications.Select(x => x.Id), "notification schedules");
+        if (snapshot.Settings.GroupBy(x => x.Key, StringComparer.Ordinal).Any(group => group.Count() != 1))
+            throw new InvalidDataException("Backup contains duplicate setting keys.");
+    }
+
+    private static void EnsureUnique(IEnumerable<Guid> ids, string entityName)
+    {
+        var seen = new HashSet<Guid>();
+        foreach (var id in ids)
+        {
+            if (id == Guid.Empty || !seen.Add(id))
+                throw new InvalidDataException($"Backup contains invalid or duplicate {entityName} identifiers.");
+        }
     }
 
     private static byte[] Encrypt(byte[] plaintext, string password)
@@ -203,6 +244,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         using var stream = new MemoryStream(data); using var reader = new BinaryReader(stream);
         var magic = Encoding.ASCII.GetString(reader.ReadBytes(AppConstants.BackupMagic.Length)); if (magic != AppConstants.BackupMagic) throw new InvalidDataException("Not a Finora backup.");
         var salt = reader.ReadBytes(16); var nonce = reader.ReadBytes(12); var tag = reader.ReadBytes(16); var length = reader.ReadInt32();
+        if (salt.Length != 16 || nonce.Length != 12 || tag.Length != 16) throw new InvalidDataException("Backup header is truncated.");
         if (length < 0 || length > MaximumEncryptedBytes || reader.BaseStream.Length - reader.BaseStream.Position != length) throw new InvalidDataException("Backup length is invalid.");
         var ciphertext = reader.ReadBytes(length); var plaintext = new byte[length]; var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, 210_000, HashAlgorithmName.SHA256, 32);
         try { using var aes = new AesGcm(key, 16); aes.Decrypt(nonce, ciphertext, tag, plaintext, Encoding.ASCII.GetBytes(AppConstants.BackupMagic)); }
@@ -212,19 +254,18 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
 
     private string ResolveAttachmentPath(string relativePath)
     {
-        var full = Path.GetFullPath(Path.Combine(_appDataRoot, relativePath.Replace('/', Path.DirectorySeparatorChar)));
-        var root = AttachmentRoot.EndsWith(Path.DirectorySeparatorChar) ? AttachmentRoot : AttachmentRoot + Path.DirectorySeparatorChar;
-        if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Attachment path escaped Finora storage.");
-        return full;
+        var normalized = relativePath.Replace('/', Path.DirectorySeparatorChar);
+        var prefix = "attachments" + Path.DirectorySeparatorChar;
+        if (!normalized.StartsWith(prefix, PathSafety.Comparison))
+            throw new InvalidDataException("Attachment path is outside Finora receipt storage.");
+        return PathSafety.ResolveDescendant(AttachmentRoot, normalized[prefix.Length..], "Attachment path escaped Finora storage.");
     }
 
     private string ResolveStagedPath(string stagedRoot, string relativePath)
     {
-        var attachmentRelative = Path.GetRelativePath(AttachmentRoot, ResolveAttachmentPath(relativePath));
-        var full = Path.GetFullPath(Path.Combine(stagedRoot, attachmentRelative));
-        var root = stagedRoot.EndsWith(Path.DirectorySeparatorChar) ? stagedRoot : stagedRoot + Path.DirectorySeparatorChar;
-        if (!full.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Staged attachment path is invalid.");
-        return full;
+        var livePath = ResolveAttachmentPath(relativePath);
+        var attachmentRelative = Path.GetRelativePath(AttachmentRoot, livePath);
+        return PathSafety.ResolveDescendant(stagedRoot, attachmentRelative, "Staged attachment path is invalid.");
     }
 
     private static void ValidatePassword(string password) { if (string.IsNullOrWhiteSpace(password) || password.Length < 8) throw new ArgumentException("Backup password must be at least 8 characters."); }
