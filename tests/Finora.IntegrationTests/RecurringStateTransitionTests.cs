@@ -29,7 +29,7 @@ public sealed class RecurringStateTransitionTests : IAsyncLifetime
 
     public Task DisposeAsync()
     {
-        try { Directory.Delete(_root, true); } catch (IOException) { }
+        try { Directory.Delete(_root, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
         return Task.CompletedTask;
     }
 
@@ -85,7 +85,88 @@ public sealed class RecurringStateTransitionTests : IAsyncLifetime
         Assert.Equal(OccurrenceStatus.Pending, Assert.Single(await workflow.GetOccurrencesAsync(_today, _today, true)).Status);
     }
 
-    private async Task<RecurrenceOccurrenceInfo> PrepareOccurrenceAsync()
+    [Fact]
+    public async Task ArchivedCategory_BlocksNewRecurringPayment()
+    {
+        var category = new Category { Name = "Rent", Icon = "home" };
+        await _store.SaveCategoryAsync(category);
+        var occurrence = await PrepareOccurrenceAsync(category.Id);
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            var storedCategory = await db.Categories.SingleAsync(x => x.Id == category.Id);
+            storedCategory.IsArchived = true;
+            await db.SaveChangesAsync();
+        }
+
+        var result = await new RecurringWorkflowService(_factory).MarkPaidAsync(occurrence.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Empty(await _store.SearchTransactionsAsync());
+    }
+
+    [Fact]
+    public async Task PartialPayment_LinkDriftBlocksFurtherMutation()
+    {
+        var occurrence = await PrepareOccurrenceAsync();
+        var workflow = new RecurringWorkflowService(_factory);
+        Assert.True((await workflow.MarkPaidAsync(occurrence.Id, 1_000)).IsSuccess);
+        var generated = Assert.Single(await _store.SearchTransactionsAsync());
+        Assert.Equal(-1_000, generated.AmountMinor);
+
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            var stored = await db.Transactions.SingleAsync(x => x.Id == generated.Id);
+            stored.RecurrenceRuleId = null;
+            await db.SaveChangesAsync();
+        }
+
+        var result = await workflow.MarkPaidAsync(occurrence.Id, 2_500);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(-1_000, Assert.Single(await _store.SearchTransactionsAsync()).AmountMinor);
+    }
+
+    [Fact]
+    public async Task PartialRecurringTransfer_PairDriftBlocksFurtherMutation()
+    {
+        var destination = new Account { Name = "Destination", Type = AccountType.Savings, Currency = "INR" };
+        await _store.SaveAccountAsync(destination);
+        var rule = new RecurrenceRule
+        {
+            Name = "Move savings",
+            Frequency = RecurrenceFrequency.Monthly,
+            StartsOn = _today,
+            NextDueOn = _today,
+            DayOfMonth = _today.Day,
+            TransactionType = TransactionType.Transfer,
+            AmountMinor = 2_500,
+            Currency = "INR",
+            AccountId = _account.Id,
+            DestinationAccountId = destination.Id
+        };
+        await _store.SaveRecurrenceRuleAsync(rule);
+        Assert.Equal(1, await _store.ProcessDueRecurrencesAsync(_today));
+        var workflow = new RecurringWorkflowService(_factory);
+        var occurrence = Assert.Single(await workflow.GetOccurrencesAsync(_today, _today, true));
+        Assert.True((await workflow.MarkPaidAsync(occurrence.Id, 1_000)).IsSuccess);
+
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            var pair = await db.Transactions.Where(x => x.TransferGroupId != null).ToListAsync();
+            Assert.Equal(2, pair.Count);
+            pair.Single(x => x.AccountId == destination.Id).CounterpartyAccountId = Guid.NewGuid();
+            await db.SaveChangesAsync();
+        }
+
+        var result = await workflow.MarkPaidAsync(occurrence.Id, 2_500);
+
+        Assert.False(result.IsSuccess);
+        await using var verify = await _factory.CreateDbContextAsync();
+        var amounts = await verify.Transactions.AsNoTracking().Where(x => x.TransferGroupId != null).Select(x => x.AmountMinor).OrderBy(x => x).ToListAsync();
+        Assert.Equal(new[] { -1_000L, 1_000L }, amounts);
+    }
+
+    private async Task<RecurrenceOccurrenceInfo> PrepareOccurrenceAsync(Guid? categoryId = null)
     {
         var rule = new RecurrenceRule
         {
@@ -97,7 +178,8 @@ public sealed class RecurringStateTransitionTests : IAsyncLifetime
             TransactionType = TransactionType.Expense,
             AmountMinor = 2_500,
             Currency = "INR",
-            AccountId = _account.Id
+            AccountId = _account.Id,
+            CategoryId = categoryId
         };
         await _store.SaveRecurrenceRuleAsync(rule);
         Assert.Equal(1, await _store.ProcessDueRecurrencesAsync(_today));
