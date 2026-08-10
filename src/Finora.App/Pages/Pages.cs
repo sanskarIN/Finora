@@ -127,8 +127,14 @@ public partial class SettingsPage : ContentPage
 
     private async void OnCreateBackupClicked(object? sender, EventArgs e)
     {
-        var password = await DisplayPromptAsync("Encrypted backup", "Create a strong backup password. Finora cannot recover a forgotten backup password.", "Create", "Cancel", "Password", 128, Keyboard.Default);
-        if (string.IsNullOrWhiteSpace(password)) return;
+        var password = BackupPasswordEntry.Text ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            BackupPasswordEntry.Text = string.Empty;
+            await DisplayAlertAsync("Backup password required", "Enter a backup password of at least 8 characters in the masked field before creating a backup.", "OK");
+            return;
+        }
+
         byte[]? bytes = null;
         try
         {
@@ -146,18 +152,26 @@ public partial class SettingsPage : ContentPage
         }
         finally
         {
+            BackupPasswordEntry.Text = string.Empty;
             if (bytes is not null) CryptographicOperations.ZeroMemory(bytes);
         }
     }
 
     private async void OnRestoreBackupClicked(object? sender, EventArgs e)
     {
-        var picked = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Choose a Finora backup" });
-        if (picked is null) return;
-        var password = await DisplayPromptAsync("Restore backup", "Enter the backup password.", "Preview", "Cancel", "Password", 128, Keyboard.Default);
-        if (string.IsNullOrWhiteSpace(password)) return;
+        var password = BackupPasswordEntry.Text ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            BackupPasswordEntry.Text = string.Empty;
+            await DisplayAlertAsync("Backup password required", "Enter the backup password in the masked field before choosing a backup to restore.", "OK");
+            return;
+        }
+
         try
         {
+            var picked = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Choose a Finora backup" });
+            if (picked is null) return;
+
             await using var previewStream = await picked.OpenReadAsync();
             var preview = await _backup.PreviewEncryptedBackupAsync(previewStream, password);
             if (!preview.IsSuccess || preview.Value is null)
@@ -179,6 +193,10 @@ public partial class SettingsPage : ContentPage
             _logger.Error(ex, "Settings.BackupRestoreFailed");
             await DisplayAlertAsync("Restore failed", "The encrypted backup could not be restored. Existing data remains unchanged unless Finora reported restore completion.", "OK");
         }
+        finally
+        {
+            BackupPasswordEntry.Text = string.Empty;
+        }
     }
 
     private async void OnExportLogClicked(object? sender, EventArgs e)
@@ -197,15 +215,39 @@ public partial class SettingsPage : ContentPage
 
     private async void OnSetPinClicked(object? sender, EventArgs e)
     {
-        var pin = await DisplayPromptAsync("App lock PIN", "Enter a 4–12 digit PIN.", "Next", "Cancel", "PIN", 12, Keyboard.Numeric); if (string.IsNullOrWhiteSpace(pin)) return;
-        var again = await DisplayPromptAsync("Confirm PIN", "Enter the same PIN again.", "Save", "Cancel", "PIN", 12, Keyboard.Numeric); if (pin != again) { await DisplayAlertAsync("PIN not changed", "The PIN entries did not match.", "OK"); return; }
-        var result = await _lock.SetPinAsync(pin); await DisplayAlertAsync(result.IsSuccess ? "PIN saved" : "PIN not changed", result.IsSuccess ? "App lock is enabled." : result.Error ?? "PIN was not accepted.", "OK");
+        var pin = NewPinEntry.Text ?? string.Empty;
+        var confirmation = ConfirmPinEntry.Text ?? string.Empty;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(pin) || string.IsNullOrWhiteSpace(confirmation))
+            {
+                await DisplayAlertAsync("PIN not changed", "Enter and confirm a 4–12 digit PIN in the masked fields.", "OK");
+                return;
+            }
+            if (!string.Equals(pin, confirmation, StringComparison.Ordinal))
+            {
+                await DisplayAlertAsync("PIN not changed", "The PIN entries did not match.", "OK");
+                return;
+            }
+
+            var result = await _lock.SetPinAsync(pin);
+            await DisplayAlertAsync(result.IsSuccess ? "PIN saved" : "PIN not changed", result.IsSuccess ? "App lock is enabled." : result.Error ?? "PIN was not accepted.", "OK");
+        }
+        finally
+        {
+            NewPinEntry.Text = string.Empty;
+            ConfirmPinEntry.Text = string.Empty;
+        }
     }
 
     private async void OnRemovePinClicked(object? sender, EventArgs e)
     {
         if (!await DisplayAlertAsync("Remove app lock?", "Anyone with access to this device session may open Finora after the PIN is removed.", "Remove", "Cancel")) return;
-        await _lock.ClearPinAsync(); ViewModel.BiometricUnlock = false; await DisplayAlertAsync("App lock removed", "The local PIN and biometric unlock preference have been removed.", "OK");
+        await _lock.ClearPinAsync();
+        NewPinEntry.Text = string.Empty;
+        ConfirmPinEntry.Text = string.Empty;
+        ViewModel.BiometricUnlock = false;
+        await DisplayAlertAsync("App lock removed", "The local PIN and biometric unlock preference have been removed.", "OK");
     }
 
     private async void OnDeleteAllClicked(object? sender, EventArgs e)
