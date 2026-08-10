@@ -13,7 +13,7 @@ public sealed class RestoreRecoveryService(
     private readonly IDbContextFactory<FinoraDbContext> _factory = factory;
     private readonly string _appDataRoot = Path.GetFullPath(appDataRoot);
     private readonly RestoreRecoveryJournal _journal = new(appDataRoot);
-    private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
+    private string AttachmentRoot => Path.GetFullPath(Path.Combine(_appDataRoot, "attachments"));
 
     public async Task<Result<StorageRecoveryReport>> RecoverAsync(CancellationToken cancellationToken = default)
     {
@@ -27,6 +27,7 @@ public sealed class RestoreRecoveryService(
                 return Result<StorageRecoveryReport>.Success(new StorageRecoveryReport(false, false, false, cleaned));
             }
 
+            PathSafety.EnsureNotLinkIfExists(AttachmentRoot, "Finora receipt storage cannot be a symbolic link or reparse point during recovery.");
             await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
             var marker = await db.AppSettings.AsNoTracking()
                 .SingleOrDefaultAsync(setting => setting.Key == CommitMarkerKey, cancellationToken)
@@ -55,6 +56,7 @@ public sealed class RestoreRecoveryService(
                 {
                     if (!Directory.Exists(rollback))
                         return Result<StorageRecoveryReport>.Failure("An interrupted restore is missing its verified receipt rollback copy. The recovery journal was preserved for manual repair.");
+                    PathSafety.EnsureNotLinkIfExists(rollback, "Receipt rollback copy cannot be a symbolic link or reparse point.");
 
                     cleanupCount += DeleteDirectoryIfPresent(AttachmentRoot);
                     Directory.Move(rollback, AttachmentRoot);
@@ -110,11 +112,15 @@ public sealed class RestoreRecoveryService(
     private int CleanupOrphanRestoreDirectories()
     {
         if (!Directory.Exists(_appDataRoot)) return 0;
+        PathSafety.EnsureNotLinkIfExists(_appDataRoot, "App-private recovery root cannot be a symbolic link or reparse point.");
         var removed = 0;
         foreach (var pattern in new[] { "attachments.restore.*", "attachments.rollback.*" })
         {
             foreach (var directory in Directory.EnumerateDirectories(_appDataRoot, pattern, SearchOption.TopDirectoryOnly))
+            {
+                PathSafety.EnsureDescendant(_appDataRoot, directory, "Restore cleanup path escaped app-private storage.");
                 removed += DeleteDirectoryIfPresent(directory);
+            }
         }
         return removed;
     }
@@ -122,7 +128,8 @@ public sealed class RestoreRecoveryService(
     private static int DeleteDirectoryIfPresent(string path)
     {
         if (!Directory.Exists(path)) return 0;
-        Directory.Delete(path, recursive: true);
+        if (PathSafety.IsSymbolicLink(path)) Directory.Delete(path);
+        else Directory.Delete(path, recursive: true);
         return 1;
     }
 }
