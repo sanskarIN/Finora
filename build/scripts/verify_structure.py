@@ -48,6 +48,8 @@ REQUIRED_PATHS = [
     "docs/security/THREAT_MODEL.md",
     "docs/releases/RELEASE_CHECKLIST.md",
     "docs/releases/STORE_READINESS.md",
+    "src/Finora.App/Platforms/Android/Resources/xml/backup_rules.xml",
+    "src/Finora.App/Platforms/Android/Resources/xml/data_extraction_rules.xml",
 ]
 
 
@@ -231,14 +233,49 @@ def check_money_representation(errors: list[str]) -> None:
                 errors.append(f"{rel(path)}:{line_number}: floating-point type appears to represent a monetary value")
 
 
+def _assert_android_rule_domains(path: Path, errors: list[str]) -> None:
+    if not path.exists():
+        return
+    text = read(path)
+    for domain in ("root", "file", "database", "sharedpref", "external"):
+        if not re.search(rf'<exclude\s+domain="{domain}"\s+path="\."\s*/>', text):
+            errors.append(f"{rel(path)}: expected full-domain exclusion for {domain}")
+
+
 def check_privacy_configuration(errors: list[str]) -> None:
     android_manifest = ROOT / "src/Finora.App/Platforms/Android/AndroidManifest.xml"
     if android_manifest.exists():
         text = read(android_manifest)
-        if 'android:allowBackup="false"' not in text:
-            errors.append(f"{rel(android_manifest)}: android:allowBackup must remain false for the local finance store")
-        if 'android:usesCleartextTraffic="false"' not in text:
-            errors.append(f"{rel(android_manifest)}: android:usesCleartextTraffic must remain false")
+        required_fragments = {
+            'android:allowBackup="false"': "android:allowBackup must remain false for the local finance store",
+            'android:usesCleartextTraffic="false"': "android:usesCleartextTraffic must remain false",
+            'android:fullBackupContent="@xml/backup_rules"': "legacy Android full-backup exclusions must remain wired",
+            'android:dataExtractionRules="@xml/data_extraction_rules"': "Android 12+ data-extraction exclusions must remain wired",
+        }
+        for fragment, message in required_fragments.items():
+            if fragment not in text:
+                errors.append(f"{rel(android_manifest)}: {message}")
+
+    _assert_android_rule_domains(ROOT / "src/Finora.App/Platforms/Android/Resources/xml/backup_rules.xml", errors)
+    _assert_android_rule_domains(ROOT / "src/Finora.App/Platforms/Android/Resources/xml/data_extraction_rules.xml", errors)
+
+    settings_xaml = ROOT / "src/Finora.App/Pages/SettingsPage.xaml"
+    if settings_xaml.exists():
+        text = read(settings_xaml)
+        for name in ("BackupPasswordEntry", "NewPinEntry", "ConfirmPinEntry"):
+            match = re.search(rf'<Entry\b(?=[^>]*\bx:Name="{name}")[^>]*>', text)
+            if match is None or 'IsPassword="True"' not in match.group(0):
+                errors.append(f"{rel(settings_xaml)}: {name} must remain a masked password Entry")
+
+    app_root = ROOT / "src/Finora.App"
+    secret_prompt = re.compile(r"DisplayPromptAsync\s*\([^;]{0,900}\b(?:password|PIN)\b", re.IGNORECASE | re.DOTALL)
+    raw_exception_alert = re.compile(r"DisplayAlertAsync\s*\([^;]{0,900}\b(?:ex|exception)\.Message\b", re.IGNORECASE | re.DOTALL)
+    for path in app_root.rglob("*.cs"):
+        text = read(path)
+        if secret_prompt.search(text):
+            errors.append(f"{rel(path)}: secret password/PIN input must use a masked Entry, not DisplayPromptAsync")
+        if raw_exception_alert.search(text):
+            errors.append(f"{rel(path)}: raw exception messages must not be displayed in user alerts")
 
 
 def main() -> int:
@@ -263,7 +300,7 @@ def main() -> int:
         return 1
 
     print(f"Finora structural preflight passed: {len(paths)} text/source files checked.")
-    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation, and Android privacy flags.")
+    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation, masked secrets, and Android privacy/backup rules.")
     print("This is not a compiler, analyzer, test runner, emulator, simulator, signing, or store-validation substitute.")
     return 0
 
