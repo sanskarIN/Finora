@@ -128,6 +128,7 @@ public sealed class AttachmentService(IDbContextFactory<FinoraDbContext> factory
     public async Task<int> CleanupOrphanedFilesAsync(CancellationToken cancellationToken = default)
     {
         Directory.CreateDirectory(_attachmentRoot);
+        PathSafety.EnsureNotLinkIfExists(_attachmentRoot, "Attachment root cannot be a symbolic link or reparse point.");
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var storedPaths = await db.Attachments.AsNoTracking().Select(x => x.RelativePath).ToListAsync(cancellationToken).ConfigureAwait(false);
         var known = new HashSet<string>(PathSafety.Comparer);
@@ -138,11 +139,9 @@ public sealed class AttachmentService(IDbContextFactory<FinoraDbContext> factory
         }
 
         var removed = 0;
-        foreach (var file in Directory.EnumerateFiles(_attachmentRoot, "*", SearchOption.AllDirectories))
+        foreach (var full in PathSafety.EnumerateFilesWithoutLinks(_attachmentRoot, "Attachment cleanup encountered a linked or escaped path."))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var full = Path.GetFullPath(file);
-            PathSafety.EnsureDescendant(_attachmentRoot, full, "Attachment cleanup path escaped app storage.");
             if (known.Contains(full)) continue;
             SafeDelete(full);
             removed++;
@@ -162,7 +161,7 @@ public sealed class AttachmentService(IDbContextFactory<FinoraDbContext> factory
     }
 
     private string ResolveSafePath(string relativeWithinAttachments)
-        => PathSafety.ResolveDescendant(_attachmentRoot, relativeWithinAttachments, "Attachment path escaped app storage.");
+        => PathSafety.ResolveDescendantWithoutLinks(_attachmentRoot, relativeWithinAttachments, "Attachment path escaped app storage or traversed a link.");
 
     private static string SanitizeFileName(string fileName)
     {
