@@ -52,7 +52,6 @@ public sealed class FinanceRelationInvariantTests : IAsyncLifetime
     [Fact]
     public async Task GoalContribution_RejectsLinkedTransactionInAnotherCurrency()
     {
-        var inrAccount = await CreateAccountAsync("INR");
         var usdAccount = await CreateAccountAsync("USD");
         var goal = new SavingsGoal { Name = "Emergency", TargetMinor = 10_000, StartingMinor = 0, Currency = "INR" };
         await _store.SaveSavingsGoalAsync(goal);
@@ -69,7 +68,6 @@ public sealed class FinanceRelationInvariantTests : IAsyncLifetime
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => _store.AddGoalContributionAsync(contribution));
         Assert.Equal(0, (await _store.GetSavingsGoalsAsync()).Single(x => x.Id == goal.Id).CurrentMinor);
-        _ = inrAccount;
     }
 
     [Fact]
@@ -153,7 +151,7 @@ public sealed class FinanceRelationInvariantTests : IAsyncLifetime
         Assert.False(result.IsSuccess);
         await using var verify = await _factory.CreateDbContextAsync();
         var pair = await verify.Transactions.AsNoTracking().Where(x => x.TransferGroupId == group).OrderBy(x => x.AmountMinor).ToListAsync();
-        Assert.Equal([-100L, 90L], pair.Select(x => x.AmountMinor).ToArray());
+        Assert.Equal(new[] { -100L, 90L }, pair.Select(x => x.AmountMinor).ToArray());
     }
 
     [Fact]
