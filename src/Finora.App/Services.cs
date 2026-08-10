@@ -102,24 +102,39 @@ public sealed class MauiAppLockService : IAppLockService
 
     public async Task<bool> HasPinAsync()
     {
-        if (Preferences.Get(EnabledKey, false)) return true;
+        var enabledPreference = Preferences.Get(EnabledKey, false);
         try
         {
-            var hash = await SecureStorage.Default.GetAsync(HashKey);
-            var hasLegacyPin = !string.IsNullOrWhiteSpace(hash);
-            if (hasLegacyPin) Preferences.Set(EnabledKey, true);
-            return hasLegacyPin;
+            var saltRaw = await SecureStorage.Default.GetAsync(SaltKey);
+            var hashRaw = await SecureStorage.Default.GetAsync(HashKey);
+            var verifierPresent = HasValidVerifierShape(saltRaw, hashRaw);
+            if (verifierPresent)
+            {
+                if (!enabledPreference) Preferences.Set(EnabledKey, true);
+                return true;
+            }
+
+            // Secure storage is readable but the verifier is missing/corrupt. Clear the
+            // stale preference so the app cannot become permanently trapped on LockPage.
+            SecureStorage.Default.Remove(SaltKey);
+            SecureStorage.Default.Remove(HashKey);
+            Preferences.Remove(EnabledKey);
+            Preferences.Remove(FailureKey);
+            Preferences.Remove(LockUntilKey);
+            return false;
         }
         catch (Exception)
         {
-            return Preferences.Get(EnabledKey, false);
+            // If the secure-storage provider itself is temporarily unavailable, fail closed
+            // when the explicit enabled marker exists instead of silently disabling the lock.
+            return enabledPreference;
         }
     }
 
     public async Task<Result> SetPinAsync(string pin)
     {
-        if (pin.Length is < 4 or > 12 || pin.Any(character => !char.IsDigit(character)))
-            return Result.Failure("PIN must contain 4–12 digits.");
+        if (!IsValidPin(pin))
+            return Result.Failure("PIN must contain 4–12 ASCII digits.");
 
         var salt = RandomNumberGenerator.GetBytes(16);
         var hash = Rfc2898DeriveBytes.Pbkdf2(pin, salt, Pbkdf2Iterations, HashAlgorithmName.SHA256, 32);
@@ -149,6 +164,11 @@ public sealed class MauiAppLockService : IAppLockService
     public async Task<bool> VerifyPinAsync(string pin)
     {
         if (RemainingLockout > TimeSpan.Zero) return false;
+        if (!IsValidPin(pin))
+        {
+            RegisterFailure();
+            return false;
+        }
         if (!await HasPinAsync()) return false;
 
         string? saltRaw;
@@ -164,38 +184,32 @@ public sealed class MauiAppLockService : IAppLockService
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(saltRaw) || string.IsNullOrWhiteSpace(hashRaw))
-        {
-            RegisterFailure();
-            return false;
-        }
-
-        byte[] salt;
-        byte[] expected;
+        byte[]? salt = null;
+        byte[]? expected = null;
+        byte[]? actual = null;
+        var verified = false;
         try
         {
+            if (string.IsNullOrWhiteSpace(saltRaw) || string.IsNullOrWhiteSpace(hashRaw))
+                return false;
             salt = Convert.FromBase64String(saltRaw);
             expected = Convert.FromBase64String(hashRaw);
-        }
-        catch (FormatException)
-        {
-            RegisterFailure();
-            return false;
-        }
+            if (salt.Length != 16 || expected.Length != 32)
+                return false;
 
-        if (salt.Length < 16 || expected.Length != 32)
-        {
-            CryptographicOperations.ZeroMemory(salt);
-            CryptographicOperations.ZeroMemory(expected);
-            RegisterFailure();
-            return false;
+            actual = Rfc2898DeriveBytes.Pbkdf2(pin, salt, Pbkdf2Iterations, HashAlgorithmName.SHA256, 32);
+            verified = CryptographicOperations.FixedTimeEquals(actual, expected);
         }
-
-        var actual = Rfc2898DeriveBytes.Pbkdf2(pin, salt, Pbkdf2Iterations, HashAlgorithmName.SHA256, 32);
-        var verified = CryptographicOperations.FixedTimeEquals(actual, expected);
-        CryptographicOperations.ZeroMemory(salt);
-        CryptographicOperations.ZeroMemory(actual);
-        CryptographicOperations.ZeroMemory(expected);
+        catch (Exception exception) when (exception is FormatException or CryptographicException or ArgumentException)
+        {
+            verified = false;
+        }
+        finally
+        {
+            if (salt is not null) CryptographicOperations.ZeroMemory(salt);
+            if (expected is not null) CryptographicOperations.ZeroMemory(expected);
+            if (actual is not null) CryptographicOperations.ZeroMemory(actual);
+        }
 
         if (verified)
         {
@@ -211,12 +225,45 @@ public sealed class MauiAppLockService : IAppLockService
 
     public Task ClearPinAsync()
     {
-        SecureStorage.Default.Remove(SaltKey);
-        SecureStorage.Default.Remove(HashKey);
+        try
+        {
+            SecureStorage.Default.Remove(SaltKey);
+            SecureStorage.Default.Remove(HashKey);
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException("Finora could not remove the PIN verifier from device secure storage.", exception);
+        }
+
         Preferences.Remove(EnabledKey);
         Preferences.Remove(FailureKey);
         Preferences.Remove(LockUntilKey);
         return Task.CompletedTask;
+    }
+
+    private static bool IsValidPin(string? pin)
+        => pin is { Length: >= 4 and <= 12 } && pin.All(character => character is >= '0' and <= '9');
+
+    private static bool HasValidVerifierShape(string? saltRaw, string? hashRaw)
+    {
+        if (string.IsNullOrWhiteSpace(saltRaw) || string.IsNullOrWhiteSpace(hashRaw)) return false;
+        byte[]? salt = null;
+        byte[]? hash = null;
+        try
+        {
+            salt = Convert.FromBase64String(saltRaw);
+            hash = Convert.FromBase64String(hashRaw);
+            return salt.Length == 16 && hash.Length == 32;
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        finally
+        {
+            if (salt is not null) CryptographicOperations.ZeroMemory(salt);
+            if (hash is not null) CryptographicOperations.ZeroMemory(hash);
+        }
     }
 
     private static void RegisterFailure()
