@@ -11,7 +11,7 @@ public sealed class DataIntegrityService(
     string appDataRoot) : IDataIntegrityService
 {
     private readonly string _appDataRoot = Path.GetFullPath(appDataRoot);
-    private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
+    private string AttachmentRoot => Path.GetFullPath(Path.Combine(_appDataRoot, "attachments"));
 
     public async Task<IntegrityReport> CheckAsync(CancellationToken cancellationToken = default)
     {
@@ -329,13 +329,10 @@ public sealed class DataIntegrityService(
     private string ResolveSafePath(string relativePath)
     {
         var normalized = relativePath.Replace('/', Path.DirectorySeparatorChar);
-        var fullPath = Path.GetFullPath(Path.Combine(_appDataRoot, normalized));
-        var allowedRoot = AttachmentRoot.EndsWith(Path.DirectorySeparatorChar)
-            ? AttachmentRoot
-            : AttachmentRoot + Path.DirectorySeparatorChar;
-        if (!fullPath.StartsWith(allowedRoot, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException("Attachment path escaped app-private receipt storage.");
-        return fullPath;
+        var prefix = "attachments" + Path.DirectorySeparatorChar;
+        if (!normalized.StartsWith(prefix, PathSafety.Comparison))
+            throw new InvalidDataException("Attachment path is outside Finora private receipt storage.");
+        return PathSafety.ResolveDescendant(AttachmentRoot, normalized[prefix.Length..], "Attachment path escaped app-private receipt storage.");
     }
 
     private static async Task EnsureOpenAsync(DbConnection connection, CancellationToken cancellationToken)
