@@ -209,7 +209,7 @@ public static class DomainRules
                     throw new InvalidOperationException("Postponed occurrences require only a postponed date.");
                 break;
             case OccurrenceStatus.Paid or OccurrenceStatus.PartiallyPaid:
-                if (occurrence.GeneratedTransactionId is null || occurrence.PaidAmountMinor is null or <= 0 || occurrence.PostponedTo is not null)
+                if (occurrence.GeneratedTransactionId is null || occurrence.PaidAmountMinor is null or <= 0)
                     throw new InvalidOperationException("Paid occurrences require generated transaction and paid amount data.");
                 break;
         }
@@ -230,8 +230,8 @@ public static class DomainRules
             throw new ArgumentException("Attachment content type is unsupported.", nameof(attachment));
         if (attachment.SizeBytes <= 0 || attachment.SizeBytes > 20L * 1024 * 1024)
             throw new ArgumentOutOfRangeException(nameof(attachment.SizeBytes), "Attachment size must be between 1 byte and 20 MB.");
-        if (attachment.Sha256 is not { Length: 32 })
-            throw new ArgumentException("Attachment SHA-256 metadata must contain 32 bytes.", nameof(attachment));
+        if (attachment.Sha256 is { Length: not 32 })
+            throw new ArgumentException("Attachment SHA-256 metadata must contain 32 bytes when present.", nameof(attachment));
     }
 
     public static void ValidateTransactionRevision(TransactionRevision revision)
