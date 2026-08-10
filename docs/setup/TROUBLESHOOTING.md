@@ -1,24 +1,6 @@
 # Finora Troubleshooting
 
-Use synthetic/test data while diagnosing. Never attach a real Finora database, receipt, PIN, backup password, recovery journal, signing credential, or private financial screenshot to a public issue.
-
-## `dotnet` or MAUI workload is missing
-
-Check:
-
-```bash
-dotnet --info
-dotnet workload list
-```
-
-Then restore the app workload/project on a supported host:
-
-```bash
-dotnet workload restore src/Finora.App/Finora.App.csproj
-dotnet restore src/Finora.App/Finora.App.csproj
-```
-
-Linux is suitable for structural/core checks but not the repository's Windows/Android/Apple release matrix. Use Windows for Windows/Android and a supported Mac/Xcode host for Apple targets.
+Use synthetic/sample data while diagnosing problems. Never attach a real Finora database, real receipts, PINs, backup passwords, signing keys, or private financial records to a public issue.
 
 ## Structural preflight fails
 
@@ -28,109 +10,205 @@ Run:
 python build/scripts/verify_structure.py
 ```
 
-Fix the reported path rather than disabling the check. It now validates required repository files, XML/XAML/project parsing, project/solution references, XAML handlers, version/schema-document consistency, money-representation signals, and Android privacy flags.
+The preflight reports malformed XML/XAML/RESX/project files, missing project-reference targets, empty source/resource files, unfinished placeholder markers, XAML event handlers without matching C# methods, version/schema drift, selected money-representation violations, and required policy/platform metadata problems.
 
-A passing preflight is not evidence that C# compiles.
+The script is not a C# compiler and cannot replace `dotnet build` or tests.
 
-## SQLite is locked
+## `dotnet` is not found
 
-Finora enables WAL and a busy timeout. Close other app/debug/test processes using the same database and retry. Do not copy a live DB/WAL/SHM set selectively and then treat it as a supported backup.
+Install a .NET SDK compatible with the target frameworks in `src/Finora.App/Finora.App.csproj`, then verify:
 
-## Database will not open after update
+```bash
+dotnet --info
+```
 
-Check the release/schema pair and migration logs using synthetic copies. Finora rejects databases whose declared schema is newer than the build understands. Current source declares schema 2 and includes v1 → v2 migration.
+Do not change Finora target frameworks merely to make an unrelated older SDK accept the solution.
 
-Do not manually change `schema.version` to force an incompatible database open.
+## MAUI workload is missing
 
-## Data-integrity check reports a problem
+Run:
 
-The hidden developer integrity check returns privacy-safe issue codes/counts. Treat errors as real until investigated. It checks SQLite/foreign keys, transaction values/sign/currency, transfer pairs, split totals, category cycles, recurrence references, and receipt path/size/hash state.
+```bash
+dotnet workload restore
+```
 
-Create a separate encrypted backup only if the database/receipt state is appropriate for recovery; do not overwrite the only known-good backup.
+If the workload manifest or platform SDK is unavailable, update/install the supported .NET/MAUI/Android/Apple/Windows toolchain on the build host rather than committing generated workload files.
 
-## Encrypted backup preview/restore is rejected
+## NuGet restore fails
 
-Possible causes include wrong password, altered/truncated file, unsupported schema, oversized payload, unsafe attachment metadata, missing receipt bytes, or checksum mismatch.
+- Confirm the SDK version expected by the source.
+- Clear only NuGet caches that are safe to rehydrate; do not delete Finora app data.
+- Confirm `Directory.Packages.props` remains the central package-version source.
+- Do not bypass dependency/security warnings by disabling them globally.
 
-Finora cannot recover a forgotten backup password.
+## Warnings/analyzers fail the build
 
-## Finora reports interrupted-restore recovery failure
+Finora enables nullable reference types, latest-recommended analysis, deterministic builds, and warnings-as-errors through `Directory.Build.props`.
 
-Production restore uses a private journal plus a transient `internal.restore.commit` marker to keep SQLite and receipt files consistent across process interruption.
+Correct the source warning instead of suppressing analyzers broadly. Narrow suppressions require a documented reason.
 
-At startup:
+## SQLite database is locked
 
-- a matching pending marker means the DB replacement did not commit, so the previous verified receipt tree is restored;
-- an absent matching marker means the DB committed, so the new receipt tree is finalized;
-- stale staging/rollback directories are cleaned only after that decision.
+Finora enables WAL, foreign keys, and a busy timeout. Close extra debug instances and ensure tests are not sharing the same database file. Do not manually delete `-wal`/`-shm` files from a live application database.
 
-If safe automatic recovery cannot complete, Finora intentionally blocks normal initialization. Do not delete `finora-restore-recovery.json` or `attachments.rollback.*` manually before preserving a diagnostic copy in a private test/support environment and understanding which DB state committed. Never publish recovery artifacts because they are still local application metadata.
+## Database reports a newer schema
 
-## PIN is enabled but unlock fails after secure-storage damage
+Do not downgrade the schema number manually. Use a Finora build that supports the database version or restore a compatible encrypted backup. Schema-version advancement is controlled by migrations.
 
-Finora is deliberately fail-closed. A persistent non-secret “PIN enabled” marker prevents missing/malformed secure-storage verifier material from being treated as “no PIN.” The app will not bypass the lock simply because the verifier is unavailable.
+## Migration from schema v1 to v2 fails
 
-Use supported device/app recovery procedures rather than weakening the verifier check. A future product recovery mechanism must be designed explicitly; do not add a hidden bypass.
+Keep the original database untouched and work on a copy made from synthetic/test data. Run the migration integration tests. Do not edit production-style databases manually to force `schema.version` forward.
 
-## Dashboard total seems to omit an account
+## Developer integrity check reports an error
 
-Check the account currency. Dashboard aggregate totals use the configured default/reporting currency only. Accounts in other currencies remain separate and are not converted or added using an invented exchange rate. The dashboard displays a notice listing separated currencies.
+The hidden developer option now checks SQLite/FK state plus the wider finance graph. Common issue codes include transaction value/account/currency problems, broken transfers, split totals, category cycles, invalid budgets/custom periods, savings contribution links, recurrence dependency/payment state, reconciliation links, and receipt file path/size/checksum problems.
 
-Change the default/reporting currency if you want to view aggregates in another existing currency context. Finora does not currently perform automatic exchange-rate conversion.
+- Export the sanitized integrity report if needed.
+- Do not publish the database itself.
+- Do not create a new backup over the only known-good external backup until the integrity issue is understood.
+- Use `SECURITY.md` for suspected data exposure or security defects.
 
-## Imported JPY/KWD-style amount looks unexpected
+## Dashboard says totals use one currency
 
-Major-unit import uses currency-specific minor-unit precision. Zero-decimal currencies such as JPY and supported three-decimal currencies such as KWD are not forced through two decimals. Confirm:
+This is intentional. Finora does not silently add unlike currencies or invent exchange rates.
 
-- the mapped Currency column/default currency;
-- whether the Amount column is marked major units or already minor units;
-- the release's verified currency-precision metadata;
-- the CSV uses invariant-style numeric input expected by the importer.
+- Dashboard aggregate cards use the configured reporting currency.
+- Accounts/transactions/goals/recurrence rows in other currencies retain their own currency.
+- Change the reporting/default currency in Settings if you want aggregate reports for a different currency.
+- Cross-currency conversion is not part of the current release.
 
-## Navigation differs between phone and desktop/tablet
+## Tag report does not include another-currency transaction
 
-This is intentional. Phones use bottom primary tabs. Tablet/desktop or sufficiently wide layouts expose the equivalent primary routes through a flyout/sidebar hierarchy. Resizing should preserve the equivalent primary section.
+Tag reports are explicitly currency-scoped. The same tag can exist on INR/USD/etc. transactions without those values being added together. Run the report for the desired currency rather than treating raw minor units as exchange-equivalent.
 
-If resize routing is wrong, record the current Shell route, device idiom, window width and synthetic reproduction steps. Test onboarding/unlock/startup separately because they use adaptive root routing too.
+## Account cannot be archived
 
-## Notifications do not appear
+Check whether an **Active** recurring rule uses the account as source or destination. Pause, complete, or archive that recurring rule first.
 
-Check OS permission, Finora notification preference, platform scheduling support, current trigger time and device background/power policy. Reminder text is intentionally generic.
+A paused rule may preserve its historical account link after the account is archived, but it cannot resume until its account/category/currency dependencies are valid again.
 
-Do not treat notification delivery as a financial source of truth; persisted recurrence/budget/backup state remains in Finora.
+## Account currency cannot be changed
 
-## Biometrics/Windows Hello cannot be enabled
+Finora blocks currency changes after transaction or recurring records reference the account. Changing the currency label would reinterpret historical minor units and is therefore not allowed.
 
-Set a Finora PIN first. Biometric/Hello unlock requires PIN fallback. Then verify platform enrollment/capability/permission state. On Apple targets ensure the packaged `NSFaceIDUsageDescription` is present.
+Create a separate account for the other currency or use an explicit migration/exchange workflow if a future release provides one.
 
-## Screenshot/capture protection differs by platform
+## Recurring rule cannot resume
 
-Protection is platform-capability-based. Android uses secure-window behavior; supported Windows configurations use display-affinity behavior. Apple/platform limitations must be communicated honestly. An external camera/rooted or compromised OS is outside app-level control.
+Resume validates current dependencies. Check:
 
-## Receipt will not open or integrity check reports it missing
+- rule is Paused rather than Completed/Archived;
+- configured end date has not already passed;
+- source/destination accounts still exist and are not archived;
+- account currencies still match the rule;
+- referenced category still exists and is active.
 
-Receipts must remain beneath app-private `attachments` storage. Finora validates stored path/size/checksum where required. Moving/deleting app-private files outside Finora can break metadata/file consistency.
+Pausing stops new due-occurrence generation but does not delete historical occurrences.
 
-Use attachment cleanup only for true orphan files; do not manually point attachment metadata at arbitrary paths.
+## A paused/archived recurring reminder still appears
 
-## Full finance reset fails
+Run reminder synchronization from Settings/developer tools after granting notification permission. Current synchronization cancels stale recurrence dedupe keys for non-active rules.
 
-Reset deletes schema-v2 finance records in dependency-safe order. Category hierarchies are removed leaves-first; a cycle causes rollback rather than partial deletion. App preferences, schema marker and PIN configuration are intentionally retained.
+Also remember that an OS may have already displayed a notification before Finora could cancel it; test platform-specific scheduling behavior on a real packaged build.
 
-If reset fails, run the integrity checker and investigate the underlying relational/category issue using synthetic data.
+## Custom budget is not visible for a date
 
-## Developer sample reset warning
+Custom cadence is active only inside an explicit configured period. Finora intentionally does not fabricate a one-day fallback period.
 
-“Reset to synthetic sample data” is destructive by design. It requires exact typed confirmation, clears current finance data, reseeds system categories and creates deterministic synthetic records. Do not use it on data you need unless you have already saved a verified encrypted backup elsewhere.
+Check that:
 
-## Windows package build/signing issue
+- at least one explicit period exists;
+- the selected report/dashboard date is inside that period;
+- periods do not overlap;
+- effective planned amount remains positive after enabled rollover.
 
-Repository package metadata is development source, not production signing evidence. Configure final package identity/publisher/signing securely in release infrastructure and verify source/package version alignment.
+## Budget update fails
 
-## Apple build fails on Windows/Linux
+Explicit period replacement is treated as one logical operation. A failed replacement should leave the prior valid period set intact rather than partially deleting it.
 
-Build/archive Apple targets on a supported Mac/Xcode host. Do not interpret source inspection or a non-Apple build as evidence that LocalAuthentication/UserNotifications/archive/signing works.
+Use synthetic data and the budget rollback integration tests when diagnosing persistence failures. Do not manually delete budget-period rows from a real finance database.
 
-## Need more help
+## Backup creation is rejected before a file is produced
 
-Read `SUPPORT.md`, `SECURITY.md`, `PROJECT_STATUS.md`, `docs/TEST_PLAN.md` and `docs/releases/STORE_READINESS.md` before opening a public bug. Use synthetic data only. Report vulnerabilities privately as described in `SECURITY.md`.
+Finora validates more than receipt checksums. It also validates the supported financial graph before encrypting it.
+
+Possible causes include:
+
+- transaction/account currency mismatch;
+- broken transfer pair;
+- invalid split signs/totals/categories;
+- category hierarchy problem;
+- custom budget without a period or overlapping periods;
+- invalid savings contribution history/link;
+- active recurrence pointing to an unavailable account/category;
+- impossible occurrence payment state;
+- reconciliation arithmetic/adjustment mismatch;
+- invalid attachment metadata/path/file checksum.
+
+Run the sanitized integrity checker first rather than weakening backup validation.
+
+## Backup preview or restore is rejected
+
+Possible reasons include:
+
+- wrong password;
+- tampered/truncated backup;
+- unsupported schema version;
+- duplicate/invalid object identifiers;
+- semantically invalid financial graph even though decryption succeeded;
+- invalid attachment path/size/checksum;
+- file too large or unreadable.
+
+Finora intentionally fails closed. Do not weaken AES-GCM authentication or graph validation to make a damaged file import.
+
+## App was interrupted during restore
+
+Finora records a private restore journal plus database commit marker and runs recovery before finance navigation.
+
+- If the pending DB marker remains, startup restores the previous receipt tree and removes staged data.
+- If the DB commit completed and the marker is gone, startup finalizes the new receipt tree and removes rollback data.
+- Do not manually delete `attachments.restore.*` or `attachments.rollback.*` directories before startup recovery has made its decision.
+
+If recovery still fails, preserve the external encrypted backup and work only on synthetic/copied app data during diagnosis.
+
+## Receipt/attachment file is missing
+
+The transaction record may still contain attachment metadata. Use the integrity checker and orphan-file cleanup. A missing receipt file cannot be reconstructed from metadata unless an encrypted backup contains the receipt bytes.
+
+## Local notification does not appear
+
+- Confirm notification permission is granted.
+- Confirm notifications and the relevant reminder are enabled in Settings.
+- Use the developer reminder-sync action.
+- Test OS power-management/reboot/force-stop behavior on the target platform; operating systems can impose scheduling restrictions.
+- Notification text intentionally avoids private transaction details.
+
+## Biometrics / Windows Hello unavailable
+
+Finora requires a configured PIN fallback before biometric unlock can be enabled. Confirm biometric/Hello enrollment and platform availability. Cancellation or lockout should return to the PIN path rather than bypassing app lock.
+
+If PIN-enabled state remains but secure-storage verifier material is missing/corrupt, verification intentionally fails closed rather than treating the lock as disabled.
+
+## Sensitive-screen capture protection unavailable
+
+Android and supported Windows paths have platform-specific protection. Other platform paths may not provide a universal screenshot-blocking API. Finora should report the limitation rather than claiming protection that the OS cannot guarantee.
+
+## Apple build attempted on Windows
+
+Use a supported Mac with compatible Xcode for iOS/Mac Catalyst archive/signing/device validation. Source-level compilation of other projects on Windows does not replace an Apple platform build.
+
+## Windows packaging identity/signing fails
+
+Release packaging must use the final package identity/publisher and signing material supplied outside the repository. Never commit a signing certificate password or private key.
+
+## Android signing fails
+
+Configure release keystore/signing through secure external build/release configuration. Never add the keystore or password to source control.
+
+## File picker/share sheet behaves differently by platform
+
+Backup, restore, import, export, and attachment workflows intentionally use system pickers/share surfaces. Test packaged/signed builds because sandbox/identity behavior may differ from debug deployment.
+
+## Public bug report
+
+Use `.github/ISSUE_TEMPLATE/bug_report.yml` with synthetic data only. Security vulnerabilities and possible private-data exposure must be reported privately according to `SECURITY.md`.
