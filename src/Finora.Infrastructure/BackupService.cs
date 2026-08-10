@@ -22,74 +22,82 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var attachments = await db.Attachments.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false);
         var blobs = new List<AttachmentBlob>(attachments.Count);
-        foreach (var attachment in attachments)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var path = ResolveAttachmentPath(attachment.RelativePath);
-            if (!File.Exists(path)) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' is missing; backup was not created.");
-            var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
-            if (attachment.SizeBytes != bytes.LongLength)
-            {
-                CryptographicOperations.ZeroMemory(bytes);
-                throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' size does not match the database record.");
-            }
-            var hash = SHA256.HashData(bytes);
-            if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
-            {
-                CryptographicOperations.ZeroMemory(bytes);
-                throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' failed integrity verification.");
-            }
-            blobs.Add(new AttachmentBlob(attachment.Id, bytes));
-        }
-
-        var snapshot = new Snapshot(
-            AppConstants.DatabaseSchemaVersion,
-            DateTimeOffset.UtcNow,
-            await db.Accounts.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.Transactions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.TransactionSplits.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.Categories.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.Tags.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.TransactionTags.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.Budgets.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.BudgetPeriods.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.SavingsGoals.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.GoalContributions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.RecurrenceRules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.RecurrenceOccurrences.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            attachments,
-            blobs,
-            await db.TransactionRevisions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.AccountReconciliations.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.NotificationSchedules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.AppSettings.AsNoTracking().Where(x => x.Key != "schema.version" && !x.Key.StartsWith("internal.")).ToListAsync(cancellationToken).ConfigureAwait(false));
-
-        byte[]? plaintext = null;
-        byte[] encrypted;
         try
         {
-            ValidateUniqueIds(snapshot);
-            ValidateSnapshot(snapshot);
-            plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
-            encrypted = Encrypt(plaintext, password);
+            foreach (var attachment in attachments)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var path = ResolveAttachmentPath(attachment.RelativePath);
+                if (!File.Exists(path)) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' is missing; backup was not created.");
+                var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    if (attachment.SizeBytes != bytes.LongLength)
+                        throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' size does not match the database record.");
+                    var hash = SHA256.HashData(bytes);
+                    if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
+                        throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' failed integrity verification.");
+                    blobs.Add(new AttachmentBlob(attachment.Id, bytes));
+                    bytes = [];
+                }
+                finally
+                {
+                    if (bytes.Length > 0) CryptographicOperations.ZeroMemory(bytes);
+                }
+            }
+
+            var snapshot = new Snapshot(
+                AppConstants.DatabaseSchemaVersion,
+                DateTimeOffset.UtcNow,
+                await db.Accounts.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.Transactions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.TransactionSplits.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.Categories.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.Tags.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.TransactionTags.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.Budgets.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.BudgetPeriods.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.SavingsGoals.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.GoalContributions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.RecurrenceRules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.RecurrenceOccurrences.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                attachments,
+                blobs,
+                await db.TransactionRevisions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.AccountReconciliations.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.NotificationSchedules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
+                await db.AppSettings.AsNoTracking().Where(x => x.Key != "schema.version" && !x.Key.StartsWith("internal.")).ToListAsync(cancellationToken).ConfigureAwait(false));
+
+            byte[]? plaintext = null;
+            byte[] encrypted;
+            try
+            {
+                ValidateUniqueIds(snapshot);
+                ValidateSnapshot(snapshot);
+                plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
+                encrypted = Encrypt(plaintext, password);
+            }
+            finally
+            {
+                if (plaintext is not null) CryptographicOperations.ZeroMemory(plaintext);
+            }
+
+            var metadata = new BackupMetadata
+            {
+                BackupId = Guid.NewGuid().ToString("N"),
+                SchemaVersion = AppConstants.DatabaseSchemaVersion,
+                CreatedOnUtc = snapshot.CreatedAtUtc,
+                Sha256Hex = Convert.ToHexString(SHA256.HashData(encrypted))
+            };
+            db.BackupMetadata.Add(metadata);
+            db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = metadata.Id, Action = "CreatedEncryptedBackup" });
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return encrypted;
         }
         finally
         {
-            if (plaintext is not null) CryptographicOperations.ZeroMemory(plaintext);
-            ZeroAttachmentBlobs(snapshot);
+            ZeroAttachmentBlobs(blobs);
         }
-
-        var metadata = new BackupMetadata
-        {
-            BackupId = Guid.NewGuid().ToString("N"),
-            SchemaVersion = AppConstants.DatabaseSchemaVersion,
-            CreatedOnUtc = snapshot.CreatedAtUtc,
-            Sha256Hex = Convert.ToHexString(SHA256.HashData(encrypted))
-        };
-        db.BackupMetadata.Add(metadata);
-        db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = metadata.Id, Action = "CreatedEncryptedBackup" });
-        await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return encrypted;
     }
 
     public async Task<Result<BackupPreview>> PreviewEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
@@ -109,7 +117,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         }
         finally
         {
-            if (snapshot is not null) ZeroAttachmentBlobs(snapshot);
+            if (snapshot is not null) ZeroAttachmentBlobs(snapshot.AttachmentBlobs);
         }
     }
 
@@ -210,7 +218,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         }
         finally
         {
-            if (snapshot is not null) ZeroAttachmentBlobs(snapshot);
+            if (snapshot is not null) ZeroAttachmentBlobs(snapshot.AttachmentBlobs);
         }
     }
 
@@ -246,7 +254,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         }
         catch
         {
-            if (snapshot is not null) ZeroAttachmentBlobs(snapshot);
+            if (snapshot is not null) ZeroAttachmentBlobs(snapshot.AttachmentBlobs);
             throw;
         }
         finally
@@ -290,9 +298,9 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         }
     }
 
-    private static void ZeroAttachmentBlobs(Snapshot snapshot)
+    private static void ZeroAttachmentBlobs(IEnumerable<AttachmentBlob> blobs)
     {
-        foreach (var blob in snapshot.AttachmentBlobs) CryptographicOperations.ZeroMemory(blob.Data);
+        foreach (var blob in blobs) CryptographicOperations.ZeroMemory(blob.Data);
     }
 
     private static byte[] Encrypt(byte[] plaintext, string password)
