@@ -73,6 +73,12 @@ public static class DomainRules
 
         foreach (var period in budget.Periods)
             ValidateBudgetPeriod(period, budget.Id);
+        var orderedPeriods = budget.Periods.OrderBy(x => x.StartsOn).ThenBy(x => x.EndsOn).ToList();
+        for (var index = 1; index < orderedPeriods.Count; index++)
+        {
+            if (orderedPeriods[index].StartsOn <= orderedPeriods[index - 1].EndsOn)
+                throw new InvalidOperationException("Budget periods cannot overlap.");
+        }
     }
 
     public static void ValidateBudgetPeriod(BudgetPeriod period, Guid? expectedBudgetId = null)
