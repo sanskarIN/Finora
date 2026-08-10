@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Finora.Application;
 
 namespace Finora.App;
@@ -62,21 +63,28 @@ public partial class RecurringPage : ContentPage
 public partial class ReportsPage : ContentPage
 {
     private readonly IExportService _export = ServiceHelper.Get<IExportService>();
+    private readonly IPrivacyLogger _logger = ServiceHelper.Get<IPrivacyLogger>();
     private ReportsViewModel ViewModel => (ReportsViewModel)BindingContext;
     public ReportsPage() { InitializeComponent(); BindingContext = new ReportsViewModel(ServiceHelper.Get<IAdvancedReportService>(), ServiceHelper.Get<IAppSettingsService>()); }
     protected override void OnAppearing() { base.OnAppearing(); _ = ViewModel.LoadAsync(); }
     private async void OnExportCsvClicked(object? sender, EventArgs e) => await ExportAsync(false);
     private async void OnExportPdfClicked(object? sender, EventArgs e) => await ExportAsync(true);
+
     private async Task ExportAsync(bool pdf)
     {
         try
         {
             var suffix = DateTime.Now.ToString("yyyyMMdd-HHmmss", System.Globalization.CultureInfo.InvariantCulture);
             var path = Path.Combine(FileSystem.CacheDirectory, $"Finora-transactions-{suffix}.{(pdf ? "pdf" : "csv")}");
-            if (pdf) await File.WriteAllBytesAsync(path, await _export.ExportTransactionsPdfAsync()); else await File.WriteAllTextAsync(path, await _export.ExportTransactionsCsvAsync());
+            if (pdf) await File.WriteAllBytesAsync(path, await _export.ExportTransactionsPdfAsync());
+            else await File.WriteAllTextAsync(path, await _export.ExportTransactionsCsvAsync());
             await Share.Default.RequestAsync(new ShareFileRequest("Export Finora transactions", new ShareFile(path)));
         }
-        catch (Exception ex) { await DisplayAlertAsync("Export failed", ex.Message, "OK"); }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Reports.ExportFailed");
+            await DisplayAlertAsync("Export failed", "The export could not be created or shared. Review local storage/share permissions and try again.", "OK");
+        }
     }
 }
 
@@ -121,37 +129,70 @@ public partial class SettingsPage : ContentPage
     {
         var password = await DisplayPromptAsync("Encrypted backup", "Create a strong backup password. Finora cannot recover a forgotten backup password.", "Create", "Cancel", "Password", 128, Keyboard.Default);
         if (string.IsNullOrWhiteSpace(password)) return;
+        byte[]? bytes = null;
         try
         {
-            var bytes = await _backup.CreateEncryptedBackupAsync(password);
+            bytes = await _backup.CreateEncryptedBackupAsync(password);
             var path = Path.Combine(FileSystem.CacheDirectory, $"Finora-{DateTime.Now:yyyyMMdd-HHmmss}.finora-backup");
-            await File.WriteAllBytesAsync(path, bytes); _settings.LastBackupAtUtc = DateTimeOffset.UtcNow; await _reminders.SyncAsync();
+            await File.WriteAllBytesAsync(path, bytes);
+            _settings.LastBackupAtUtc = DateTimeOffset.UtcNow;
+            await _reminders.SyncAsync();
             await Share.Default.RequestAsync(new ShareFileRequest("Save encrypted Finora backup", new ShareFile(path)));
         }
-        catch (Exception ex) { await DisplayAlertAsync("Backup failed", ex.Message, "OK"); }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Settings.BackupCreateFailed");
+            await DisplayAlertAsync("Backup failed", "The encrypted backup could not be created or shared. Existing finance data was not changed.", "OK");
+        }
+        finally
+        {
+            if (bytes is not null) CryptographicOperations.ZeroMemory(bytes);
+        }
     }
 
     private async void OnRestoreBackupClicked(object? sender, EventArgs e)
     {
-        var picked = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Choose a Finora backup" }); if (picked is null) return;
-        var password = await DisplayPromptAsync("Restore backup", "Enter the backup password.", "Preview", "Cancel", "Password", 128, Keyboard.Default); if (string.IsNullOrWhiteSpace(password)) return;
+        var picked = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Choose a Finora backup" });
+        if (picked is null) return;
+        var password = await DisplayPromptAsync("Restore backup", "Enter the backup password.", "Preview", "Cancel", "Password", 128, Keyboard.Default);
+        if (string.IsNullOrWhiteSpace(password)) return;
         try
         {
-            await using var previewStream = await picked.OpenReadAsync(); var preview = await _backup.PreviewEncryptedBackupAsync(previewStream, password);
-            if (!preview.IsSuccess || preview.Value is null) { await DisplayAlertAsync("Cannot restore", preview.Error ?? "Backup validation failed.", "OK"); return; }
+            await using var previewStream = await picked.OpenReadAsync();
+            var preview = await _backup.PreviewEncryptedBackupAsync(previewStream, password);
+            if (!preview.IsSuccess || preview.Value is null)
+            {
+                await DisplayAlertAsync("Cannot restore", preview.Error ?? "Backup validation failed.", "OK");
+                return;
+            }
+
             var p = preview.Value;
             if (!await DisplayAlertAsync("Restore backup?", $"Schema {p.SchemaVersion}\nAccounts: {p.AccountCount}\nTransactions: {p.TransactionCount}\nBudgets: {p.BudgetCount}\nGoals: {p.SavingsGoalCount}\n\nCurrent local finance data is replaced only if validation succeeds.", "Restore", "Cancel")) return;
-            await using var restoreStream = await picked.OpenReadAsync(); var result = await _backup.RestoreEncryptedBackupAsync(restoreStream, password);
+
+            await using var restoreStream = await picked.OpenReadAsync();
+            var result = await _backup.RestoreEncryptedBackupAsync(restoreStream, password);
             if (result.IsSuccess) await _attachments.CleanupOrphanedFilesAsync();
             await DisplayAlertAsync(result.IsSuccess ? "Restore complete" : "Restore failed", result.IsSuccess ? "The encrypted backup was restored." : result.Error ?? "Restore failed.", "OK");
         }
-        catch (Exception ex) { await DisplayAlertAsync("Restore failed", ex.Message, "OK"); }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Settings.BackupRestoreFailed");
+            await DisplayAlertAsync("Restore failed", "The encrypted backup could not be restored. Existing data remains unchanged unless Finora reported restore completion.", "OK");
+        }
     }
 
     private async void OnExportLogClicked(object? sender, EventArgs e)
     {
-        try { var path = await _logger.ExportSanitizedLogAsync(); await Share.Default.RequestAsync(new ShareFileRequest("Export sanitized Finora diagnostics", new ShareFile(path))); }
-        catch (Exception ex) { await DisplayAlertAsync("Export failed", ex.Message, "OK"); }
+        try
+        {
+            var path = await _logger.ExportSanitizedLogAsync();
+            await Share.Default.RequestAsync(new ShareFileRequest("Export sanitized Finora diagnostics", new ShareFile(path)));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Settings.DiagnosticsExportFailed");
+            await DisplayAlertAsync("Export failed", "The sanitized diagnostics file could not be created or shared.", "OK");
+        }
     }
 
     private async void OnSetPinClicked(object? sender, EventArgs e)
@@ -205,6 +246,19 @@ public partial class SettingsPage : ContentPage
     private async void OnProfileClicked(object? sender, EventArgs e) => await Launcher.Default.OpenAsync("https://www.github.com/sanskarIN");
     private async void OnBusinessEmailClicked(object? sender, EventArgs e) => await ComposeEmailAsync("sanskarin@outlook.in", "Finora business inquiry");
     private async void OnSupportEmailClicked(object? sender, EventArgs e) => await ComposeEmailAsync("supportramsandesh@gmail.com", "Finora support");
-    private async Task ComposeEmailAsync(string address, string subject) { try { await Email.Default.ComposeAsync(new EmailMessage { To = [address], Subject = subject }); } catch (Exception ex) { await DisplayAlertAsync("Email unavailable", ex.Message, "OK"); } }
+
+    private async Task ComposeEmailAsync(string address, string subject)
+    {
+        try
+        {
+            await Email.Default.ComposeAsync(new EmailMessage { To = [address], Subject = subject });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Settings.EmailComposeFailed");
+            await DisplayAlertAsync("Email unavailable", "No compatible email app is available right now.", "OK");
+        }
+    }
+
     private static string FormatBytes(long bytes) { string[] units = ["B", "KB", "MB", "GB"]; decimal value = Math.Max(0, bytes); var index = 0; while (value >= 1024 && index < units.Length - 1) { value /= 1024; index++; } return $"{value:0.##} {units[index]}"; }
 }
