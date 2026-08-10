@@ -15,26 +15,44 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var rule = await db.RecurrenceRules.AsNoTracking().SingleOrDefaultAsync(x => x.Id == ruleId, cancellationToken).ConfigureAwait(false)
             ?? throw new InvalidOperationException("Recurring rule not found.");
+        DomainRules.ValidateRecurrenceRule(rule);
+
         var current = rule.NextDueOn ?? rule.StartsOn;
         var dates = new List<DateOnly>(count);
         while (dates.Count < count && (rule.EndsOn is null || current <= rule.EndsOn))
         {
             dates.Add(current);
-            current = DomainRules.GetNextOccurrence(rule, current);
+            var next = DomainRules.GetNextOccurrence(rule, current);
+            if (next <= current) throw new InvalidDataException("Recurring rule did not advance to a later date.");
+            current = next;
         }
         return dates;
     }
 
     public async Task<IReadOnlyList<RecurrenceOccurrenceInfo>> GetOccurrencesAsync(DateOnly? from = null, DateOnly? to = null, bool includeCompleted = true, CancellationToken cancellationToken = default)
     {
+        if (from is DateOnly startDate && to is DateOnly endDate && endDate < startDate)
+            throw new ArgumentException("Occurrence range end cannot precede its start.");
+
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var query = db.RecurrenceOccurrences.AsNoTracking().Include(x => x.RecurrenceRule).AsQueryable();
         if (from is DateOnly start) query = query.Where(x => x.DueOn >= start);
         if (to is DateOnly end) query = query.Where(x => x.DueOn <= end);
-        if (!includeCompleted) query = query.Where(x => x.Status == OccurrenceStatus.Pending || x.Status == OccurrenceStatus.Postponed || x.Status == OccurrenceStatus.PartiallyPaid);
+        if (!includeCompleted)
+            query = query.Where(x => x.Status == OccurrenceStatus.Pending || x.Status == OccurrenceStatus.Postponed || x.Status == OccurrenceStatus.PartiallyPaid);
         return await query
             .OrderBy(x => x.PostponedTo ?? x.DueOn)
-            .Select(x => new RecurrenceOccurrenceInfo(x.Id, x.RecurrenceRuleId, x.RecurrenceRule!.Name, x.DueOn, x.Status, x.RecurrenceRule.AmountMinor, x.RecurrenceRule.Currency, x.PaidAmountMinor, x.PostponedTo, x.GeneratedTransactionId))
+            .Select(x => new RecurrenceOccurrenceInfo(
+                x.Id,
+                x.RecurrenceRuleId,
+                x.RecurrenceRule!.Name,
+                x.DueOn,
+                x.Status,
+                x.RecurrenceRule.AmountMinor,
+                x.RecurrenceRule.Currency,
+                x.PaidAmountMinor,
+                x.PostponedTo,
+                x.GeneratedTransactionId))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
@@ -43,13 +61,26 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
     {
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using var tx = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
-        var occurrence = await db.RecurrenceOccurrences.Include(x => x.RecurrenceRule).SingleOrDefaultAsync(x => x.Id == occurrenceId, cancellationToken).ConfigureAwait(false);
+        var occurrence = await db.RecurrenceOccurrences
+            .Include(x => x.RecurrenceRule)
+            .SingleOrDefaultAsync(x => x.Id == occurrenceId, cancellationToken)
+            .ConfigureAwait(false);
         if (occurrence?.RecurrenceRule is null) return Result.Failure("Recurring occurrence not found.");
         if (occurrence.Status == OccurrenceStatus.Skipped) return Result.Failure("Reopen the skipped occurrence before recording payment.");
 
         var rule = occurrence.RecurrenceRule;
+        try { DomainRules.ValidateRecurrenceRule(rule); }
+        catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
+        {
+            return Result.Failure($"Recurring rule is invalid: {exception.Message}");
+        }
+
+        var relationError = await ValidateRuleRelationsAsync(db, rule, cancellationToken).ConfigureAwait(false);
+        if (relationError is not null) return Result.Failure(relationError);
+
         var paid = paidAmountMinor ?? rule.AmountMinor;
-        if (paid <= 0 || paid > rule.AmountMinor) return Result.Failure("Paid amount must be greater than zero and cannot exceed the scheduled amount.");
+        if (paid <= 0 || paid > rule.AmountMinor)
+            return Result.Failure("Paid amount must be greater than zero and cannot exceed the scheduled amount.");
         if (occurrence.Status == OccurrenceStatus.Paid)
         {
             if (occurrence.PaidAmountMinor == rule.AmountMinor && paid == rule.AmountMinor) return Result.Success();
@@ -63,19 +94,33 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
         {
             var existing = await db.Transactions.SingleOrDefaultAsync(x => x.Id == existingTransactionId, cancellationToken).ConfigureAwait(false);
             if (existing is null) return Result.Failure("The payment link is inconsistent; no changes were made.");
-            if (existing.TransferGroupId is Guid transferGroup)
+            if (existing.IsDeleted) return Result.Failure("The generated payment is deleted. Restore or resolve it before changing the occurrence.");
+            if (existing.RecurrenceRuleId != rule.Id)
+                return Result.Failure("The generated payment no longer belongs to this recurring rule.");
+
+            if (rule.TransactionType == TransactionType.Transfer)
             {
+                if (existing.TransferGroupId is not Guid transferGroup)
+                    return Result.Failure("The generated recurring transfer lost its transfer-group link.");
                 var pair = await db.Transactions.Where(x => x.TransferGroupId == transferGroup).ToListAsync(cancellationToken).ConfigureAwait(false);
-                if (pair.Count != 2) return Result.Failure("The linked transfer payment is inconsistent; no changes were made.");
+                var pairError = ValidateGeneratedTransferPair(pair, rule);
+                if (pairError is not null) return Result.Failure(pairError);
+
                 foreach (var item in pair)
                 {
-                    item.AmountMinor = item.AmountMinor < 0 ? -paid : paid;
+                    item.AmountMinor = item.AmountMinor < 0 ? checked(-paid) : paid;
                     item.OccurredAtUtc = occurredAt;
                     item.UpdatedAtUtc = DateTimeOffset.UtcNow;
                 }
             }
             else
             {
+                if (existing.TransferGroupId is not null ||
+                    existing.Type != rule.TransactionType ||
+                    existing.AccountId != rule.AccountId ||
+                    !string.Equals(existing.Currency, rule.Currency, StringComparison.OrdinalIgnoreCase))
+                    return Result.Failure("The generated payment no longer matches this recurring rule.");
+
                 existing.AmountMinor = SignedAmount(rule.TransactionType, paid);
                 existing.OccurredAtUtc = occurredAt;
                 existing.UpdatedAtUtc = DateTimeOffset.UtcNow;
@@ -83,27 +128,52 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
         }
         else if (rule.TransactionType == TransactionType.Transfer)
         {
-            if (rule.DestinationAccountId is not Guid destination) return Result.Failure("Recurring transfer is missing a destination account.");
-            var accounts = await db.Accounts.Where(x => x.Id == rule.AccountId || x.Id == destination).ToListAsync(cancellationToken).ConfigureAwait(false);
-            if (accounts.Count != 2) return Result.Failure("One or both transfer accounts are unavailable.");
-            var source = accounts.Single(x => x.Id == rule.AccountId);
-            var target = accounts.Single(x => x.Id == destination);
-            if (!string.Equals(source.Currency, target.Currency, StringComparison.OrdinalIgnoreCase)) return Result.Failure("Cross-currency recurring transfers require an explicit exchange workflow.");
-            if (!string.Equals(source.Currency, rule.Currency, StringComparison.OrdinalIgnoreCase)) return Result.Failure("Recurring transfer currency no longer matches the source account.");
-
+            var destination = rule.DestinationAccountId!.Value;
             var group = Guid.NewGuid();
-            var outgoing = new FinanceTransaction { Type = TransactionType.Transfer, AmountMinor = -paid, Currency = rule.Currency, AccountId = source.Id, CounterpartyAccountId = target.Id, TransferGroupId = group, OccurredAtUtc = occurredAt, RecurrenceRuleId = rule.Id, Merchant = rule.Merchant, Note = rule.Note };
-            var incoming = new FinanceTransaction { Type = TransactionType.Transfer, AmountMinor = paid, Currency = rule.Currency, AccountId = target.Id, CounterpartyAccountId = source.Id, TransferGroupId = group, OccurredAtUtc = occurredAt, RecurrenceRuleId = rule.Id, Merchant = rule.Merchant, Note = rule.Note };
+            var outgoing = new FinanceTransaction
+            {
+                Type = TransactionType.Transfer,
+                AmountMinor = checked(-paid),
+                Currency = rule.Currency,
+                AccountId = rule.AccountId,
+                CounterpartyAccountId = destination,
+                TransferGroupId = group,
+                OccurredAtUtc = occurredAt,
+                RecurrenceRuleId = rule.Id,
+                Merchant = rule.Merchant,
+                Note = rule.Note
+            };
+            var incoming = new FinanceTransaction
+            {
+                Type = TransactionType.Transfer,
+                AmountMinor = paid,
+                Currency = rule.Currency,
+                AccountId = destination,
+                CounterpartyAccountId = rule.AccountId,
+                TransferGroupId = group,
+                OccurredAtUtc = occurredAt,
+                RecurrenceRuleId = rule.Id,
+                Merchant = rule.Merchant,
+                Note = rule.Note
+            };
             db.Transactions.AddRange(outgoing, incoming);
             occurrence.GeneratedTransactionId = outgoing.Id;
         }
         else
         {
-            var account = await db.Accounts.AsNoTracking().SingleOrDefaultAsync(x => x.Id == rule.AccountId, cancellationToken).ConfigureAwait(false);
-            if (account is null || account.State == AccountState.Archived) return Result.Failure("The recurring account is unavailable.");
-            if (!string.Equals(account.Currency, rule.Currency, StringComparison.OrdinalIgnoreCase)) return Result.Failure("Recurring item currency no longer matches its account.");
-
-            var item = new FinanceTransaction { Type = rule.TransactionType, AmountMinor = SignedAmount(rule.TransactionType, paid), Currency = rule.Currency, AccountId = rule.AccountId, CategoryId = rule.CategoryId, OccurredAtUtc = occurredAt, Merchant = rule.Merchant, Note = rule.Note, RecurrenceRuleId = rule.Id };
+            var item = new FinanceTransaction
+            {
+                Type = rule.TransactionType,
+                AmountMinor = SignedAmount(rule.TransactionType, paid),
+                Currency = rule.Currency,
+                AccountId = rule.AccountId,
+                CategoryId = rule.CategoryId,
+                OccurredAtUtc = occurredAt,
+                Merchant = rule.Merchant,
+                Note = rule.Note,
+                RecurrenceRuleId = rule.Id
+            };
+            DomainRules.ValidateTransaction(item);
             db.Transactions.Add(item);
             occurrence.GeneratedTransactionId = item.Id;
         }
@@ -123,7 +193,9 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
         var occurrence = await db.RecurrenceOccurrences.SingleOrDefaultAsync(x => x.Id == occurrenceId, cancellationToken).ConfigureAwait(false);
         if (occurrence is null) return Result.Failure("Recurring occurrence not found.");
         if (occurrence.Status == OccurrenceStatus.Skipped) return Result.Success();
-        if (occurrence.GeneratedTransactionId is not null || occurrence.PaidAmountMinor is > 0) return Result.Failure("A payment is already linked to this occurrence and must be resolved before skipping it.");
+        if (occurrence.Status == OccurrenceStatus.Paid) return Result.Failure("A fully paid occurrence cannot be skipped.");
+        if (occurrence.GeneratedTransactionId is not null || occurrence.PaidAmountMinor is > 0)
+            return Result.Failure("A payment is already linked to this occurrence and must be resolved before skipping it.");
         occurrence.Status = OccurrenceStatus.Skipped;
         occurrence.PostponedTo = null;
         occurrence.UpdatedAtUtc = DateTimeOffset.UtcNow;
@@ -135,13 +207,18 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
     public async Task<Result> PostponeAsync(Guid occurrenceId, DateOnly newDate, CancellationToken cancellationToken = default)
     {
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        var occurrence = await db.RecurrenceOccurrences.Include(x => x.RecurrenceRule).SingleOrDefaultAsync(x => x.Id == occurrenceId, cancellationToken).ConfigureAwait(false);
+        var occurrence = await db.RecurrenceOccurrences
+            .Include(x => x.RecurrenceRule)
+            .SingleOrDefaultAsync(x => x.Id == occurrenceId, cancellationToken)
+            .ConfigureAwait(false);
         if (occurrence?.RecurrenceRule is null) return Result.Failure("Recurring occurrence not found.");
         if (occurrence.Status == OccurrenceStatus.Skipped) return Result.Failure("Reopen the skipped occurrence before postponing it.");
         if (occurrence.Status == OccurrenceStatus.Paid) return Result.Failure("A fully paid occurrence cannot be postponed.");
-        if (occurrence.GeneratedTransactionId is not null || occurrence.PaidAmountMinor is > 0) return Result.Failure("A payment is already linked to this occurrence and cannot be postponed.");
+        if (occurrence.GeneratedTransactionId is not null || occurrence.PaidAmountMinor is > 0)
+            return Result.Failure("A payment is already linked to this occurrence and cannot be postponed.");
         if (newDate <= occurrence.DueOn) return Result.Failure("The postponed date must be after the original due date.");
-        if (occurrence.RecurrenceRule.EndsOn is DateOnly endsOn && newDate > endsOn) return Result.Failure("The postponed date is after this recurring rule ends.");
+        if (occurrence.RecurrenceRule.EndsOn is DateOnly endsOn && newDate > endsOn)
+            return Result.Failure("The postponed date is after this recurring rule ends.");
         occurrence.PostponedTo = newDate;
         occurrence.Status = OccurrenceStatus.Postponed;
         occurrence.UpdatedAtUtc = DateTimeOffset.UtcNow;
@@ -156,7 +233,8 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
         var occurrence = await db.RecurrenceOccurrences.SingleOrDefaultAsync(x => x.Id == occurrenceId, cancellationToken).ConfigureAwait(false);
         if (occurrence is null) return Result.Failure("Recurring occurrence not found.");
         if (occurrence.Status != OccurrenceStatus.Skipped) return Result.Failure("Only a skipped occurrence can be reopened.");
-        if (occurrence.GeneratedTransactionId is not null || occurrence.PaidAmountMinor is > 0) return Result.Failure("This occurrence already has payment data and cannot be reopened as pending.");
+        if (occurrence.GeneratedTransactionId is not null || occurrence.PaidAmountMinor is > 0)
+            return Result.Failure("This occurrence already has payment data and cannot be reopened as pending.");
 
         occurrence.Status = OccurrenceStatus.Pending;
         occurrence.PostponedTo = null;
@@ -166,11 +244,61 @@ public sealed class RecurringWorkflowService(IDbContextFactory<FinoraDbContext> 
         return Result.Success();
     }
 
+    private static async Task<string?> ValidateRuleRelationsAsync(FinoraDbContext db, RecurrenceRule rule, CancellationToken cancellationToken)
+    {
+        var accountIds = new List<Guid> { rule.AccountId };
+        if (rule.DestinationAccountId is Guid destinationId) accountIds.Add(destinationId);
+        var accounts = await db.Accounts.AsNoTracking()
+            .Where(x => accountIds.Contains(x.Id) && x.State != AccountState.Archived)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (accounts.Count != accountIds.Distinct().Count()) return "One or more recurring accounts are unavailable.";
+        if (accounts.Any(account => !string.Equals(account.Currency, rule.Currency, StringComparison.OrdinalIgnoreCase)))
+            return "Recurring item currency no longer matches its account currency.";
+
+        if (rule.CategoryId is Guid categoryId &&
+            !await db.Categories.AsNoTracking().AnyAsync(x => x.Id == categoryId && !x.IsArchived, cancellationToken).ConfigureAwait(false))
+            return "The recurring category is no longer available.";
+        return null;
+    }
+
+    private static string? ValidateGeneratedTransferPair(IReadOnlyList<FinanceTransaction> pair, RecurrenceRule rule)
+    {
+        if (pair.Count != 2) return "The linked transfer payment is incomplete; no changes were made.";
+        var left = pair[0];
+        var right = pair[1];
+        if (left.IsDeleted || right.IsDeleted) return "The generated transfer payment is deleted. Restore it before changing the occurrence.";
+        if (left.Type != TransactionType.Transfer || right.Type != TransactionType.Transfer ||
+            left.TransferGroupId is null || left.TransferGroupId != right.TransferGroupId ||
+            left.RecurrenceRuleId != rule.Id || right.RecurrenceRuleId != rule.Id ||
+            left.AccountId == right.AccountId ||
+            left.CounterpartyAccountId != right.AccountId || right.CounterpartyAccountId != left.AccountId ||
+            !string.Equals(left.Currency, rule.Currency, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(right.Currency, rule.Currency, StringComparison.OrdinalIgnoreCase) ||
+            Math.Sign(left.AmountMinor) == Math.Sign(right.AmountMinor))
+            return "The linked transfer payment is inconsistent; no changes were made.";
+
+        if (rule.DestinationAccountId is not Guid destination ||
+            !new[] { left.AccountId, right.AccountId }.Contains(rule.AccountId) ||
+            !new[] { left.AccountId, right.AccountId }.Contains(destination))
+            return "The linked transfer payment no longer matches the recurring accounts.";
+
+        try
+        {
+            if (checked(left.AmountMinor + right.AmountMinor) != 0)
+                return "The linked transfer payment does not balance; no changes were made.";
+        }
+        catch (OverflowException)
+        {
+            return "The linked transfer payment amount is outside the supported range.";
+        }
+        return null;
+    }
+
     private static long SignedAmount(TransactionType type, long amount) => type switch
     {
-        TransactionType.Expense => -amount,
+        TransactionType.Expense => checked(-amount),
         TransactionType.Income or TransactionType.Refund => amount,
-        TransactionType.Adjustment => amount,
         _ => amount
     };
 }
