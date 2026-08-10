@@ -63,6 +63,14 @@ public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) :
         modelBuilder.Entity<Account>().Property(x => x.Currency).HasMaxLength(8);
         modelBuilder.Entity<FinanceTransaction>().Property(x => x.Currency).HasMaxLength(8);
         modelBuilder.Entity<FinanceTransaction>().Property(x => x.Merchant).HasMaxLength(240);
+        modelBuilder.Entity<Category>().Property(x => x.Name).HasMaxLength(120);
+        modelBuilder.Entity<Tag>().Property(x => x.Name).HasMaxLength(80);
+        modelBuilder.Entity<Budget>().Property(x => x.Name).HasMaxLength(120);
+        modelBuilder.Entity<Budget>().Property(x => x.Currency).HasMaxLength(8);
+        modelBuilder.Entity<SavingsGoal>().Property(x => x.Name).HasMaxLength(120);
+        modelBuilder.Entity<SavingsGoal>().Property(x => x.Currency).HasMaxLength(8);
+        modelBuilder.Entity<RecurrenceRule>().Property(x => x.Name).HasMaxLength(120);
+        modelBuilder.Entity<RecurrenceRule>().Property(x => x.Currency).HasMaxLength(8);
         modelBuilder.Entity<Attachment>().Property(x => x.OriginalFileName).HasMaxLength(240);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Kind).HasMaxLength(64);
         modelBuilder.Entity<NotificationSchedule>().Property(x => x.Title).HasMaxLength(160);
@@ -82,6 +90,33 @@ public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) :
         {
             entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
             DomainRules.ValidateTransaction(entry.Entity);
+        }
+
+        foreach (var entry in ChangeTracker.Entries<Budget>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.Name = entry.Entity.Name.Trim();
+            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateBudget(entry.Entity);
+        }
+
+        foreach (var entry in ChangeTracker.Entries<BudgetPeriod>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+            DomainRules.ValidateBudgetPeriod(entry.Entity);
+
+        foreach (var entry in ChangeTracker.Entries<SavingsGoal>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.Name = entry.Entity.Name.Trim();
+            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateSavingsGoal(entry.Entity);
+        }
+
+        foreach (var entry in ChangeTracker.Entries<GoalContribution>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+            DomainRules.ValidateGoalContribution(entry.Entity);
+
+        foreach (var entry in ChangeTracker.Entries<RecurrenceRule>().Where(entry => entry.State is EntityState.Added or EntityState.Modified))
+        {
+            entry.Entity.Name = entry.Entity.Name.Trim();
+            entry.Entity.Currency = entry.Entity.Currency.Trim().ToUpperInvariant();
+            DomainRules.ValidateRecurrenceRule(entry.Entity);
         }
     }
 }
