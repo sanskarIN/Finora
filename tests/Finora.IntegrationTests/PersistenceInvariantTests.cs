@@ -90,14 +90,14 @@ public sealed class PersistenceInvariantTests : IAsyncLifetime
         {
             Type = TransactionType.Income,
             AmountMinor = 100,
-            Currency = " usd ",
+            Currency = " inr ",
             AccountId = _accountId,
             OccurredAtUtc = DateTimeOffset.UtcNow
         };
         db.Transactions.Add(transaction);
         await db.SaveChangesAsync();
 
-        Assert.Equal("USD", transaction.Currency);
+        Assert.Equal("INR", transaction.Currency);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public sealed class PersistenceInvariantTests : IAsyncLifetime
             StartsOn = new DateOnly(2026, 8, 1),
             TransactionType = TransactionType.Income,
             AmountMinor = 1_000,
-            Currency = " usd ",
+            Currency = " inr ",
             AccountId = _accountId
         };
         db.AddRange(budget, goal, recurrence);
@@ -185,6 +185,6 @@ public sealed class PersistenceInvariantTests : IAsyncLifetime
 
         Assert.Equal("USD", budget.Currency);
         Assert.Equal("USD", goal.Currency);
-        Assert.Equal("USD", recurrence.Currency);
+        Assert.Equal("INR", recurrence.Currency);
     }
 }
