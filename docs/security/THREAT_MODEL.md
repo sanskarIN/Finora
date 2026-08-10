@@ -18,6 +18,7 @@ High-value assets include:
 - app-lock PIN verifier/salt and biometric preference;
 - platform secure-storage values;
 - sanitized diagnostic/integrity reports;
+- temporary user-requested CSV/PDF/backup/integrity-report share copies;
 - release signing credentials (outside the repository/application).
 
 ## Trust boundaries
@@ -30,6 +31,7 @@ High-value assets include:
 6. **Finora ↔ GitHub/NuGet/build infrastructure** — supply-chain and CI systems can alter build inputs; repository policies, dependency review, CodeQL, version control, and release review reduce risk.
 7. **Release engineer ↔ signing infrastructure** — signing keys/certificates/profiles must remain outside source control.
 8. **Authenticated backup bytes ↔ restored finance graph** — cryptographic authentication proves integrity/authenticity under the password-derived key; it does not by itself prove that the decrypted object graph obeys current Finora domain/relationship rules.
+9. **Logical path ↔ physical filesystem object** — a lexically confined path is not trusted until existing components are checked for symbolic-link/reparse traversal.
 
 ## Threats and controls
 
@@ -39,18 +41,36 @@ Threat: another person opens Finora and sees finance data.
 
 Controls:
 
-- optional 4–12 digit app PIN;
+- optional 4–12 ASCII-digit app PIN;
 - PBKDF2-SHA256 PIN verifier with random salt rather than plaintext PIN storage;
 - OS secure storage for verifier material;
-- persistent PIN-enabled marker so missing/corrupt secure-storage material fails closed;
+- persistent PIN-enabled marker so temporary secure-storage provider failures fail closed;
+- stale enabled marker self-repair when secure storage is readable and verifier material is actually absent/corrupt;
 - escalating local lockout after failed PIN attempts;
 - bounded lockout arithmetic;
+- direct PIN inputs are length/ASCII-digit validated before expensive hashing;
+- verifier/salt/derived buffers are zeroed after verification where managed byte arrays permit it;
 - configurable inactivity auto-lock;
 - biometric/Windows Hello only with PIN fallback;
 - privacy mode / hide amounts on launch;
 - sensitive-screen protection where the platform provides a supported mechanism.
 
 Residual risk: a rooted/jailbroken/compromised device or attacker with OS-level privileges may bypass app-level controls.
+
+### Secret-entry shoulder surfing / UI persistence
+
+Threat: backup passwords or PIN setup values remain visible in ordinary prompts or stay populated after an operation.
+
+Controls:
+
+- Settings uses dedicated `Entry` controls with `IsPassword="True"` for backup password, new PIN, and PIN confirmation;
+- lock-screen PIN entry is masked;
+- backup password and PIN fields are cleared after success, validation failure, cancellation/failure exits, or PIN-removal flow completion;
+- secret fields are not bound into persisted preferences;
+- backup passwords are never stored by Finora;
+- structural preflight rejects a regression to unmasked named secret fields or password/PIN `DisplayPromptAsync` use.
+
+Residual risk: managed `string` instances cannot be deterministically zeroed by application code; clearing UI references reduces retention but cannot guarantee immediate runtime memory erasure.
 
 ### Screenshot/screen-recording leakage
 
@@ -64,6 +84,20 @@ Controls:
 - privacy mode can hide amounts.
 
 Residual risk: camera photographs, OS/platform capture gaps, accessibility/system processes, or compromised devices may still expose the screen.
+
+### OS backup / device-transfer leakage
+
+Threat: the platform copies app-private finance data through automatic backup or device-transfer mechanisms outside Finora's explicit encrypted-backup flow.
+
+Controls:
+
+- Android manifest keeps `android:allowBackup="false"`;
+- legacy Android full-backup rules explicitly exclude root, file, database, shared preferences, and external domains;
+- Android 12+ data-extraction rules explicitly exclude the same domains from cloud backup and device transfer;
+- structural preflight requires these rule files and manifest links;
+- Finora's supported portable backup remains an explicit password-encrypted user action.
+
+Residual risk: privileged device-management, rooted-device tooling, platform bugs, or full-device forensic extraction may bypass ordinary application backup controls.
 
 ### Database corruption or partial writes
 
@@ -80,8 +114,9 @@ Controls:
 - transactional schema migration;
 - transactional budget period replacement;
 - crash-safe restore journal plus database commit marker;
+- EF `SaveChanges` boundary validates Added/Modified account, transaction, split, category, tag, transaction-tag, budget, budget-period, savings-goal, contribution, recurrence-rule, occurrence, attachment metadata, transaction revision, reconciliation, notification schedule, app setting, audit entry, and backup metadata rows;
 - data-integrity diagnostic covering SQLite integrity, foreign keys, transactions, transfers, splits, category hierarchy, budgets, goals/contributions, recurrence, reconciliation, and attachment integrity;
-- automated integration/migration/failure-path tests.
+- automated unit/integration/migration/failure-path tests.
 
 Residual risk: filesystem/hardware corruption or untested platform/runtime defects require external backups and recovery testing.
 
@@ -159,9 +194,24 @@ Controls:
 - stale recurring reminder dedupe keys are cancelled during synchronization;
 - repeated full payment is idempotent while incompatible completed mutations are rejected.
 
+### Notification replacement inconsistency
+
+Threat: replacing a deduplicated reminder cancels the existing OS reminder before the replacement is accepted, leaving the database and OS schedule out of sync.
+
+Controls:
+
+- replacement reminder is scheduled with the OS first;
+- only after OS acceptance does a database transaction disable old rows and persist the replacement;
+- old OS reminders are cancelled after database commit;
+- if database persistence fails after OS scheduling, the new OS reminder is best-effort cancelled;
+- disabled/expired reminder IDs are retried for cancellation during reconciliation;
+- integration tests cover failed replacement, successful dedupe, cancellation failure, and expired cleanup.
+
+Residual risk: an OS notification API can still fail asynchronously after reporting success; periodic reconciliation remains best-effort.
+
 ### Receipt/path traversal or file tampering
 
-Threat: attachment metadata escapes app storage, points to arbitrary files, or receipt bytes are altered.
+Threat: attachment metadata escapes app storage, points to arbitrary files, traverses a symbolic link/reparse point, or receipt bytes are altered.
 
 Controls:
 
@@ -169,12 +219,17 @@ Controls:
 - app-private attachment root;
 - canonical full-path confinement check;
 - platform-correct path comparison (case-insensitive on Windows, case-sensitive on Unix-style targets);
+- existing path components are rejected if they are symbolic links/reparse points;
+- cleanup traverses directories explicitly without following links;
+- crash-safe rollback copy uses the same no-link walk;
+- restore journal/staging/rollback paths reject linked traversal;
 - per-file size limit;
 - allowed receipt/document content types;
 - stored SHA-256 checksum and byte count;
 - backup verifies path/size/hash before encryption;
 - restore stages and revalidates attachments;
-- integrity checker detects unsafe/missing/changed attachment files.
+- integrity checker detects unsafe/missing/changed attachment files and linked paths;
+- optional cross-platform symlink regression tests run when the host permits link creation.
 
 Residual risk: checksum detects changes but does not prevent a privileged attacker from changing both database metadata and local file contents.
 
@@ -189,6 +244,9 @@ Controls:
 - format magic used as authenticated associated data;
 - derived key zeroed after cryptographic operation;
 - serialized plaintext and receipt byte buffers cleared as early as practical;
+- every accumulated receipt buffer is zeroed on every backup-creation exit, including later-file/query/validation failure;
+- decrypted receipt buffers are cleared if authenticated graph validation rejects a backup;
+- UI-side encrypted backup byte arrays are zeroed after writing/sharing;
 - backup is created only after explicit user action;
 - no automatic upload destination.
 
@@ -203,7 +261,8 @@ Controls:
 - backup creation validates the graph before encryption;
 - preview/restore validates decrypted unique IDs and complete financial graph before database deletion/staging commit;
 - graph validation covers account/currency references, transfers, splits, category hierarchy, transaction-tag links, budgets/periods, goals/contributions, recurrence, attachments, revisions, reconciliations, notification metadata, and settings boundaries;
-- internal restore markers/settings are not imported from snapshot data.
+- internal restore markers/settings are not imported from snapshot data;
+- EF write-boundary metadata validation provides another layer before persistence.
 
 ### Backup tampering/truncation
 
@@ -229,11 +288,12 @@ Controls:
 
 - restore operation gate prevents simultaneous backup/restore races;
 - pre-restore attachment snapshot;
-- durable journal;
+- rollback copy rejects symbolic-link/reparse traversal;
+- durable no-link recovery journal;
 - pending database marker;
 - startup recovery executes before finance UI navigation;
 - pending marker restores the prior receipt tree; missing marker after commit finalizes the new tree;
-- orphan staging/rollback directories are cleaned after the recovery decision.
+- orphan staging/rollback directories are cleaned after the recovery decision without recursively following linked directories.
 
 ### Restore from incompatible schema
 
@@ -268,17 +328,39 @@ Residual risk: CSV is user-provided data; semantic correctness still requires us
 
 ### Logs/diagnostics leakage
 
-Threat: logs expose finance data or credentials.
+Threat: logs expose finance data, filesystem paths, provider errors, or credentials.
 
 Controls:
 
-- privacy-aware logger;
-- no private transaction payload logging by default;
+- privacy-aware logger ignores arbitrary caller properties;
+- exception diagnostics store event token + exception type only, never exception message/stack;
+- log event tokens are character/length sanitized;
+- current log is bounded and rotated to one previous file;
+- diagnostic directory/files reject symbolic-link/reparse traversal;
+- ViewModel error mapper suppresses storage/database/crypto/provider/path-like exception details;
+- primary Reports/Settings alerts use generic user-facing errors while routing exception type to the privacy logger;
+- `AsyncCommand` contains unexpected non-fatal failures and routes them to the privacy logger instead of allowing an `async void` exception to escape;
 - integrity report contains counts/codes only;
 - explicit sanitized export action;
-- developer diagnostics avoid private finance contents.
+- automated tests verify exception messages/properties do not appear in logs.
 
 Forbidden log content includes amounts, account names, merchant/payee names, notes, locations, receipt names/contents, PINs, backup passwords, encryption keys, signing material, and private finance identifiers unless an identifier is explicitly sanitized/non-sensitive.
+
+### Temporary share-copy retention
+
+Threat: explicitly exported CSV/PDF/backups/integrity reports remain indefinitely in app cache after the OS share sheet has used them.
+
+Controls:
+
+- generated share copies use known Finora filename patterns in cache;
+- serialized startup deletes only matching files older than 24 hours;
+- fresh share copies are preserved to avoid share-sheet races;
+- unrelated cache files and diagnostic logs are excluded;
+- symlink entries are deleted as entries rather than recursively followed;
+- cleanup is best-effort and cannot block finance startup;
+- integration tests cover managed/unmanaged/fresh/link behavior.
+
+Residual risk: once the user shares/saves a file into another app/location, that destination controls retention.
 
 ### Notification leakage
 
@@ -295,14 +377,15 @@ Controls:
 
 ### App-lock bypass through biometrics
 
-Threat: biometric integration unlocks without a valid platform authentication or removes PIN fallback.
+Threat: biometric integration unlocks without a valid platform authentication, exposes provider-specific error text, or removes PIN fallback.
 
 Controls:
 
 - biometric unlock requires existing Finora PIN configuration;
 - platform availability checked;
 - cancellation/unavailable/error returns to locked/PIN path;
-- PIN removal disables biometric preference.
+- lock screen presents stable generic failure text rather than raw provider detail;
+- PIN removal disables biometric preference only after secure verifier removal succeeds.
 
 Residual risk: security ultimately depends on OS biometric/Hello implementation and device integrity.
 
@@ -327,6 +410,7 @@ Controls:
 - CodeQL analysis;
 - warnings-as-errors/latest-recommended analyzers;
 - structural preflight;
+- structural preflight additionally guards Android backup exclusions, masked secret inputs, XAML handler resolution, and raw exception-alert regressions;
 - code ownership for sensitive files;
 - release-time exact dependency/license review.
 
@@ -349,7 +433,9 @@ Controls:
 - No analytics/advertising telemetry by default.
 - No background location collection; location is manually entered only.
 - No automatic backup upload.
+- Android automatic backup/device-transfer domains are explicitly excluded.
 - System pickers/share sheets are invoked only after explicit user action.
+- Stale app-cache share copies are cleaned after a grace period; copies saved elsewhere are outside Finora's control.
 - Uninstalling without a separately saved backup may remove local data.
 
 ## Security regression gates
@@ -357,14 +443,20 @@ Controls:
 Before release, verify:
 
 - app-lock/PIN/biometric/capture paths on supported devices;
+- masked backup/PIN entry and field clearing;
+- secure-storage missing/corrupt/provider-failure behavior;
 - wrong/tampered/semantically invalid backup rejection;
+- receipt symlink/reparse traversal rejection;
 - interrupted-restore startup recovery;
 - migration and expanded integrity checks;
 - mixed-currency isolation;
 - split/category and custom-budget period behavior;
 - recurrence pause/resume/archive plus stale-reminder cleanup;
-- notification privacy;
-- sanitized logs/reports;
+- notification replacement failure safety and notification privacy;
+- temporary share-copy cleanup without unrelated-file deletion;
+- sanitized logs/reports and generic user-facing infrastructure errors;
+- direct EF metadata invariant enforcement;
+- Android OS backup/data-transfer exclusions in packaged manifest/resources;
 - no new network/analytics/account dependency;
 - exact package vulnerability/license review;
 - platform signing credentials stay outside repository artifacts.
