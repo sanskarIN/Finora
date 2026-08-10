@@ -16,18 +16,6 @@ v1 -> v2
 
 A release that introduces schema v3 must add and test an explicit `v2 -> v3` path; it must not replace or delete the prior migration.
 
-## Money and currency invariants
-
-- Persist monetary values as signed 64-bit integer minor units plus currency code.
-- Major-unit parsing/conversion uses `decimal`, never `float`/`double`.
-- `CurrencyMinorUnits` provides Finora's built-in zero-, two-, and three-decimal precision mapping for major/minor conversion and formatting.
-- An expense is negative; income/refund is positive; transfers use equal/opposite linked rows.
-- Zero and `long.MinValue` transaction amounts are rejected because they are invalid/unsafe financial states.
-- Transaction splits must use the parent sign and must sum exactly to the parent amount with checked arithmetic.
-- Aggregate reports must filter to one explicit reporting currency. Unlike currencies are not silently added or converted.
-
-The built-in currency-precision metadata is implementation metadata, not an exchange-rate source. Release QA must verify the table against currencies supported by the target release markets.
-
 ## Main entities
 
 ### `Account`
@@ -47,7 +35,7 @@ Key persisted fields include:
 
 Index: `(State, Name)`.
 
-Accounts with transaction history are archived rather than silently hard-deleted by ordinary UI workflows.
+Accounts with transaction history are archived rather than silently hard-deleted by ordinary UI workflows. Account currency cannot be changed after financial or recurring records depend on the account. An account used by an active recurring rule cannot be archived until that rule is paused/completed/archived.
 
 ### `FinanceTransaction` (`Transactions`)
 
@@ -71,27 +59,54 @@ Indexes include `(AccountId, OccurredAtUtc)`, `(IsDeleted, OccurredAtUtc)`, and 
 
 Transfer invariant: two rows share a `TransferGroupId`, use the same currency, have equal/opposite amounts, reference reciprocal counterparty accounts, and transition delete/restore together.
 
+A transaction's currency must match its account currency. Expense amounts are negative; Income/Refund amounts are positive; zero and `long.MinValue` amounts are invalid. These invariants are checked at service/domain/EF boundaries and by the integrity checker.
+
 ### `TransactionSplit`
 
-Child rows allocate a transaction amount to one or more categories/notes. The sum of split minor units must equal the parent transaction amount. Each split uses the same sign as the parent. Persistence validation and the integrity diagnostic check these invariants.
+Child rows allocate a non-transfer transaction amount to one or more categories/notes. Each split has the same sign as the parent, cannot be zero/`long.MinValue`, and the checked sum of split minor units must equal the parent transaction amount.
+
+Category and category-budget reporting uses split allocations whenever splits exist; it does not also count the whole parent transaction.
 
 ### `Category`
 
 Supports parent/subcategory hierarchy, icons, ordering, system/user-created state, archive/restore. Parent deletion is restricted at the relational level; application workflows reassign/merge safely.
 
-Category hierarchy must remain acyclic.
+Category hierarchy must remain acyclic. Category reassignment/merge must preserve `Subcategory` budget semantics: a subcategory budget cannot be bulk-reassigned to a root category.
 
 ### `Tag` / `TransactionTag`
 
 Many-to-many tag relationship. `TransactionTag` uses composite primary key `(TransactionId, TagId)`.
 
+Tag financial summaries are explicitly scoped to a reporting currency; unlike currencies are never added together.
+
 ### `Budget`
 
 Stores overall/category/subcategory budget configuration, cadence, limit minor units, currency, rollover flag, warning threshold, and archive state.
 
+Budget invariants include:
+
+- positive limit;
+- valid 1–100 warning threshold;
+- category/subcategory kinds require a category;
+- overall kind cannot target a category;
+- subcategory kind must target a child category;
+- custom cadence requires at least one explicit period at persistence/backup/integrity boundaries.
+
 ### `BudgetPeriod`
 
 Stores explicit planned/rollover amounts and period boundaries. Unique index: `(BudgetId, StartsOn, EndsOn)`.
+
+`BudgetPeriodPolicy` is the shared resolver used by store/report paths:
+
+- explicit periods take precedence;
+- periods cannot overlap;
+- weekly generated windows are Monday–Sunday;
+- monthly windows are calendar months;
+- custom budgets are inactive outside explicit windows;
+- rollover is included only when `RolloverEnabled`;
+- checked effective planned amount must remain positive.
+
+Replacement of an existing budget's explicit period set is intended to be transactionally atomic so a failed replacement does not erase the prior valid periods.
 
 ### `SavingsGoal`
 
@@ -101,9 +116,13 @@ Stores target/starting minor units, currency, optional target date, notes/icon, 
 
 Stores signed contribution/withdrawal minor units, timestamp, optional linked finance transaction, and note.
 
+Contribution history must never drive running goal progress below zero. A linked transaction must exist, be non-deleted when linked through the normal workflow, and use the goal currency.
+
 ### `RecurrenceRule`
 
 Stores recurrence frequency/interval/date boundaries, reminder/grace configuration, transaction template fields, account/category/destination account, and next/last occurrence state.
+
+Rule lifecycle includes Active, Paused, Completed, and Archived. Active rule dependencies must point to available accounts/categories with matching currency. Paused/completed/archived historical rules may preserve links to later-archived accounts but cannot resume without current dependency validation.
 
 ### `RecurrenceOccurrence`
 
@@ -111,15 +130,15 @@ Persists each due occurrence and workflow state (pending/paid/partial/skipped/po
 
 Unique index: `(RecurrenceRuleId, DueOn)`.
 
-This is the core restart/idempotency guard. Reprocessing the same due date must not produce a second occurrence. A skipped occurrence must be explicitly reopened before payment or postponement; a fully paid occurrence is not regenerated.
+This is the core restart/idempotency guard. Reprocessing the same due date must not produce a second occurrence. Paid/partial-paid state must have a valid generated transaction linked to the same recurrence rule; unpaid/skipped/postponed state must not silently contain generated-payment data.
 
 ### `Attachment`
 
-Stores receipt/document metadata only; bytes live under app-private `attachments` storage.
+Stores receipt/document metadata only; bytes live under app-private attachment storage.
 
 Fields include transaction link, relative app-private path, original filename, content type, byte size, SHA-256 checksum, and timestamps.
 
-Never replace `RelativePath` with an arbitrary absolute path. Attachment services and the integrity checker canonicalize/check paths against the private receipt root.
+Never replace `RelativePath` with an arbitrary absolute path. Attachment services canonicalize/check paths against the private attachment root using platform-correct path comparison semantics.
 
 ### `TransactionRevision` — schema v2
 
@@ -150,6 +169,8 @@ Stores reconciliation history:
 
 Index: `(AccountId, StatementDateUtc)`.
 
+The difference must equal checked `statement - book`. If an adjustment is marked created, the linked transaction must exist, be an Adjustment for the same account, and have the exact difference amount.
+
 ### `NotificationSchedule` — schema v2
 
 Stores local reminder scheduling state independently from native OS scheduling:
@@ -162,15 +183,13 @@ Stores local reminder scheduling state independently from native OS scheduling:
 
 Indexes: `TriggerAtUtc`, `DedupeKey`.
 
-Do not store private merchant/amount/note content in a notification merely because this table is local; notifications may be shown on the device lock screen.
+Do not store private merchant/amount/note content in a notification merely because this table is local; notifications may be shown on the device lock screen. Reminder synchronization cancels stale recurring/budget/backup schedules when the persisted product state no longer requires them.
 
 ### `AppSetting`
 
 Stores non-secret app preferences and the schema-version marker. `Key` is unique.
 
-Small security verifier material belongs in OS secure storage, not this table. Large datasets do not belong in secure storage.
-
-`internal.restore.commit` is a transient internal recovery marker used only by the production crash-safe restore protocol. It contains a random restore operation ID, never a password, key, receipt name, transaction content, or monetary value. Normal recovery removes it. It is not a schema-version field and does not require a schema bump.
+Small security verifier material belongs in OS secure storage, not this table. Large datasets do not belong in secure storage. Internal restore-journal/commit-marker settings are not imported from an encrypted snapshot.
 
 ### `AuditEntry`
 
@@ -202,7 +221,7 @@ Initialization enables:
 - `PRAGMA foreign_keys=ON`;
 - `PRAGMA busy_timeout=5000`.
 
-Multi-record financial operations use explicit database transactions where atomicity matters. `FinoraDbContext` also validates tracked Account/FinanceTransaction writes before every EF save so direct EF/import-style write paths cannot bypass the core account/currency/sign/split rules.
+Multi-record financial operations use explicit database transactions where atomicity matters.
 
 ## Data-integrity diagnostic
 
@@ -210,40 +229,27 @@ Multi-record financial operations use explicit database transactions where atomi
 
 - SQLite `integrity_check`;
 - SQLite `foreign_key_check`;
-- invalid/unsafe transaction values and semantic signs;
-- transaction/account currency/reference consistency;
-- transfer pairing/balance;
+- transaction amount/sign/currency/account state;
+- transfer pairing/balance/link state;
 - split signs/totals;
 - category hierarchy cycles;
-- recurrence duplicate/generated-transaction references;
-- receipt path confinement, presence, byte size, and SHA-256 checksum.
+- budget configuration, custom periods, and category relationships;
+- savings-goal and contribution/link/running-progress state;
+- recurrence rule dependencies and occurrence payment/postponement/generated-transaction state;
+- reconciliation arithmetic/adjustment links;
+- receipt/attachment path, presence, byte size, and SHA-256 checksum.
 
-The integrity report contains status codes/counts only, not account names, merchants/payees, notes, monetary amounts, or receipt names/contents.
+The exported integrity report contains status codes/counts only, not account names, merchants/payees, notes, monetary amounts, or receipt names/contents.
 
-## Backup and crash-recovery relationship
+## Backup relationship
 
-Encrypted backup serialization includes the supported schema-v2 finance graph plus attachment bytes. Backup restore is not a SQLite file copy: it validates/decrypts the snapshot, stages attachment files, replaces supported relational data transactionally, and swaps the attachment directory.
+Encrypted backup serialization includes the supported schema-v2 finance graph plus attachment bytes. Backup restore is not a SQLite file copy.
 
-Because SQLite and the receipt file tree cannot participate in one native atomic transaction, production restore is wrapped by `CrashSafeBackupService` and `RestoreRecoveryService`:
+Before preview/restore, an authenticated snapshot must pass graph validation for identifiers, account/currency references, transfers, splits, category hierarchy, transaction-tag links, budgets/periods, goals/contributions, recurrence rules/occurrences, attachments, revisions, reconciliations, notification metadata, and settings boundaries.
 
-1. any previous interrupted restore is resolved first;
-2. a transient `internal.restore.commit` marker is written to the old database;
-3. an app-private recovery journal is written with a random restore ID and safe directory names;
-4. the current receipt tree is copied to an app-private rollback directory;
-5. the validated encrypted restore runs;
-6. the committed restore transaction replaces non-schema app settings, which removes the pending marker;
-7. recovery interprets a matching marker as “database restore did not commit” and restores the previous receipt tree;
-8. an absent matching marker means the database replacement committed, so recovery finalizes the new receipt tree and deletes rollback/staging artifacts.
+Restore then stages attachment files, replaces supported relational data transactionally, and coordinates the attachment directory with a durable restore journal/commit marker. Startup recovery decides whether to restore the previous receipt tree or finalize the committed new tree after an interrupted restore.
 
-At startup, recovery runs before normal navigation. If safe automatic recovery cannot be completed, Finora blocks normal initialization instead of silently exposing a database/receipt mismatch.
-
-The recovery journal and marker do not contain backup passwords or financial contents. A backup created by a newer schema is rejected by an older build.
-
-## Full finance reset
-
-`FinanceDataResetService` removes finance-domain records in dependency-safe order, including transaction revisions, reconciliation rows, reminder schedules, tags, budgets, goals, recurrence, receipts, categories, accounts, audit entries, and backup metadata. Self-referencing categories are removed leaves-first and a cycle causes rollback.
-
-The reset intentionally keeps `schema.version`, non-finance app preferences, and app-lock configuration. Receipt files are cleaned only after the database reset commits.
+A backup created by a newer schema is rejected by an older build.
 
 ## Schema change rules
 
@@ -254,5 +260,5 @@ Every future schema modification must:
 3. preserve prior migration paths;
 4. include integration tests from every released schema;
 5. update this file and backup compatibility documentation;
-6. run the integrity checker after migration in release QA;
-7. never silently reinterpret stored money, currency precision, or transfer semantics.
+6. run the data-integrity checker after migration in release QA;
+7. never silently reinterpret stored money, currency, transfer, split, budget-period, recurrence, or reconciliation semantics.
