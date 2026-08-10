@@ -26,6 +26,16 @@ internal static class BackupGraphValidator
         var accountById = accounts.ToDictionary(x => x.Id);
         foreach (var account in accounts) DomainRules.ValidateAccount(account);
 
+        foreach (var category in categories) DomainRules.ValidateCategory(category);
+        foreach (var tag in tags) DomainRules.ValidateTag(tag);
+        foreach (var link in transactionTags) DomainRules.ValidateTransactionTag(link);
+        foreach (var split in splits) DomainRules.ValidateTransactionSplit(split);
+        foreach (var attachment in attachments) DomainRules.ValidateAttachmentMetadata(attachment);
+        foreach (var revision in revisions) DomainRules.ValidateTransactionRevision(revision);
+        foreach (var reconciliation in reconciliations) DomainRules.ValidateReconciliation(reconciliation);
+        foreach (var notification in notifications) DomainRules.ValidateNotificationSchedule(notification);
+        foreach (var setting in settings) DomainRules.ValidateAppSetting(setting);
+
         var categoryById = categories.ToDictionary(x => x.Id);
         ValidateCategoryTree(categoryById);
         var tagIds = tags.Select(x => x.Id).ToHashSet();
@@ -74,9 +84,11 @@ internal static class BackupGraphValidator
         foreach (var budget in budgets)
         {
             DomainRules.ValidateBudget(budget);
+            if (budget.Cadence == BudgetCadence.Custom && budgetPeriods.All(period => period.BudgetId != budget.Id))
+                throw new InvalidDataException("Custom budget requires at least one explicit period.");
             if (budget.CategoryId is not Guid categoryId) continue;
             var category = Require(categoryById, categoryId, "Budget category is missing.");
-            if (category.IsArchived) throw new InvalidDataException("Budget references an archived category.");
+            if (category.IsArchived && !budget.IsArchived) throw new InvalidDataException("Active budget references an archived category.");
             if (budget.Kind == BudgetKind.Subcategory && category.ParentId is null)
                 throw new InvalidDataException("Subcategory budget references a root category.");
         }
@@ -90,23 +102,16 @@ internal static class BackupGraphValidator
         {
             if (!transactionById.ContainsKey(attachment.TransactionId))
                 throw new InvalidDataException("Attachment transaction is missing.");
-            if (attachment.SizeBytes <= 0) throw new InvalidDataException("Attachment size is invalid.");
-            if (string.IsNullOrWhiteSpace(attachment.RelativePath)) throw new InvalidDataException("Attachment path is missing.");
         }
 
         foreach (var revision in revisions)
         {
             if (!transactionById.ContainsKey(revision.TransactionId))
                 throw new InvalidDataException("Transaction revision parent is missing.");
-            if (string.IsNullOrWhiteSpace(revision.ChangeKind) || string.IsNullOrWhiteSpace(revision.SnapshotJson))
-                throw new InvalidDataException("Transaction revision metadata is incomplete.");
         }
 
         ValidateReconciliations(reconciliations, accountById, transactionById);
-        ValidateNotifications(notifications);
 
-        if (settings.Any(x => string.IsNullOrWhiteSpace(x.Key)))
-            throw new InvalidDataException("Backup contains an empty setting key.");
         if (settings.Any(x => string.Equals(x.Key, "schema.version", StringComparison.Ordinal) || x.Key.StartsWith("internal.", StringComparison.Ordinal)))
             throw new InvalidDataException("Backup contains internal settings that must not be restored from a snapshot.");
     }
@@ -115,8 +120,6 @@ internal static class BackupGraphValidator
     {
         foreach (var category in categoryById.Values)
         {
-            if (string.IsNullOrWhiteSpace(category.Name) || category.Name.Trim().Length > 120)
-                throw new InvalidDataException("Category name is invalid.");
             if (category.ParentId is Guid parentId && !categoryById.ContainsKey(parentId))
                 throw new InvalidDataException("Category parent is missing.");
 
@@ -158,7 +161,6 @@ internal static class BackupGraphValidator
     {
         foreach (var split in splits)
         {
-            if (split.AmountMinor is 0 or long.MinValue) throw new InvalidDataException("Transaction split amount is invalid.");
             if (!transactionById.ContainsKey(split.TransactionId)) throw new InvalidDataException("Transaction split parent is missing.");
             if (split.CategoryId is Guid categoryId && !categoryById.ContainsKey(categoryId))
                 throw new InvalidDataException("Transaction split category is missing.");
@@ -171,8 +173,7 @@ internal static class BackupGraphValidator
             long total = 0;
             foreach (var split in group)
             {
-                if (Math.Sign(split.AmountMinor) != Math.Sign(transaction.AmountMinor))
-                    throw new InvalidDataException("Transaction split sign does not match the parent transaction.");
+                DomainRules.ValidateTransactionSplit(split, transaction.Id, transaction.AmountMinor);
                 total = checked(total + split.AmountMinor);
             }
             if (total != transaction.AmountMinor) throw new InvalidDataException("Transaction split total does not match the parent transaction.");
@@ -206,6 +207,16 @@ internal static class BackupGraphValidator
             if (!unique.Add((period.BudgetId, period.StartsOn, period.EndsOn)))
                 throw new InvalidDataException("Backup contains a duplicate budget period.");
         }
+
+        foreach (var group in periods.GroupBy(x => x.BudgetId))
+        {
+            var ordered = group.OrderBy(x => x.StartsOn).ThenBy(x => x.EndsOn).ToList();
+            for (var index = 1; index < ordered.Count; index++)
+            {
+                if (ordered[index].StartsOn <= ordered[index - 1].EndsOn)
+                    throw new InvalidDataException("Backup contains overlapping budget periods.");
+            }
+        }
     }
 
     private static void ValidateGoalContributions(
@@ -220,6 +231,7 @@ internal static class BackupGraphValidator
             if (contribution.TransactionId is Guid transactionId)
             {
                 var transaction = Require(transactionById, transactionId, "Linked goal transaction is missing.");
+                if (transaction.IsDeleted) throw new InvalidDataException("Linked goal transaction is deleted.");
                 EnsureCurrency(transaction.Currency, goal.Currency, "Linked goal transaction currency does not match the goal.");
             }
         }
@@ -232,6 +244,8 @@ internal static class BackupGraphValidator
                 current = checked(current + contribution.AmountMinor);
                 if (current < 0) throw new InvalidDataException("Savings goal contribution history falls below zero.");
             }
+            if (goal.IsCompleted != (current >= goal.TargetMinor))
+                throw new InvalidDataException("Savings goal completion state does not match contribution progress.");
         }
     }
 
@@ -243,18 +257,18 @@ internal static class BackupGraphValidator
         var unique = new HashSet<(Guid RuleId, DateOnly DueOn)>();
         foreach (var occurrence in occurrences)
         {
+            DomainRules.ValidateRecurrenceOccurrence(occurrence);
             var rule = Require(ruleById, occurrence.RecurrenceRuleId, "Recurrence occurrence rule is missing.");
-            if (occurrence.DueOn == default) throw new InvalidDataException("Recurrence occurrence due date is invalid.");
             if (!unique.Add((occurrence.RecurrenceRuleId, occurrence.DueOn)))
                 throw new InvalidDataException("Backup contains a duplicate recurrence occurrence.");
-            if (occurrence.PostponedTo is DateOnly postponed && postponed <= occurrence.DueOn)
-                throw new InvalidDataException("Postponed recurrence date is invalid.");
+            if (occurrence.PostponedTo is DateOnly postponed && rule.EndsOn is DateOnly endsOn && postponed > endsOn)
+                throw new InvalidDataException("Postponed recurrence date is after the rule end date.");
 
             var generated = occurrence.GeneratedTransactionId is Guid generatedId
                 ? Require(transactionById, generatedId, "Generated recurrence transaction is missing.")
                 : null;
-            if (generated is not null && generated.RecurrenceRuleId != rule.Id)
-                throw new InvalidDataException("Generated transaction does not belong to the recurrence rule.");
+            if (generated is not null && (generated.RecurrenceRuleId != rule.Id || generated.IsDeleted))
+                throw new InvalidDataException("Generated transaction does not belong to the recurrence rule or is deleted.");
 
             switch (occurrence.Status)
             {
@@ -266,12 +280,6 @@ internal static class BackupGraphValidator
                     if (occurrence.PaidAmountMinor is not long partial || partial <= 0 || partial >= rule.AmountMinor || generated is null)
                         throw new InvalidDataException("Partially paid recurrence occurrence is invalid.");
                     break;
-                case OccurrenceStatus.Pending or OccurrenceStatus.Skipped or OccurrenceStatus.Postponed:
-                    if (occurrence.PaidAmountMinor is > 0 || generated is not null)
-                        throw new InvalidDataException("Unpaid recurrence occurrence unexpectedly contains payment data.");
-                    break;
-                default:
-                    throw new InvalidDataException("Recurrence occurrence status is unsupported.");
             }
         }
     }
@@ -283,38 +291,13 @@ internal static class BackupGraphValidator
     {
         foreach (var reconciliation in reconciliations)
         {
+            DomainRules.ValidateReconciliation(reconciliation);
             if (!accountById.ContainsKey(reconciliation.AccountId)) throw new InvalidDataException("Reconciliation account is missing.");
-            if (reconciliation.StatementDateUtc == default || reconciliation.CompletedAtUtc == default)
-                throw new InvalidDataException("Reconciliation timestamps are invalid.");
-            if (checked(reconciliation.StatementBalanceMinor - reconciliation.BookBalanceMinor) != reconciliation.DifferenceMinor)
-                throw new InvalidDataException("Reconciliation difference does not match its balances.");
-            if (reconciliation.DifferenceMinor == long.MinValue)
-                throw new InvalidDataException("Reconciliation difference is outside the supported range.");
+            if (!reconciliation.AdjustmentCreated) continue;
 
-            if (reconciliation.AdjustmentCreated)
-            {
-                if (reconciliation.AdjustmentTransactionId is not Guid adjustmentId)
-                    throw new InvalidDataException("Reconciliation adjustment link is missing.");
-                var adjustment = Require(transactionById, adjustmentId, "Reconciliation adjustment transaction is missing.");
-                if (adjustment.Type != TransactionType.Adjustment || adjustment.AccountId != reconciliation.AccountId || adjustment.AmountMinor != reconciliation.DifferenceMinor)
-                    throw new InvalidDataException("Reconciliation adjustment transaction does not match the reconciliation.");
-            }
-            else if (reconciliation.AdjustmentTransactionId is not null)
-            {
-                throw new InvalidDataException("Reconciliation contains an unexpected adjustment link.");
-            }
-        }
-    }
-
-    private static void ValidateNotifications(IReadOnlyCollection<NotificationSchedule> notifications)
-    {
-        foreach (var notification in notifications)
-        {
-            if (string.IsNullOrWhiteSpace(notification.Kind) || notification.Kind.Length > 64 ||
-                string.IsNullOrWhiteSpace(notification.Title) || notification.Title.Length > 160 ||
-                string.IsNullOrWhiteSpace(notification.Body) || notification.Body.Length > 500 ||
-                notification.TriggerAtUtc == default)
-                throw new InvalidDataException("Notification schedule metadata is invalid.");
+            var adjustment = Require(transactionById, reconciliation.AdjustmentTransactionId!.Value, "Reconciliation adjustment transaction is missing.");
+            if (adjustment.IsDeleted || adjustment.Type != TransactionType.Adjustment || adjustment.AccountId != reconciliation.AccountId || adjustment.AmountMinor != reconciliation.DifferenceMinor)
+                throw new InvalidDataException("Reconciliation adjustment transaction does not match the reconciliation.");
         }
     }
 
