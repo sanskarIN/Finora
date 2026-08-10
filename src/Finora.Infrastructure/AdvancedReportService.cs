@@ -311,7 +311,10 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
     }
 
     private static void AddChecked(IDictionary<string, long> totals, string key, long value)
-        => totals[key] = checked(totals.GetValueOrDefault(key) + value);
+    {
+        totals.TryGetValue(key, out var current);
+        totals[key] = checked(current + value);
+    }
 
     private static string NormalizeMerchant(string? merchant)
         => string.IsNullOrWhiteSpace(merchant) ? "Unknown" : merchant.Trim();
