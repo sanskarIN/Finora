@@ -28,9 +28,17 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             var path = ResolveAttachmentPath(attachment.RelativePath);
             if (!File.Exists(path)) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' is missing; backup was not created.");
             var bytes = await File.ReadAllBytesAsync(path, cancellationToken).ConfigureAwait(false);
-            if (attachment.SizeBytes != bytes.LongLength) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' size does not match the database record.");
+            if (attachment.SizeBytes != bytes.LongLength)
+            {
+                CryptographicOperations.ZeroMemory(bytes);
+                throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' size does not match the database record.");
+            }
             var hash = SHA256.HashData(bytes);
-            if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256)) throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' failed integrity verification.");
+            if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
+            {
+                CryptographicOperations.ZeroMemory(bytes);
+                throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' failed integrity verification.");
+            }
             blobs.Add(new AttachmentBlob(attachment.Id, bytes));
         }
 
@@ -56,12 +64,12 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             await db.NotificationSchedules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
             await db.AppSettings.AsNoTracking().Where(x => x.Key != "schema.version" && !x.Key.StartsWith("internal.")).ToListAsync(cancellationToken).ConfigureAwait(false));
 
-        ValidateUniqueIds(snapshot);
-        ValidateSnapshot(snapshot);
         byte[]? plaintext = null;
         byte[] encrypted;
         try
         {
+            ValidateUniqueIds(snapshot);
+            ValidateSnapshot(snapshot);
             plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
             encrypted = Encrypt(plaintext, password);
         }
@@ -116,7 +124,8 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             if (snapshot.SchemaVersion != AppConstants.DatabaseSchemaVersion)
                 return Result.Failure("This build restores schema-v2 backups. Migrate older backups with the matching Finora version first.");
 
-            stagedDirectory = Path.Combine(_appDataRoot, $"attachments.restore.{Guid.NewGuid():N}");
+            PathSafety.EnsureNotLinkIfExists(AttachmentRoot, "Finora receipt storage cannot be a symbolic link or reparse point during restore.");
+            stagedDirectory = PathSafety.ResolveDescendantWithoutLinks(_appDataRoot, $"attachments.restore.{Guid.NewGuid():N}", "Restore staging path is invalid.");
             Directory.CreateDirectory(stagedDirectory);
             foreach (var attachment in snapshot.Attachments)
             {
@@ -168,19 +177,19 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = Guid.NewGuid(), Action = "RestoredEncryptedBackup" });
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            rollbackDirectory = Path.Combine(_appDataRoot, $"attachments.rollback.{Guid.NewGuid():N}");
+            rollbackDirectory = PathSafety.ResolveDescendantWithoutLinks(_appDataRoot, $"attachments.rollback.{Guid.NewGuid():N}", "Restore rollback path is invalid.");
             if (Directory.Exists(AttachmentRoot)) Directory.Move(AttachmentRoot, rollbackDirectory);
             Directory.Move(stagedDirectory, AttachmentRoot);
             stagedDirectory = null;
             try
             {
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
-                if (Directory.Exists(rollbackDirectory)) Directory.Delete(rollbackDirectory, true);
+                Cleanup(rollbackDirectory);
                 rollbackDirectory = null;
             }
             catch
             {
-                if (Directory.Exists(AttachmentRoot)) Directory.Delete(AttachmentRoot, true);
+                Cleanup(AttachmentRoot);
                 if (Directory.Exists(rollbackDirectory)) Directory.Move(rollbackDirectory, AttachmentRoot);
                 rollbackDirectory = null;
                 throw;
@@ -215,9 +224,10 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         await stream.CopyToAsync(buffer, cancellationToken).ConfigureAwait(false);
         if (buffer.Length > MaximumEncryptedBytes) throw new InvalidDataException("Backup file is too large.");
         var plaintext = Decrypt(buffer.ToArray(), password);
+        Snapshot? snapshot = null;
         try
         {
-            var snapshot = JsonSerializer.Deserialize<Snapshot>(plaintext, Json) ?? throw new InvalidDataException("Backup payload is empty.");
+            snapshot = JsonSerializer.Deserialize<Snapshot>(plaintext, Json) ?? throw new InvalidDataException("Backup payload is empty.");
             if (snapshot.SchemaVersion <= 0) throw new InvalidDataException("Backup schema is invalid.");
             ValidateUniqueIds(snapshot);
             ValidateSnapshot(snapshot);
@@ -229,9 +239,15 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
                 var blob = snapshot.AttachmentBlobs.Single(x => x.AttachmentId == attachment.Id);
                 if (blob.Data.LongLength != attachment.SizeBytes) throw new InvalidDataException("Backup attachment size is invalid.");
                 var hash = SHA256.HashData(blob.Data);
-                if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256)) throw new InvalidDataException("Backup attachment integrity check failed.");
+                if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
+                    throw new InvalidDataException("Backup attachment integrity check failed.");
             }
             return snapshot;
+        }
+        catch
+        {
+            if (snapshot is not null) ZeroAttachmentBlobs(snapshot);
+            throw;
         }
         finally
         {
@@ -309,18 +325,29 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         var prefix = "attachments" + Path.DirectorySeparatorChar;
         if (!normalized.StartsWith(prefix, PathSafety.Comparison))
             throw new InvalidDataException("Attachment path is outside Finora receipt storage.");
-        return PathSafety.ResolveDescendant(AttachmentRoot, normalized[prefix.Length..], "Attachment path escaped Finora storage.");
+        return PathSafety.ResolveDescendantWithoutLinks(AttachmentRoot, normalized[prefix.Length..], "Attachment path escaped Finora storage or traversed a link.");
     }
 
     private string ResolveStagedPath(string stagedRoot, string relativePath)
     {
         var livePath = ResolveAttachmentPath(relativePath);
         var attachmentRelative = Path.GetRelativePath(AttachmentRoot, livePath);
-        return PathSafety.ResolveDescendant(stagedRoot, attachmentRelative, "Staged attachment path is invalid.");
+        return PathSafety.ResolveDescendantWithoutLinks(stagedRoot, attachmentRelative, "Staged attachment path is invalid or traversed a link.");
     }
 
     private static void ValidatePassword(string password) { if (string.IsNullOrWhiteSpace(password) || password.Length < 8) throw new ArgumentException("Backup password must be at least 8 characters."); }
-    private static void Cleanup(string? directory) { try { if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory)) Directory.Delete(directory, true); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
+
+    private static void Cleanup(string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory)) return;
+        try
+        {
+            if (PathSafety.IsSymbolicLink(directory)) Directory.Delete(directory);
+            else Directory.Delete(directory, recursive: true);
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+    }
 
     private sealed record AttachmentBlob(Guid AttachmentId, byte[] Data);
     private sealed record Snapshot(int SchemaVersion, DateTimeOffset CreatedAtUtc, List<Account> Accounts, List<FinanceTransaction> Transactions, List<TransactionSplit> Splits, List<Category> Categories, List<Tag> Tags, List<TransactionTag> TransactionTags, List<Budget> Budgets, List<BudgetPeriod> BudgetPeriods, List<SavingsGoal> Goals, List<GoalContribution> Contributions, List<RecurrenceRule> Rules, List<RecurrenceOccurrence> Occurrences, List<Attachment> Attachments, List<AttachmentBlob> AttachmentBlobs, List<TransactionRevision> Revisions, List<AccountReconciliation> Reconciliations, List<NotificationSchedule> Notifications, List<AppSetting> Settings);
