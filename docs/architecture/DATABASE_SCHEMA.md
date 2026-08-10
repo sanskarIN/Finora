@@ -1,264 +1,182 @@
 # Finora Database Schema
 
-Current declared schema: **2**.
-
-The SQLite database is the local system of record for the current release. Financial amounts are persisted as signed integer minor units (`long`/SQLite INTEGER) with a currency code. Binary floating-point storage is not used for money.
-
-## Schema version metadata
-
-`AppSetting` contains the unique key `schema.version`. `DatabaseMigrationRunner` reads this value for an existing database and executes registered version steps transactionally. A version greater than the application-supported schema is rejected. The version marker advances only after the corresponding migration step succeeds.
-
-Current migration chain:
-
-```text
-v1 -> v2
-```
-
-A release that introduces schema v3 must add and test an explicit `v2 -> v3` path; it must not replace or delete the prior migration.
-
-## Main entities
-
-### `Account`
-
-Represents cash, bank, credit card, wallet, savings, investment-placeholder, or custom account state.
-
-Key persisted fields include:
-
-- `Id`;
-- name/type/icon/color label;
-- currency;
-- opening balance in minor units;
-- active/hidden/archived state;
-- optional credit limit/billing day;
-- last reconciled timestamp/balance;
-- creation/update timestamps.
-
-Index: `(State, Name)`.
-
-Accounts with transaction history are archived rather than silently hard-deleted by ordinary UI workflows. Account currency cannot be changed after financial or recurring records depend on the account. An account used by an active recurring rule cannot be archived until that rule is paused/completed/archived.
-
-### `FinanceTransaction` (`Transactions`)
-
-Represents Expense, Income, Transfer, Refund, or Adjustment.
-
-Key fields include:
-
-- signed amount in minor units;
-- currency;
-- account/category;
-- occurrence timestamp;
-- merchant/payee;
-- note;
-- payment method;
-- manually entered location;
-- recurrence link;
-- transfer group/counterparty account;
-- soft-delete state/timestamp.
-
-Indexes include `(AccountId, OccurredAtUtc)`, `(IsDeleted, OccurredAtUtc)`, and `TransferGroupId`.
-
-Transfer invariant: two rows share a `TransferGroupId`, use the same currency, have equal/opposite amounts, reference reciprocal counterparty accounts, and transition delete/restore together.
-
-A transaction's currency must match its account currency. Expense amounts are negative; Income/Refund amounts are positive; zero and `long.MinValue` amounts are invalid. These invariants are checked at service/domain/EF boundaries and by the integrity checker.
-
-### `TransactionSplit`
-
-Child rows allocate a non-transfer transaction amount to one or more categories/notes. Each split has the same sign as the parent, cannot be zero/`long.MinValue`, and the checked sum of split minor units must equal the parent transaction amount.
-
-Category and category-budget reporting uses split allocations whenever splits exist; it does not also count the whole parent transaction.
-
-### `Category`
-
-Supports parent/subcategory hierarchy, icons, ordering, system/user-created state, archive/restore. Parent deletion is restricted at the relational level; application workflows reassign/merge safely.
-
-Category hierarchy must remain acyclic. Category reassignment/merge must preserve `Subcategory` budget semantics: a subcategory budget cannot be bulk-reassigned to a root category.
-
-### `Tag` / `TransactionTag`
-
-Many-to-many tag relationship. `TransactionTag` uses composite primary key `(TransactionId, TagId)`.
-
-Tag financial summaries are explicitly scoped to a reporting currency; unlike currencies are never added together.
-
-### `Budget`
-
-Stores overall/category/subcategory budget configuration, cadence, limit minor units, currency, rollover flag, warning threshold, and archive state.
-
-Budget invariants include:
-
-- positive limit;
-- valid 1–100 warning threshold;
-- category/subcategory kinds require a category;
-- overall kind cannot target a category;
-- subcategory kind must target a child category;
-- custom cadence requires at least one explicit period at persistence/backup/integrity boundaries.
-
-### `BudgetPeriod`
-
-Stores explicit planned/rollover amounts and period boundaries. Unique index: `(BudgetId, StartsOn, EndsOn)`.
-
-`BudgetPeriodPolicy` is the shared resolver used by store/report paths:
-
-- explicit periods take precedence;
-- periods cannot overlap;
-- weekly generated windows are Monday–Sunday;
-- monthly windows are calendar months;
-- custom budgets are inactive outside explicit windows;
-- rollover is included only when `RolloverEnabled`;
-- checked effective planned amount must remain positive.
-
-Replacement of an existing budget's explicit period set is intended to be transactionally atomic so a failed replacement does not erase the prior valid periods.
-
-### `SavingsGoal`
-
-Stores target/starting minor units, currency, optional target date, notes/icon, and completion state.
-
-### `GoalContribution`
-
-Stores signed contribution/withdrawal minor units, timestamp, optional linked finance transaction, and note.
-
-Contribution history must never drive running goal progress below zero. A linked transaction must exist, be non-deleted when linked through the normal workflow, and use the goal currency.
-
-### `RecurrenceRule`
-
-Stores recurrence frequency/interval/date boundaries, reminder/grace configuration, transaction template fields, account/category/destination account, and next/last occurrence state.
-
-Rule lifecycle includes Active, Paused, Completed, and Archived. Active rule dependencies must point to available accounts/categories with matching currency. Paused/completed/archived historical rules may preserve links to later-archived accounts but cannot resume without current dependency validation.
-
-### `RecurrenceOccurrence`
-
-Persists each due occurrence and workflow state (pending/paid/partial/skipped/postponed), optional generated transaction, amount paid, and postponed date.
-
-Unique index: `(RecurrenceRuleId, DueOn)`.
-
-This is the core restart/idempotency guard. Reprocessing the same due date must not produce a second occurrence. Paid/partial-paid state must have a valid generated transaction linked to the same recurrence rule; unpaid/skipped/postponed state must not silently contain generated-payment data.
-
-### `Attachment`
-
-Stores receipt/document metadata only; bytes live under app-private attachment storage.
-
-Fields include transaction link, relative app-private path, original filename, content type, byte size, SHA-256 checksum, and timestamps.
-
-Never replace `RelativePath` with an arbitrary absolute path. Attachment services canonicalize/check paths against the private attachment root using platform-correct path comparison semantics.
-
-### `TransactionRevision` — schema v2
-
-Stores critical pre-change transaction history:
-
-- transaction ID;
-- change kind;
-- serialized local snapshot;
-- change timestamp.
-
-Index: `(TransactionId, ChangedAtUtc)`.
-
-Relationship uses cascade delete from the parent transaction. Diagnostics/logs must not export raw private snapshot contents.
-
-### `AccountReconciliation` — schema v2
-
-Stores reconciliation history:
-
-- account;
-- statement date;
-- book balance minor units;
-- statement balance minor units;
-- difference;
-- whether an explicit adjustment was created;
-- optional adjustment transaction;
-- note;
-- completion timestamp.
-
-Index: `(AccountId, StatementDateUtc)`.
-
-The difference must equal checked `statement - book`. If an adjustment is marked created, the linked transaction must exist, be an Adjustment for the same account, and have the exact difference amount.
-
-### `NotificationSchedule` — schema v2
-
-Stores local reminder scheduling state independently from native OS scheduling:
-
-- kind;
-- generic privacy-safe title/body;
-- trigger timestamp;
+Current schema version: **2**
+
+Finora stores financial state locally in SQLite through EF Core. Monetary fields use signed 64-bit integer minor units (`long`) plus currency code. User-facing major-unit conversion uses `decimal`; floating-point values are not persistence/calculation types for money.
+
+## Core tables
+
+| Table | Purpose / important invariants |
+| --- | --- |
+| `Accounts` | account name/type/currency/opening balance/state; credit-card metadata only for credit-card type |
+| `Transactions` | expense/income/transfer/refund/adjustment; account/date/currency; soft-delete state; transfer/recurrence linkage |
+| `TransactionSplits` | split amounts/categories; split total and sign must match parent transaction |
+| `Categories` | hierarchical category tree; parent cycles forbidden |
+| `Tags` | transaction labels |
+| `TransactionTags` | many-to-many transaction/tag relation |
+| `Budgets` | overall/category/subcategory budget definition, cadence, rollover and warning threshold |
+| `BudgetPeriods` | explicit budget windows/planned/rollover values; `(BudgetId, StartsOn, EndsOn)` unique |
+| `SavingsGoals` | target/starting amount/currency/date/completion state |
+| `GoalContributions` | contribution/withdrawal history and optional linked transaction |
+| `RecurrenceRules` | persisted recurring templates and lifecycle state |
+| `RecurrenceOccurrences` | due-instance state; `(RecurrenceRuleId, DueOn)` unique |
+| `Attachments` | app-private receipt metadata, relative path, size and SHA-256 |
+| `AppSettings` | app/database settings; key unique |
+| `AuditEntries` | privacy-safe local action metadata |
+| `BackupMetadata` | local encrypted-backup metadata; backup ID unique |
+
+## Schema-v2 tables
+
+### `TransactionRevisions`
+
+- points to a transaction;
+- stores `ChangeKind`, privacy-safe/local snapshot JSON and `ChangedAtUtc`;
+- indexed by transaction/time;
+- cascades with transaction deletion at the relational layer.
+
+### `AccountReconciliations`
+
+- account/statement date;
+- book balance, statement balance and explicit difference;
+- optional adjustment-transaction link metadata;
+- completion timestamp/note;
+- indexed by account/statement date.
+
+### `NotificationSchedules`
+
+- privacy-safe kind/title/body;
+- trigger time;
 - optional dedupe key;
-- enabled/delivered state.
+- enabled/delivered state;
+- indexed by trigger and dedupe key.
 
-Indexes: `TriggerAtUtc`, `DedupeKey`.
+## Important indexes
 
-Do not store private merchant/amount/note content in a notification merely because this table is local; notifications may be shown on the device lock screen. Reminder synchronization cancels stale recurring/budget/backup schedules when the persisted product state no longer requires them.
+- account state/name;
+- transaction account/date;
+- transaction soft-delete/date;
+- transfer group;
+- budget period uniqueness;
+- recurrence occurrence uniqueness;
+- app setting key uniqueness;
+- backup ID uniqueness;
+- transaction revision history;
+- reconciliation history;
+- notification trigger/dedupe.
 
-### `AppSetting`
+## Persistence-boundary validation
 
-Stores non-secret app preferences and the schema-version marker. `Key` is unique.
+SQLite foreign keys and indexes are not the only validation layer. Before every EF `SaveChanges`/`SaveChangesAsync`, Added/Modified entities pass Domain structural validation.
 
-Small security verifier material belongs in OS secure storage, not this table. Large datasets do not belong in secure storage. Internal restore-journal/commit-marker settings are not imported from an encrypted snapshot.
+The current boundary covers:
 
-### `AuditEntry`
+- account name/currency/credit-card metadata;
+- transaction amount/sign/currency/account/date/transfer/deletion-state metadata;
+- transaction split amount/reference shape;
+- category/tag/transaction-tag metadata;
+- budgets and explicit budget periods;
+- savings goals and contributions;
+- recurrence rules and occurrence structural state;
+- attachment path/content-type/size/hash metadata;
+- transaction revision metadata;
+- reconciliation arithmetic/adjustment-state metadata;
+- notification schedule lengths/timestamps;
+- app setting keys/values;
+- audit entry metadata;
+- backup metadata.
 
-Records privacy-safe action metadata for critical workflows. Audit details must be sanitized and must not become a duplicate private transaction log.
+This validation prevents direct EF write paths from bypassing basic schema-v2 invariants. It does **not** replace relationship/aggregate services, SQLite foreign keys, backup graph validation, or the explicit data-integrity checker.
 
-### `BackupMetadata`
+## Financial graph invariants
 
-Records local metadata about backup creation such as backup ID, schema version, creation time, optional filename, and SHA-256 of the encrypted backup. `BackupId` is unique.
+### Account / transaction currency
 
-Backup metadata does not contain the backup password or encryption key.
+Transaction currency must equal its account currency. Changing account currency is blocked after transaction or recurrence references exist. Current transfers are same-currency only.
 
-## Schema-v1 to schema-v2 migration
+### Transfers
 
-The v1 → v2 step:
+A transfer is represented by exactly two transaction rows sharing a `TransferGroupId`:
 
-1. adds `Attachment.OriginalFileName` and populates a neutral fallback for old rows;
-2. creates `TransactionRevisions` and its transaction/timestamp index;
-3. creates `AccountReconciliations` and its account/statement-date index;
-4. creates `NotificationSchedules` and scheduling/dedupe indexes;
-5. updates `schema.version` to 2 only after the migration SQL and EF save succeed inside the migration transaction.
+- both rows are `Transfer`;
+- accounts differ;
+- counterparties are reciprocal;
+- currencies match;
+- amounts are equal and opposite;
+- soft-delete state matches.
 
-Migration tests retain a representative v1 database shape and verify the v2 additions/version marker.
+Generic single-transaction mutation paths must not silently alter a linked transfer half.
 
-## Database runtime controls
+### Splits
 
-Initialization enables:
+For a split transaction:
 
-- `PRAGMA journal_mode=WAL`;
-- `PRAGMA foreign_keys=ON`;
-- `PRAGMA busy_timeout=5000`.
+- nonzero split amounts use same sign as parent;
+- checked split sum equals parent amount;
+- split categories must remain valid;
+- reports/budgets use split allocations rather than double-counting parent amount.
 
-Multi-record financial operations use explicit database transactions where atomicity matters.
+### Budgets / periods
 
-## Data-integrity diagnostic
+- explicit periods cannot overlap;
+- custom cadence requires explicit periods and is inactive outside them;
+- weekly/monthly generated windows use shared `BudgetPeriodPolicy`;
+- rollover participates only when enabled;
+- effective planned amount must remain positive;
+- explicit-period replacement is transactional.
 
-`DataIntegrityService` performs a privacy-safe local check of:
+### Savings goals
 
-- SQLite `integrity_check`;
-- SQLite `foreign_key_check`;
-- transaction amount/sign/currency/account state;
-- transfer pairing/balance/link state;
-- split signs/totals;
-- category hierarchy cycles;
-- budget configuration, custom periods, and category relationships;
-- savings-goal and contribution/link/running-progress state;
-- recurrence rule dependencies and occurrence payment/postponement/generated-transaction state;
-- reconciliation arithmetic/adjustment links;
-- receipt/attachment path, presence, byte size, and SHA-256 checksum.
+- target is positive;
+- starting amount is between zero and target;
+- contribution/withdrawal history uses checked arithmetic and cannot drive running progress below zero;
+- linked transaction must exist/not be deleted and use goal currency;
+- `IsCompleted` is derived from validated starting + contribution progress.
 
-The exported integrity report contains status codes/counts only, not account names, merchants/payees, notes, monetary amounts, or receipt names/contents.
+Earlier source versions could persist a stale `IsCompleted` flag. Initialization now repairs only this safe derived flag when underlying goal/contribution history validates. Invalid/overflowing/negative history is not silently repaired and remains visible to the integrity checker.
 
-## Backup relationship
+### Recurrence
 
-Encrypted backup serialization includes the supported schema-v2 finance graph plus attachment bytes. Backup restore is not a SQLite file copy.
+- active rule account/destination/category dependencies must be usable;
+- rule currency must match involved accounts;
+- pending occurrence is created before a transaction;
+- paid/partially-paid occurrence has generated transaction/payment data;
+- paid history may retain a valid postponed date;
+- pending/skipped occurrence cannot silently contain generated payment/postponement data;
+- generated transfer must remain balanced/reciprocal;
+- `(RecurrenceRuleId, DueOn)` prevents duplicate due instances;
+- paused/archived/completed rules stop generation.
 
-Before preview/restore, an authenticated snapshot must pass graph validation for identifiers, account/currency references, transfers, splits, category hierarchy, transaction-tag links, budgets/periods, goals/contributions, recurrence rules/occurrences, attachments, revisions, reconciliations, notification metadata, and settings boundaries.
+### Reconciliation
 
-Restore then stages attachment files, replaces supported relational data transactionally, and coordinates the attachment directory with a durable restore journal/commit marker. Startup recovery decides whether to restore the previous receipt tree or finalize the committed new tree after an interrupted restore.
+`DifferenceMinor` must equal checked `StatementBalanceMinor - BookBalanceMinor`. If an adjustment is recorded, adjustment-state metadata and the linked adjustment transaction must agree.
 
-A backup created by a newer schema is rejected by an older build.
+### Attachments
 
-## Schema change rules
+Receipt metadata remains beneath the logical `attachments/` root. Runtime file operations additionally use canonical physical-path checks that reject symbolic-link/reparse traversal. Size is bounded to 20 MB per receipt and SHA-256 metadata, when present for legacy compatibility, must be exactly 32 bytes.
 
-Every future schema modification must:
+## Migration: v1 → v2
 
-1. increase `AppConstants.DatabaseSchemaVersion`;
-2. add exactly the required next migration step(s);
-3. preserve prior migration paths;
-4. include integration tests from every released schema;
-5. update this file and backup compatibility documentation;
-6. run the data-integrity checker after migration in release QA;
-7. never silently reinterpret stored money, currency, transfer, split, budget-period, recurrence, or reconciliation semantics.
+The migration runner transactionally adds:
+
+- `Attachment.OriginalFileName` support;
+- transaction revision table/index;
+- reconciliation table/index;
+- notification schedule table/indexes;
+- schema version advance.
+
+Schema version advances only inside successful migration transaction. Existing database initialization invokes the migration runner before normal use.
+
+## Validation layers
+
+Finora deliberately uses multiple layers:
+
+1. **Domain/entity structural rules** — basic field/monetary/state shape.
+2. **EF SaveChanges boundary** — enforces those rules for all Added/Modified tracked entities.
+3. **SQLite relationships/indexes** — foreign keys and uniqueness.
+4. **Application/infrastructure services** — account/currency/category/lifecycle/atomic workflow relations.
+5. **Backup graph validator** — authenticated snapshot semantic validation before restore replacement.
+6. **Data integrity service** — read-only detection of SQLite/relationship/aggregate/file drift.
+7. **Startup derived-state repair** — only safe `SavingsGoal.IsCompleted` normalization when underlying history validates.
+8. **Tests/release QA** — failure-path and platform behavior.
+
+No single layer should be treated as sufficient by itself.
