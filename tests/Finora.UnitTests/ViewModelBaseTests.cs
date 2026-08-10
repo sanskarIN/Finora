@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Finora.App;
 
 namespace Finora.UnitTests;
@@ -22,15 +23,53 @@ public sealed class ViewModelBaseTests
     }
 
     [Fact]
-    public async Task RunAsync_ConvertsFailureIntoViewModelErrorState()
+    public async Task RunAsync_PreservesShortUserValidationMessage()
     {
         var probe = new ProbeViewModel();
 
-        await probe.RunProbeAsync(() => throw new InvalidOperationException("Synthetic failure"));
+        await probe.RunProbeAsync(() => throw new InvalidOperationException("Choose an account before saving."));
 
         Assert.False(probe.IsBusy);
         Assert.True(probe.HasError);
-        Assert.Equal("Synthetic failure", probe.ErrorMessage);
+        Assert.Equal("Choose an account before saving.", probe.ErrorMessage);
+    }
+
+    [Theory]
+    [InlineData("C:\\Users\\person\\private\\receipt.pdf")]
+    [InlineData("/home/person/private/receipt.pdf")]
+    [InlineData("SQLite Error 19: constraint failed")]
+    [InlineData("Data Source=/private/finora.db")]
+    public async Task RunAsync_RedactsTechnicalOrPathLikeInvalidOperationMessages(string message)
+    {
+        var probe = new ProbeViewModel();
+
+        await probe.RunProbeAsync(() => throw new InvalidOperationException(message));
+
+        Assert.True(probe.HasError);
+        Assert.DoesNotContain("private", probe.ErrorMessage!, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SQLite", probe.ErrorMessage!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("could not be completed safely", probe.ErrorMessage!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RunAsync_RedactsInfrastructureExceptionMessages()
+    {
+        var probe = new ProbeViewModel();
+
+        await probe.RunProbeAsync(() => throw new CryptographicException("secret provider detail"));
+
+        Assert.True(probe.HasError);
+        Assert.DoesNotContain("secret", probe.ErrorMessage!, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task RunAsync_ReportsCancellationWithoutRawExceptionText()
+    {
+        var probe = new ProbeViewModel();
+
+        await probe.RunProbeAsync(() => throw new OperationCanceledException("private cancellation detail"));
+
+        Assert.Equal("The operation was cancelled.", probe.ErrorMessage);
     }
 
     [Fact]
@@ -86,6 +125,29 @@ public sealed class ViewModelBaseTests
 
         Assert.Equal(1, executions);
         Assert.True(command.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task AsyncCommand_ContainsUnexpectedFailure_AndInvokesPrivacyHook()
+    {
+        var observed = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var previous = AsyncCommand.UnexpectedFailureHandler;
+        AsyncCommand.UnexpectedFailureHandler = exception => observed.TrySetResult(exception);
+        try
+        {
+            var command = new AsyncCommand(() => throw new IOException("private path detail"));
+
+            command.Execute(null);
+            var exception = await observed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+            Assert.IsType<IOException>(exception);
+            await Task.Yield();
+            Assert.True(command.CanExecute(null));
+        }
+        finally
+        {
+            AsyncCommand.UnexpectedFailureHandler = previous;
+        }
     }
 
     [Fact]
