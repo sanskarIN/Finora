@@ -70,7 +70,7 @@ public sealed class AttachmentPathSafetyTests : IAsyncLifetime
         Assert.False(local.IsSuccess);
 
         var report = await new DataIntegrityService(_factory, _root).CheckAsync();
-        Assert.Contains(report.Issues, issue => issue.Code == "ATTACHMENT_PATH_UNSAFE" && issue.Count == 1);
+        Assert.Contains(report.Issues, issue => issue.Code == "ATTACHMENT_PATH_UNSAFE" && issue.AffectedRecords == 1);
     }
 
     [Fact]
@@ -99,6 +99,54 @@ public sealed class AttachmentPathSafetyTests : IAsyncLifetime
         Assert.False(local.IsSuccess);
         var report = await new DataIntegrityService(_factory, _root).CheckAsync();
         Assert.Contains(report.Issues, issue => issue.Code == "ATTACHMENT_PATH_UNSAFE");
+    }
+
+    [Fact]
+    public async Task SymlinkedReceiptDirectory_FailsClosedAcrossOpenIntegrityAndBackup_WhenLinksAreSupported()
+    {
+        var transaction = await CreateTransactionAsync();
+        var attachmentId = Guid.NewGuid();
+        var attachmentRoot = Path.Combine(_root, "attachments");
+        var outsideDirectory = Path.Combine(_root, "outside-receipts");
+        Directory.CreateDirectory(attachmentRoot);
+        Directory.CreateDirectory(outsideDirectory);
+        var bytes = new byte[] { 1, 2, 3, 4 };
+        var outsideFile = Path.Combine(outsideDirectory, $"{attachmentId:N}.png");
+        await File.WriteAllBytesAsync(outsideFile, bytes);
+        var linkedDirectory = Path.Combine(attachmentRoot, transaction.Id.ToString("N"));
+
+        try
+        {
+            Directory.CreateSymbolicLink(linkedDirectory, outsideDirectory);
+        }
+        catch (Exception exception) when (exception is PlatformNotSupportedException or UnauthorizedAccessException or IOException)
+        {
+            return;
+        }
+
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            db.Attachments.Add(new Attachment
+            {
+                Id = attachmentId,
+                TransactionId = transaction.Id,
+                RelativePath = $"attachments/{transaction.Id:N}/{attachmentId:N}.png",
+                OriginalFileName = "receipt.png",
+                ContentType = "image/png",
+                SizeBytes = bytes.Length,
+                Sha256 = SHA256.HashData(bytes)
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var local = await new AttachmentService(_factory, _root).GetLocalPathAsync(attachmentId);
+        Assert.False(local.IsSuccess);
+
+        var report = await new DataIntegrityService(_factory, _root).CheckAsync();
+        Assert.Contains(report.Issues, issue => issue.Code == "ATTACHMENT_PATH_UNSAFE");
+
+        await Assert.ThrowsAsync<InvalidDataException>(() =>
+            new BackupService(_factory, _root).CreateEncryptedBackupAsync("correct-horse"));
     }
 
     private async Task<FinanceTransaction> CreateTransactionAsync()
