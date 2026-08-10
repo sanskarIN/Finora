@@ -76,17 +76,33 @@ public sealed class RecurringViewModel : ViewModelBase
     public int ReminderMinutesBefore { get => _reminderMinutesBefore; set => SetProperty(ref _reminderMinutesBefore, Math.Clamp(value, 0, 10080)); }
     public string Merchant { get => _merchant; set => SetProperty(ref _merchant, value); }
     public string Note { get => _note; set => SetProperty(ref _note, value); }
-    public RecurrenceRule? SelectedRule { get => _selectedRule; set => SetProperty(ref _selectedRule, value); }
+    public RecurrenceRule? SelectedRule
+    {
+        get => _selectedRule;
+        set
+        {
+            if (!SetProperty(ref _selectedRule, value)) return;
+            OnPropertyChanged(nameof(CanPauseSelectedRule));
+            OnPropertyChanged(nameof(CanResumeSelectedRule));
+            OnPropertyChanged(nameof(CanArchiveSelectedRule));
+        }
+    }
+    public bool CanPauseSelectedRule => SelectedRule?.Status == RecurrenceStatus.Active;
+    public bool CanResumeSelectedRule => SelectedRule?.Status == RecurrenceStatus.Paused;
+    public bool CanArchiveSelectedRule => SelectedRule is not null && SelectedRule.Status != RecurrenceStatus.Archived;
     public RecurrenceOccurrenceInfo? SelectedOccurrence
     {
         get => _selectedOccurrence;
         set
         {
-            if (!SetProperty(ref _selectedOccurrence, value) || value is null) return;
+            if (!SetProperty(ref _selectedOccurrence, value)) return;
+            OnPropertyChanged(nameof(CanReopenSelectedOccurrence));
+            if (value is null) return;
             PaidAmount = new Money(value.AmountMinor, value.Currency).ToMajorUnits().ToString($"N{CurrencyMinorUnits.GetDecimalPlaces(value.Currency)}", CultureInfo.CurrentCulture);
             PostponeDate = (value.PostponedTo ?? value.DueOn).ToDateTime(TimeOnly.MinValue).AddDays(1);
         }
     }
+    public bool CanReopenSelectedOccurrence => SelectedOccurrence?.Status == OccurrenceStatus.Skipped;
     public string PaidAmount { get => _paidAmount; set => SetProperty(ref _paidAmount, value); }
     public DateTime PostponeDate { get => _postponeDate; set => SetProperty(ref _postponeDate, value.Date); }
     public string ProcessingResult { get => _processingResult; private set => SetProperty(ref _processingResult, value); }
@@ -151,7 +167,7 @@ public sealed class RecurringViewModel : ViewModelBase
         Name = Amount = Merchant = Note = string.Empty;
         SelectedRule = rule;
         await SyncRemindersIfEnabledAsync();
-        await LoadRulesCoreAsync();
+        await LoadRulesCoreAsync(rule.Id);
         await LoadOccurrencesCoreAsync();
         ProcessingResult = "Recurring item saved.";
     });
