@@ -8,6 +8,7 @@ public partial class App : Microsoft.Maui.Controls.Application
 {
     private readonly IFinanceStore _store;
     private readonly IStorageRecoveryService _storageRecovery;
+    private readonly ITemporaryArtifactCleaner _temporaryArtifacts;
     private readonly IAppSettingsService _settings;
     private readonly IAppLockService _appLock;
     private readonly ISensitiveScreenService _sensitiveScreen;
@@ -20,6 +21,7 @@ public partial class App : Microsoft.Maui.Controls.Application
     public App(
         IFinanceStore store,
         IStorageRecoveryService storageRecovery,
+        ITemporaryArtifactCleaner temporaryArtifacts,
         IAppSettingsService settings,
         IAppLockService appLock,
         ISensitiveScreenService sensitiveScreen,
@@ -29,6 +31,7 @@ public partial class App : Microsoft.Maui.Controls.Application
         InitializeComponent();
         _store = store;
         _storageRecovery = storageRecovery;
+        _temporaryArtifacts = temporaryArtifacts;
         _settings = settings;
         _appLock = appLock;
         _sensitiveScreen = sensitiveScreen;
@@ -68,6 +71,8 @@ public partial class App : Microsoft.Maui.Controls.Application
 
             if (recovery.Value?.RecoveryWasRequired == true)
                 _exceptions.Report(new InvalidOperationException("Interrupted restore recovered."), "restore_recovery_completed");
+
+            await _temporaryArtifacts.CleanupStaleAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
 
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
