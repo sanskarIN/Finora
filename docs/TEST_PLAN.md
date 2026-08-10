@@ -10,138 +10,150 @@ Run on every pull request and release candidate:
 python build/scripts/verify_structure.py
 ```
 
-Expected: no malformed XML/XAML/RESX/project files, missing required repository files, missing project references, empty implementation/resource files, unfinished placeholder markers, missing XAML event handlers, app/package version drift, schema-document drift, suspicious floating-point monetary fields, or weakened Android local-data privacy flags.
+Expected: no malformed XML/XAML/RESX/project files, missing project references, empty implementation/resource files, unfinished placeholder markers, missing XAML event handlers, version/schema drift, missing required repository/policy files, forbidden floating-point money fields, or selected Android privacy-manifest regressions.
 
-## 2. Compiler/static-analysis gates
+## 2. Build/static analysis
 
-The repository treats warnings as errors and enables recommended analyzers. Core test projects build on a normal .NET 10 host. Native MAUI target frameworks build on their supported CI hosts.
+Use the platform-appropriate SDK/workloads and the repository verification wrappers. Warnings are errors. Do not ship a release that succeeds only after broad analyzer suppression.
 
-Use the repository wrappers:
-
-```bash
-./build/scripts/verify.sh
-```
-
-or on Windows:
-
-```powershell
-./build/scripts/verify.ps1
-```
-
-Set `FINORA_SKIP_MAUI=1` only when intentionally running core verification on a host that cannot build the native targets. Native platform builds remain mandatory before release.
-
-Formatting cleanup is encouraged, but source formatting alone is not used as a release correctness substitute. Compiler/analyzer/test/platform gates are authoritative.
+Core/non-MAUI projects can be restored/built/tested on a general .NET host. MAUI target builds require their corresponding workloads/platform hosts.
 
 ## 3. Unit tests
 
 Cover pure/domain behavior:
 
-- integer minor-unit money conversion and rounding boundaries;
-- zero-, two-, and three-decimal currency precision (for example JPY/INR/KWD);
-- explicit custom precision where a non-standard accounting unit is intentionally used;
-- integer overflow and `long.MinValue` rejection;
+- currency-aware major/minor money conversion including 0-, 2-, and 3-decimal currencies;
+- rounding boundaries and integer overflow;
 - currency normalization/validation;
-- expense/income/refund sign rules;
-- split sign and checked total invariants;
-- account credit-card constraints;
+- transaction sign/domain validation;
+- transfer invariants;
+- split sign/total invariants;
+- account credit-card field invariants;
+- budget kind/category/threshold/period rules;
+- explicit budget-period overlap rejection;
+- custom-budget active/inactive windows;
+- Monday–Sunday weekly period resolution;
+- rollover enabled/disabled behavior;
+- non-positive/overflowing effective rollover plan rejection;
+- savings goal/contribution rules;
 - recurrence next-occurrence calculations across month/year boundaries;
 - decimal calculator precedence/parentheses/division/error cases;
-- runtime locale normalization/fallback/application;
-- PIN failure-count bounds and escalating lockout cap;
-- ViewModel base busy/error/property-notification behavior;
-- async command parallel-execution suppression.
-
-Tests that mutate process culture run in a non-parallel collection and restore the previous culture afterward.
+- locale normalization/application helpers;
+- PIN attempt escalation/lockout policy;
+- ViewModel base busy/error/command behavior where platform-neutral.
 
 ## 4. Database integration tests
 
 Use isolated SQLite databases per test.
 
-### Persistence-boundary invariants
-
-- direct EF writes normalize valid account/transaction currencies;
-- direct EF writes reject invalid currency codes;
-- positive Expense and negative Income/Refund writes are rejected;
-- zero/`long.MinValue` amounts are rejected;
-- service/import/restore-style code cannot bypass Account/FinanceTransaction validation.
-
 ### Accounts and transfers
 
 - create/edit/archive/restore account;
-- opening/current balance calculation;
+- opening balance/current balance checked calculation;
 - same-currency paired transfer is atomic and net-zero across accounts;
 - transfer edit updates both halves;
 - transfer delete/restore affects both halves;
 - cross-currency paired transfer is rejected until an explicit exchange workflow exists;
-- reconciliation no-difference and explicit-adjustment paths;
-- unresolved reconciliation difference rejected;
+- account currency change is rejected after transaction references;
+- account currency change is rejected after recurrence references;
+- active recurring source/destination blocks account archival;
+- paused recurring dependency permits archival but cannot resume until dependencies are available;
+- reconciliation with no difference;
+- reconciliation with explicit adjustment;
+- reconciliation with unresolved difference is rejected;
+- reconciliation arithmetic overflow fails closed;
+- reconciled opening balance cannot be silently changed;
 - reconciliation history persists.
 
-### Transactions/categories/tags
+### Transactions
 
-- create/edit/delete/restore Expense/Income/Refund/Adjustment;
+- create/edit/delete/restore expense/income/refund/adjustment;
+- persistence-boundary invalid sign/currency writes are rejected;
+- zero/`long.MinValue` money is rejected;
 - critical edits create revision history;
 - bulk categorization creates revisions;
 - split totals equal parent amount;
-- invalid split totals/signs are rejected/detected;
-- tag linking/removal;
-- duplicate review never deletes automatically;
-- search/filter by account/category/type/date/text;
-- category create/subcategory/cycle-prevention/reorder/archive/restore/merge/reassign;
-- tag archive/restore and report linkage.
+- split signs equal parent sign;
+- split categories must exist and remain active;
+- invalid split totals/categories are rejected/detected;
+- tag linking and removal;
+- duplicate detection does not delete data automatically;
+- search/filter by account/category/type/date/text.
 
-### Budgets/goals
+### Categories/tags
 
-- weekly/monthly/custom period boundaries;
+- create parent/subcategory;
+- prevent hierarchy cycle;
+- reorder;
+- archive/restore;
+- merge/reassign references safely;
+- cannot reassign a `Subcategory` budget to a root category through archive/merge;
+- tag archive/restore;
+- tag report requires explicit currency;
+- same tag across INR/USD does not aggregate the two currencies;
+- tag report uses checked arithmetic and rejects unsupported extreme stored amounts.
+
+### Budgets
+
+- monthly/weekly/custom period boundaries;
+- custom cadence requires explicit period;
+- overlapping explicit periods are rejected;
+- custom budget is absent outside configured window;
 - overall/category/subcategory actuals;
-- rollover and warning thresholds;
-- split transaction contribution to category budgets;
-- savings deposits/withdrawals and optional linked transactions;
+- recursive descendant category accounting;
+- split transaction contribution to category budget;
+- rollover applies only when enabled;
+- effective planned amount remains positive;
+- warning-threshold arithmetic cannot overflow;
+- failed explicit-period replacement rolls back the prior persisted period set.
+
+### Savings goals
+
+- goal create/load;
+- deposit/withdrawal;
+- withdrawal never drives running progress below zero;
+- optional linked contribution transaction exists and uses goal currency;
 - target/milestone/completion behavior;
-- withdrawal constraints.
+- checked contribution aggregation.
 
 ### Recurrence
 
 - processing is idempotent across repeated calls/restarts;
 - unique `(RecurrenceRuleId, DueOn)` invariant;
-- pending occurrence creates no transaction before paid/partial-paid;
-- paid/partial-paid creates exactly one transaction;
-- repeated full-payment action is idempotent;
+- pending occurrence does not create a transaction before paid/partial-paid action;
+- paid/partial paid creates exactly one transaction;
+- repeated full payment is idempotent;
+- generated transaction must still belong to the rule;
+- generated recurring transfer pair must remain complete/balanced/account-correct;
 - recurring transfer creates a balanced pair;
-- skip → reopen → pay path;
-- skipped item must reopen before postpone/payment;
-- fully paid item cannot be postponed;
-- archived/unavailable account blocks payment generation;
-- account/rule currency drift blocks payment generation;
-- end-date/custom interval behavior.
+- skip/postpone/reopen state transitions;
+- paused rule creates no due occurrences;
+- paused → resume re-enables generation;
+- resume revalidates end date/account/category/currency dependencies;
+- archived rule is removed from active rule list while occurrence history remains;
+- completed/archived rule cannot be resumed;
+- backlog guard prevents unbounded occurrence generation;
+- end date and custom interval behavior.
 
 ### CSV import
 
-- quoted commas/escaped quotes/multiline quoted fields;
+- quoted commas/escaped quotes/newlines where parser supports them;
 - UTF-8 validation;
 - file/row limits;
 - explicit user-selected column mapping;
-- currency-specific major-unit conversion (including zero/three-decimal currencies);
+- currency-specific major-unit decimal conversion (including JPY/KWD-style precision);
 - minor-unit import;
-- `long.MinValue`/overflow rejection without crashing;
+- `long.MinValue` rejection before sign normalization;
 - invalid date/type/currency/amount rejection;
-- parse errors counted exactly once;
 - missing account/fallback behavior;
 - optional category creation;
 - tag linking;
-- duplicate skipping including duplicates inside one import batch;
-- transfer-group pair/counterparty validation;
+- duplicate skipping including duplicates within the same import batch;
+- transfer-group/counterparty pair validation;
+- parse errors counted exactly once;
 - transactional failure/rollback.
 
-### Reports/multi-currency
-
-- aggregated reports include only the selected reporting currency;
-- unlike currencies are never silently added;
-- account/budget rows retain their own currencies;
-- JPY/KWD/etc. formatting uses currency-specific precision;
-- dashboard/report summary calculations use checked integer arithmetic.
-
-### Backup/restore/recovery
+### Backup/restore
 
 - create/preview/restore current schema;
 - wrong password rejected;
@@ -149,14 +161,22 @@ Use isolated SQLite databases per test.
 - truncated/oversized backup rejected;
 - future schema rejected;
 - attachment bytes round-trip;
-- attachment path escape rejected;
+- attachment path escape rejected with platform-correct path semantics;
 - attachment size/hash mismatch rejected;
+- account/transaction currency graph drift rejects backup creation/preview/restore;
+- broken transfer/split/category/tag/budget/goal/recurrence/reconciliation graph is rejected;
+- custom budget without periods/overlapping periods is rejected;
+- active recurrence on archived account is rejected;
+- paused historical recurrence on archived account remains compatible;
+- internal restore settings/markers are not imported;
+- serialized plaintext/receipt buffers are cleared after use/failure as far as managed-memory APIs permit;
+- database replacement and attachment-directory swap are consistent;
+- durable restore journal/commit marker recovers interruption;
+- pending marker restores previous attachment tree;
+- committed database marker finalizes new attachment tree;
+- incomplete rollback snapshots do not delete untouched live attachments;
+- stale restore staging/rollback directories are cleaned after recovery decision;
 - failed restore leaves prior data usable;
-- pending recovery marker restores verified previous receipt tree;
-- missing pending marker finalizes a database-committed restore;
-- incomplete rollback-copy state preserves untouched live receipt tree;
-- successful crash-safe round trip leaves no recovery marker/journal/orphan directories;
-- concurrent backup/preview/restore operations are serialized;
 - backup metadata/audit entries do not expose finance contents.
 
 ### Migrations
@@ -175,103 +195,131 @@ Current required migration coverage includes v1 → v2.
 ### Data integrity diagnostics
 
 - healthy SQLite database returns healthy sanitized report;
-- raw SQL corruption of transaction sign/extreme amount is detected;
 - broken transfer half is detected;
+- transaction sign/currency/extreme amount is detected;
 - foreign-key violation is detected;
-- split mismatch/sign issue is detected;
+- split sign/total mismatch is detected;
 - category cycle is detected;
-- recurrence duplicate/missing generated transaction is detected;
+- invalid custom/overlapping budget periods are detected;
+- budget category/subcategory relation drift is detected;
+- invalid savings contribution/link/currency/running-progress state is detected;
+- active recurrence on archived/mismatched account is detected;
+- recurrence duplicate/invalid payment/generated-transaction state is detected;
+- reconciliation arithmetic/adjustment-link drift is detected;
 - missing/changed receipt file is detected;
-- attachment path outside the private receipt root is detected;
-- sanitized report exposes codes/counts only, not names/notes/amounts/receipt filenames.
-
-### Full finance reset and synthetic sample reset
-
-- every finance table is cleared dependency-safely;
-- self-referencing categories are deleted leaves-first;
-- cyclic category reset rolls back rather than partially deleting;
-- `schema.version` remains;
-- app preferences/PIN configuration remain;
-- receipt files are cleaned only after DB commit;
-- developer sample reset replaces finance data with deterministic synthetic records;
-- sample transfer conserves total balance;
-- system categories are reseeded;
-- synthetic reset never preserves pre-existing user finance records.
+- unsafe attachment path is detected;
+- sanitized report contains counts/codes only, not account names, merchant/payee names, notes, amounts, or receipt filenames.
 
 ## 5. ViewModel/UI-contract tests
 
-These are state/route contracts, not native UI automation:
+Cover navigation contracts and state behavior without pretending this is native UI automation:
 
-- busy/error/property-notification behavior;
-- onboarding → adaptive dashboard root;
-- PIN/biometric unlock → adaptive dashboard root;
-- mobile bottom-tab route set;
-- tablet/desktop flyout route set;
-- resize route preservation;
+- onboarding → adaptive root;
+- mobile bottom-tab hierarchy and desktop/tablet flyout hierarchy;
+- startup/unlock preserve adaptive destination;
 - privacy mode/hidden amounts;
-- transaction/account/reconciliation/import/category/budget/goal/recurrence/report/settings/legal routes;
-- destructive finance reset confirmation;
-- synthetic sample reset confirmation;
-- large-text, keyboard-focus, and screen-reader semantic flows remain required native acceptance cases.
+- transaction quick-add/detail routes;
+- accounts/detail/reconciliation routes;
+- import and transaction-tool routes;
+- category/tag management route;
+- budget/goal/recurring/report routes;
+- recurring page exposes pause/resume/archive and skipped-occurrence reopen bindings;
+- dashboard source does not call legacy mixed-currency aggregate API;
+- dashboard displays explicit reporting-currency scope;
+- backup/restore/settings/legal routes;
+- app-lock fallback state;
+- destructive finance/sample reset requires typed confirmation;
+- larger-interface resources remain globally scalable.
 
 ## 6. Android device/emulator tests
 
-- fresh install/onboarding and restart/force-stop persistence;
+At minimum test a current emulator and a physical device when available:
+
+- fresh install/onboarding;
+- app restart/force-stop persistence;
 - account/transaction/transfer/budget/goal/recurrence core flows;
+- recurring pause/resume/archive and stale-reminder cleanup;
 - receipt picker/open/delete;
-- CSV import/export and encrypted backup/share/save/restore;
-- kill the app during restore phases and verify startup recovery behavior;
-- notification permission/scheduled reminders/reboot-doze limitations;
+- CSV import and CSV/PDF export;
+- encrypted backup/share/save/restore;
+- interrupted restore/relaunch recovery where practical;
+- notification permission and scheduled reminders;
+- reboot/doze/force-stop reminder limitations;
 - biometric success/cancel/unavailable/lockout with PIN fallback;
-- missing/corrupted secure-storage verifier fails closed;
 - `FLAG_SECURE` behavior;
-- phone bottom tabs and tablet/large-width flyout;
-- dark/light/system theme, TalkBack, large font/display scaling, reduced motion;
+- dark/light/system theme;
+- TalkBack, large font/display scaling, reduced motion;
+- Android back/navigation behavior;
 - upgrade from prior release/schema.
 
 ## 7. Windows packaged tests
 
-- install/upgrade/uninstall package;
-- package identity/version and signing;
-- resizable window, flyout/sidebar, minimum usable size, high DPI;
-- keyboard focus/navigation and Narrator;
+- install/upgrade/uninstall MSIX/package;
+- resizable window/minimum usable size/high DPI;
+- keyboard focus/navigation;
 - Windows Hello success/cancel/unavailable with PIN fallback;
 - scheduled toast behavior with packaged identity;
-- display-affinity capture behavior where supported;
-- file picker/share/export/backup/restore including interrupted-restore recovery;
+- stale toast/reminder cleanup after recurring lifecycle change;
+- display-affinity capture protection where supported;
+- file picker/share/export/backup/restore;
+- Narrator and high-contrast/large text behavior;
 - database/receipt preservation across package upgrade.
 
 ## 8. iOS device/simulator tests
 
 - archive/build on supported Xcode host;
-- Face ID/Touch ID purpose text and LocalAuthentication states with PIN fallback;
-- UserNotifications permission/scheduling;
+- onboarding/core finance flows;
+- LocalAuthentication states with PIN fallback;
+- UserNotifications permission/scheduling and lifecycle cleanup;
 - document picker/share/export/backup/restore/receipt flows;
-- interrupted-restore recovery;
-- phone tabs/iPad adaptive navigation;
 - VoiceOver, Dynamic Type, reduced motion, dark mode;
-- screenshot-protection limitation is communicated accurately;
+- platform screenshot-protection limitation is correctly communicated;
 - upgrade/migration behavior.
 
 ## 9. Mac Catalyst tests
 
 - archive/build/signing prerequisites;
-- resizable flyout/sidebar layout and keyboard/mouse focus;
+- resizable windows and keyboard/mouse focus;
 - LocalAuthentication/UserNotifications;
-- file picker/share/backup/restore/recovery flows;
+- reminder lifecycle cleanup;
+- file picker/share flows;
 - VoiceOver/accessibility and dark/light modes;
 - database/receipt persistence and migration.
 
 ## 10. Reliability/failure injection
 
-Exercise force-close/kill around transaction save, migration, attachment copy, backup creation, each restore journal/copy/database/swap/finalization phase, low disk space, cancelled picker/share, permission denial/revocation, corrupted receipt, locked file, wrong/tampered backup, repeated recurrence processing, database contention, and malformed persisted preference/security values.
+Exercise:
+
+- force-close after transaction save returns but before next navigation;
+- low disk space during attachment copy/export/backup;
+- cancelled picker/share flow;
+- permission denial/revocation;
+- corrupted local receipt file;
+- locked/unavailable file;
+- wrong/tampered/semantically-invalid backup;
+- interruption before/after restore database commit marker;
+- repeated recurrence processing after restart;
+- pause/resume/archive around pending occurrence state;
+- failed custom-budget period replacement after old period deletion begins;
+- database lock contention;
+- migration interruption using a copied synthetic database.
 
 Never intentionally corrupt a user's real finance database during testing.
 
 ## 11. Privacy/security regression
 
-Verify no current-release network/account requirement, analytics/telemetry/advertising SDK, private financial log payloads, private notification text, persisted backup key material, repository signing credentials, or real finance test data. Secure-storage verifier loss must fail closed. Local premium remains explicitly non-secure demo state. Recovery journal/marker must contain operation metadata only.
+Verify:
+
+- no network/account requirement for current release;
+- no analytics/telemetry/advertising SDK introduced;
+- logs do not include amounts, account names, merchant/payee names, notes, locations, receipt names/contents, PINs, backup passwords, or encryption material;
+- local notification text remains generic/privacy-safe;
+- stale local reminders are cancelled when source state is no longer active;
+- backup key material is not persisted;
+- app-lock verifier uses secure storage for small secrets only and fails closed on missing verifier material;
+- local premium remains explicitly non-tamper-proof demo state;
+- no repository/build artifact contains signing credentials or real finance data.
 
 ## 12. Release evidence
 
-For a release candidate, retain CI run links, test artifacts, native build logs, migration/recovery test results, device accessibility/navigation checks, and signed-package smoke-test evidence. Do not mark a platform gate complete based only on source inspection.
+For a release candidate, retain CI run links, test result artifacts, platform build logs, migration-test results, backup/recovery failure-path results, and device-smoke-test checklist results. Do not mark a platform gate complete based only on source inspection.
