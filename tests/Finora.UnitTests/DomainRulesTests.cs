@@ -60,6 +60,26 @@ public sealed class DomainRulesTests
         Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateTransaction(transaction));
     }
 
+    [Fact]
+    public void TransferRows_RequirePairLinkage()
+    {
+        var transaction = NewTransaction(TransactionType.Transfer, -1_000);
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateTransaction(transaction));
+
+        transaction.TransferGroupId = Guid.NewGuid();
+        transaction.CounterpartyAccountId = Guid.NewGuid();
+        DomainRules.ValidateTransaction(transaction);
+    }
+
+    [Fact]
+    public void NonTransferRows_CannotCarryTransferLinkage()
+    {
+        var transaction = NewTransaction(TransactionType.Expense, -100);
+        transaction.TransferGroupId = Guid.NewGuid();
+        transaction.CounterpartyAccountId = Guid.NewGuid();
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateTransaction(transaction));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("IN")]
@@ -93,6 +113,84 @@ public sealed class DomainRulesTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => DomainRules.ValidateAccount(account));
     }
+
+    [Fact]
+    public void OverallBudget_CannotTargetCategory()
+    {
+        var budget = NewBudget(BudgetKind.Overall);
+        budget.CategoryId = Guid.NewGuid();
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateBudget(budget));
+    }
+
+    [Theory]
+    [InlineData(BudgetKind.Category)]
+    [InlineData(BudgetKind.Subcategory)]
+    public void CategoryBudget_RequiresCategory(BudgetKind kind)
+    {
+        var budget = NewBudget(kind);
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateBudget(budget));
+    }
+
+    [Fact]
+    public void SavingsGoal_StartingAmountCannotExceedTarget()
+    {
+        var goal = new SavingsGoal { Name = "Emergency", TargetMinor = 10_000, StartingMinor = 10_001, Currency = "INR" };
+        Assert.Throws<ArgumentOutOfRangeException>(() => DomainRules.ValidateSavingsGoal(goal));
+    }
+
+    [Fact]
+    public void GoalContribution_RejectsUnsupportedExtreme()
+    {
+        var contribution = new GoalContribution
+        {
+            SavingsGoalId = Guid.NewGuid(),
+            AmountMinor = long.MinValue,
+            OccurredAtUtc = DateTimeOffset.UtcNow
+        };
+        Assert.Throws<ArgumentOutOfRangeException>(() => DomainRules.ValidateGoalContribution(contribution));
+    }
+
+    [Fact]
+    public void RecurringTransfer_RequiresDifferentDestinationAndNoCategory()
+    {
+        var accountId = Guid.NewGuid();
+        var rule = NewRecurrence(TransactionType.Transfer, accountId);
+        rule.DestinationAccountId = accountId;
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateRecurrenceRule(rule));
+
+        rule.DestinationAccountId = Guid.NewGuid();
+        rule.CategoryId = Guid.NewGuid();
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateRecurrenceRule(rule));
+    }
+
+    [Fact]
+    public void NonTransferRecurrence_CannotSpecifyDestination()
+    {
+        var rule = NewRecurrence(TransactionType.Expense, Guid.NewGuid());
+        rule.DestinationAccountId = Guid.NewGuid();
+        Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateRecurrenceRule(rule));
+    }
+
+    private static Budget NewBudget(BudgetKind kind) => new()
+    {
+        Name = "Plan",
+        Kind = kind,
+        Cadence = BudgetCadence.Monthly,
+        LimitMinor = 10_000,
+        Currency = "INR"
+    };
+
+    private static RecurrenceRule NewRecurrence(TransactionType type, Guid accountId) => new()
+    {
+        Name = "Rule",
+        Frequency = RecurrenceFrequency.Monthly,
+        Interval = 1,
+        StartsOn = new DateOnly(2026, 8, 1),
+        TransactionType = type,
+        AmountMinor = 1_000,
+        Currency = "INR",
+        AccountId = accountId
+    };
 
     private static FinanceTransaction NewTransaction(TransactionType type, long amountMinor) => new()
     {
