@@ -85,6 +85,8 @@ public sealed class AccountManagementService(IDbContextFactory<FinoraDbContext> 
 
         if (account.LastReconciledAtUtc is not null && account.OpeningBalanceMinor != candidate.OpeningBalanceMinor)
             return Result.Failure("Opening balance cannot be changed after this account has reconciliation history. Use an explicit adjustment transaction instead.");
+        if (candidate.State == AccountState.Archived && account.State != AccountState.Archived && await HasActiveRecurrenceAsync(db, account.Id, cancellationToken).ConfigureAwait(false))
+            return Result.Failure("Pause, complete, or archive recurring items that use this account before archiving the account.");
 
         db.Entry(account).CurrentValues.SetValues(candidate);
         db.AuditEntries.Add(new AuditEntry { EntityType = "Account", EntityId = account.Id, Action = "Updated" });
@@ -104,10 +106,18 @@ public sealed class AccountManagementService(IDbContextFactory<FinoraDbContext> 
         var account = await db.Accounts.SingleOrDefaultAsync(x => x.Id == accountId, cancellationToken).ConfigureAwait(false);
         if (account is null) return Result.Failure("Account not found.");
         if (account.State == state) return Result.Success();
+        if (state == AccountState.Archived && await HasActiveRecurrenceAsync(db, account.Id, cancellationToken).ConfigureAwait(false))
+            return Result.Failure("Pause, complete, or archive recurring items that use this account before archiving the account.");
+
         account.State = state;
         account.UpdatedAtUtc = DateTimeOffset.UtcNow;
         db.AuditEntries.Add(new AuditEntry { EntityType = "Account", EntityId = account.Id, Action = state == AccountState.Archived ? "Archived" : "Restored" });
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return Result.Success();
     }
+
+    private static Task<bool> HasActiveRecurrenceAsync(FinoraDbContext db, Guid accountId, CancellationToken cancellationToken)
+        => db.RecurrenceRules.AsNoTracking().AnyAsync(
+            rule => rule.Status == RecurrenceStatus.Active && (rule.AccountId == accountId || rule.DestinationAccountId == accountId),
+            cancellationToken);
 }
