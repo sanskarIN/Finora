@@ -15,7 +15,7 @@ public sealed class CrashSafeBackupService(
     private readonly RestoreRecoveryService _recovery = new(factory, appDataRoot);
     private readonly RestoreRecoveryJournal _journal = new(appDataRoot);
     private readonly SemaphoreSlim _operationGate = new(1, 1);
-    private string AttachmentRoot => Path.Combine(_appDataRoot, "attachments");
+    private string AttachmentRoot => Path.GetFullPath(Path.Combine(_appDataRoot, "attachments"));
 
     public async Task<byte[]> CreateEncryptedBackupAsync(string password, CancellationToken cancellationToken = default)
     {
@@ -78,6 +78,7 @@ public sealed class CrashSafeBackupService(
 
         try
         {
+            PathSafety.EnsureNotLinkIfExists(AttachmentRoot, "Finora receipt storage cannot be a symbolic link or reparse point during restore.");
             await SetPendingMarkerAsync(restoreId, cancellationToken).ConfigureAwait(false);
             await _journal.WriteAsync(state, cancellationToken).ConfigureAwait(false);
 
@@ -135,21 +136,18 @@ public sealed class CrashSafeBackupService(
 
     private static async Task CopyDirectoryAsync(string source, string destination, CancellationToken cancellationToken)
     {
-        if (!Directory.Exists(source)) return;
-        Directory.CreateDirectory(destination);
+        var sourceRoot = Path.GetFullPath(source);
+        var destinationRoot = Path.GetFullPath(destination);
+        if (!Directory.Exists(sourceRoot)) return;
+        PathSafety.EnsureNotLinkIfExists(sourceRoot, "Receipt rollback source cannot be a symbolic link or reparse point.");
+        Directory.CreateDirectory(destinationRoot);
+        PathSafety.EnsureNotLinkIfExists(destinationRoot, "Receipt rollback destination cannot be a symbolic link or reparse point.");
 
-        foreach (var directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories))
+        foreach (var file in PathSafety.EnumerateFilesWithoutLinks(sourceRoot, "Receipt rollback encountered a linked or escaped path."))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var relative = Path.GetRelativePath(source, directory);
-            Directory.CreateDirectory(Path.Combine(destination, relative));
-        }
-
-        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var relative = Path.GetRelativePath(source, file);
-            var target = Path.Combine(destination, relative);
+            var relative = Path.GetRelativePath(sourceRoot, file);
+            var target = PathSafety.ResolveDescendantWithoutLinks(destinationRoot, relative, "Receipt rollback destination path is invalid.");
             Directory.CreateDirectory(Path.GetDirectoryName(target)!);
             await using var input = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
             await using var output = new FileStream(target, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous | FileOptions.SequentialScan);
