@@ -39,13 +39,15 @@ internal static class BackupGraphValidator
             DomainRules.ValidateRecurrenceRule(rule);
             var source = Require(accountById, rule.AccountId, "Recurring source account is missing.");
             EnsureCurrency(source.Currency, rule.Currency, "Recurring source account currency does not match the rule.");
-            if (source.State == AccountState.Archived) throw new InvalidDataException("Recurring source account is archived.");
+            if (rule.Status == RecurrenceStatus.Active && source.State == AccountState.Archived)
+                throw new InvalidDataException("Active recurring source account is archived.");
 
             if (rule.DestinationAccountId is Guid destinationId)
             {
                 var destination = Require(accountById, destinationId, "Recurring destination account is missing.");
                 EnsureCurrency(destination.Currency, rule.Currency, "Recurring destination account currency does not match the rule.");
-                if (destination.State == AccountState.Archived) throw new InvalidDataException("Recurring destination account is archived.");
+                if (rule.Status == RecurrenceStatus.Active && destination.State == AccountState.Archived)
+                    throw new InvalidDataException("Active recurring destination account is archived.");
             }
 
             if (rule.CategoryId is Guid ruleCategoryId)
@@ -316,7 +318,7 @@ internal static class BackupGraphValidator
         }
     }
 
-    private static TValue Require<TValue>(IReadOnlyDictionary<Guid, TValue> values, Guid id, string message)
+    private static TValue Require<TValue>(IReadOnlyDictionary<Guid, TValue> values, Guid id, string message) where TValue : class
     {
         if (id == Guid.Empty || !values.TryGetValue(id, out var value)) throw new InvalidDataException(message);
         return value;
