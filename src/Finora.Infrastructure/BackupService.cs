@@ -54,12 +54,30 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             await db.TransactionRevisions.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
             await db.AccountReconciliations.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
             await db.NotificationSchedules.AsNoTracking().ToListAsync(cancellationToken).ConfigureAwait(false),
-            await db.AppSettings.AsNoTracking().Where(x => x.Key != "schema.version").ToListAsync(cancellationToken).ConfigureAwait(false));
+            await db.AppSettings.AsNoTracking().Where(x => x.Key != "schema.version" && !x.Key.StartsWith("internal.")).ToListAsync(cancellationToken).ConfigureAwait(false));
 
-        var plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
-        var encrypted = Encrypt(plaintext, password);
-        CryptographicOperations.ZeroMemory(plaintext);
-        var metadata = new BackupMetadata { BackupId = Guid.NewGuid().ToString("N"), SchemaVersion = AppConstants.DatabaseSchemaVersion, CreatedOnUtc = snapshot.CreatedAtUtc, Sha256Hex = Convert.ToHexString(SHA256.HashData(encrypted)) };
+        ValidateUniqueIds(snapshot);
+        ValidateSnapshot(snapshot);
+        byte[]? plaintext = null;
+        byte[] encrypted;
+        try
+        {
+            plaintext = JsonSerializer.SerializeToUtf8Bytes(snapshot, Json);
+            encrypted = Encrypt(plaintext, password);
+        }
+        finally
+        {
+            if (plaintext is not null) CryptographicOperations.ZeroMemory(plaintext);
+            ZeroAttachmentBlobs(snapshot);
+        }
+
+        var metadata = new BackupMetadata
+        {
+            BackupId = Guid.NewGuid().ToString("N"),
+            SchemaVersion = AppConstants.DatabaseSchemaVersion,
+            CreatedOnUtc = snapshot.CreatedAtUtc,
+            Sha256Hex = Convert.ToHexString(SHA256.HashData(encrypted))
+        };
         db.BackupMetadata.Add(metadata);
         db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = metadata.Id, Action = "CreatedEncryptedBackup" });
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -68,24 +86,36 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
 
     public async Task<Result<BackupPreview>> PreviewEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
     {
+        Snapshot? snapshot = null;
         try
         {
-            var snapshot = await ReadAndValidateAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
-            if (snapshot.SchemaVersion > AppConstants.DatabaseSchemaVersion) return Result<BackupPreview>.Failure("Backup was created by a newer Finora schema.");
+            snapshot = await ReadAndValidateAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+            if (snapshot.SchemaVersion > AppConstants.DatabaseSchemaVersion)
+                return Result<BackupPreview>.Failure("Backup was created by a newer Finora schema.");
             return Result<BackupPreview>.Success(new BackupPreview(snapshot.SchemaVersion, snapshot.CreatedAtUtc, snapshot.Accounts.Count, snapshot.Transactions.Count, snapshot.Budgets.Count, snapshot.Goals.Count));
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or ArgumentException or IOException or InvalidOperationException) { return Result<BackupPreview>.Failure("The backup could not be verified. Check the file and password."); }
+        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or ArgumentException or IOException or InvalidOperationException or OverflowException)
+        {
+            return Result<BackupPreview>.Failure("The backup could not be verified. Check the file and password.");
+        }
+        finally
+        {
+            if (snapshot is not null) ZeroAttachmentBlobs(snapshot);
+        }
     }
 
     public async Task<Result> RestoreEncryptedBackupAsync(Stream backupStream, string password, CancellationToken cancellationToken = default)
     {
         string? stagedDirectory = null;
         string? rollbackDirectory = null;
+        Snapshot? snapshot = null;
         try
         {
-            var snapshot = await ReadAndValidateAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
-            if (snapshot.SchemaVersion != AppConstants.DatabaseSchemaVersion) return Result.Failure("This build restores schema-v2 backups. Migrate older backups with the matching Finora version first.");
+            snapshot = await ReadAndValidateAsync(backupStream, password, cancellationToken).ConfigureAwait(false);
+            if (snapshot.SchemaVersion != AppConstants.DatabaseSchemaVersion)
+                return Result.Failure("This build restores schema-v2 backups. Migrate older backups with the matching Finora version first.");
+
             stagedDirectory = Path.Combine(_appDataRoot, $"attachments.restore.{Guid.NewGuid():N}");
             Directory.CreateDirectory(stagedDirectory);
             foreach (var attachment in snapshot.Attachments)
@@ -157,11 +187,21 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             }
             return Result.Success();
         }
-        catch (OperationCanceledException) { Cleanup(stagedDirectory); Cleanup(rollbackDirectory); throw; }
-        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (OperationCanceledException)
         {
-            Cleanup(stagedDirectory); Cleanup(rollbackDirectory);
+            Cleanup(stagedDirectory);
+            Cleanup(rollbackDirectory);
+            throw;
+        }
+        catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException or InvalidOperationException or OverflowException)
+        {
+            Cleanup(stagedDirectory);
+            Cleanup(rollbackDirectory);
             return Result.Failure("Restore failed safely; the existing database was not committed with incomplete backup data.");
+        }
+        finally
+        {
+            if (snapshot is not null) ZeroAttachmentBlobs(snapshot);
         }
     }
 
@@ -180,7 +220,9 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             var snapshot = JsonSerializer.Deserialize<Snapshot>(plaintext, Json) ?? throw new InvalidDataException("Backup payload is empty.");
             if (snapshot.SchemaVersion <= 0) throw new InvalidDataException("Backup schema is invalid.");
             ValidateUniqueIds(snapshot);
-            if (snapshot.Attachments.Count != snapshot.AttachmentBlobs.Count) throw new InvalidDataException("Backup attachment metadata is incomplete.");
+            ValidateSnapshot(snapshot);
+            if (snapshot.Attachments.Count != snapshot.AttachmentBlobs.Count)
+                throw new InvalidDataException("Backup attachment metadata is incomplete.");
             foreach (var attachment in snapshot.Attachments)
             {
                 _ = ResolveAttachmentPath(attachment.RelativePath);
@@ -196,6 +238,9 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             CryptographicOperations.ZeroMemory(plaintext);
         }
     }
+
+    private static void ValidateSnapshot(Snapshot snapshot)
+        => BackupGraphValidator.Validate(snapshot.Accounts, snapshot.Transactions, snapshot.Splits, snapshot.Categories, snapshot.Tags, snapshot.TransactionTags, snapshot.Budgets, snapshot.BudgetPeriods, snapshot.Goals, snapshot.Contributions, snapshot.Rules, snapshot.Occurrences, snapshot.Attachments, snapshot.Revisions, snapshot.Reconciliations, snapshot.Notifications, snapshot.Settings);
 
     private static void ValidateUniqueIds(Snapshot snapshot)
     {
@@ -229,6 +274,11 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
         }
     }
 
+    private static void ZeroAttachmentBlobs(Snapshot snapshot)
+    {
+        foreach (var blob in snapshot.AttachmentBlobs) CryptographicOperations.ZeroMemory(blob.Data);
+    }
+
     private static byte[] Encrypt(byte[] plaintext, string password)
     {
         var salt = RandomNumberGenerator.GetBytes(16); var nonce = RandomNumberGenerator.GetBytes(12); var tag = new byte[16]; var ciphertext = new byte[plaintext.Length];
@@ -243,8 +293,9 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
     {
         using var stream = new MemoryStream(data); using var reader = new BinaryReader(stream);
         var magic = Encoding.ASCII.GetString(reader.ReadBytes(AppConstants.BackupMagic.Length)); if (magic != AppConstants.BackupMagic) throw new InvalidDataException("Not a Finora backup.");
-        var salt = reader.ReadBytes(16); var nonce = reader.ReadBytes(12); var tag = reader.ReadBytes(16); var length = reader.ReadInt32();
+        var salt = reader.ReadBytes(16); var nonce = reader.ReadBytes(12); var tag = reader.ReadBytes(16);
         if (salt.Length != 16 || nonce.Length != 12 || tag.Length != 16) throw new InvalidDataException("Backup header is truncated.");
+        var length = reader.ReadInt32();
         if (length < 0 || length > MaximumEncryptedBytes || reader.BaseStream.Length - reader.BaseStream.Position != length) throw new InvalidDataException("Backup length is invalid.");
         var ciphertext = reader.ReadBytes(length); var plaintext = new byte[length]; var key = Rfc2898DeriveBytes.Pbkdf2(password, salt, 210_000, HashAlgorithmName.SHA256, 32);
         try { using var aes = new AesGcm(key, 16); aes.Decrypt(nonce, ciphertext, tag, plaintext, Encoding.ASCII.GetBytes(AppConstants.BackupMagic)); }
