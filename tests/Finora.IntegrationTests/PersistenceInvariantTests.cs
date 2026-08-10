@@ -30,7 +30,7 @@ public sealed class PersistenceInvariantTests : IAsyncLifetime
 
     public Task DisposeAsync()
     {
-        try { Directory.Delete(_root, true); } catch (IOException) { }
+        try { Directory.Delete(_root, true); } catch (IOException) { } catch (UnauthorizedAccessException) { }
         return Task.CompletedTask;
     }
 
@@ -42,6 +42,22 @@ public sealed class PersistenceInvariantTests : IAsyncLifetime
         {
             Type = TransactionType.Expense,
             AmountMinor = 100,
+            Currency = "INR",
+            AccountId = _accountId,
+            OccurredAtUtc = DateTimeOffset.UtcNow
+        });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task DirectEfWrite_RejectsTransferWithoutPairLinkage()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        db.Transactions.Add(new FinanceTransaction
+        {
+            Type = TransactionType.Transfer,
+            AmountMinor = -100,
             Currency = "INR",
             AccountId = _accountId,
             OccurredAtUtc = DateTimeOffset.UtcNow
@@ -82,5 +98,93 @@ public sealed class PersistenceInvariantTests : IAsyncLifetime
         await db.SaveChangesAsync();
 
         Assert.Equal("USD", transaction.Currency);
+    }
+
+    [Fact]
+    public async Task DirectEfWrite_RejectsCategoryBudgetWithoutCategory()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        db.Budgets.Add(new Budget
+        {
+            Name = "Food",
+            Kind = BudgetKind.Category,
+            Cadence = BudgetCadence.Monthly,
+            LimitMinor = 10_000,
+            Currency = "INR"
+        });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task DirectEfWrite_RejectsSavingsGoalStartingAboveTarget()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        db.SavingsGoals.Add(new SavingsGoal
+        {
+            Name = "Emergency",
+            TargetMinor = 10_000,
+            StartingMinor = 10_001,
+            Currency = "INR"
+        });
+
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task DirectEfWrite_RejectsRecurringTransferWithoutDestination()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        db.RecurrenceRules.Add(new RecurrenceRule
+        {
+            Name = "Move savings",
+            Frequency = RecurrenceFrequency.Monthly,
+            Interval = 1,
+            StartsOn = new DateOnly(2026, 8, 1),
+            TransactionType = TransactionType.Transfer,
+            AmountMinor = 1_000,
+            Currency = "INR",
+            AccountId = _accountId
+        });
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
+    public async Task DirectEfWrite_NormalizesAggregateCurrencies()
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        var budget = new Budget
+        {
+            Name = "Overall",
+            Kind = BudgetKind.Overall,
+            Cadence = BudgetCadence.Monthly,
+            LimitMinor = 5_000,
+            Currency = " usd "
+        };
+        var goal = new SavingsGoal
+        {
+            Name = "Trip",
+            TargetMinor = 20_000,
+            StartingMinor = 0,
+            Currency = " usd "
+        };
+        var recurrence = new RecurrenceRule
+        {
+            Name = "Income",
+            Frequency = RecurrenceFrequency.Monthly,
+            Interval = 1,
+            StartsOn = new DateOnly(2026, 8, 1),
+            TransactionType = TransactionType.Income,
+            AmountMinor = 1_000,
+            Currency = " usd ",
+            AccountId = _accountId
+        };
+        db.AddRange(budget, goal, recurrence);
+        await db.SaveChangesAsync();
+
+        Assert.Equal("USD", budget.Currency);
+        Assert.Equal("USD", goal.Currency);
+        Assert.Equal("USD", recurrence.Currency);
     }
 }
