@@ -4,92 +4,100 @@ Use this checklist for every candidate. Do not mark a box complete from source i
 
 ## Source and repository
 
-- [ ] Release commit is on the intended branch/tag.
+- [ ] Release commit is on intended branch/tag.
 - [ ] Working tree used for release contains no uncommitted/generated private files.
 - [ ] `python build/scripts/verify_structure.py` passes.
+- [ ] Structural preflight confirms XAML handlers, masked backup/PIN fields, Android backup/data-transfer exclusions, and no raw exception-alert regressions.
 - [ ] CodeQL/dependency-review findings have been reviewed.
 - [ ] Dependabot/security alerts have been reviewed.
 - [ ] No API keys, keystores, certificates, passwords, PINs, backup passwords, private keys, real financial databases, or real receipt files are present.
-- [ ] `README.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`, `what_changed.md`, privacy/security/support docs, and third-party notices match the source.
+- [ ] `README.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`, `what_changed.md`, privacy/security/support docs, and third-party notices match source.
 
 ## Dependencies and licenses
 
-- [ ] Restore exact dependency graph with the release SDK/workloads.
-- [ ] Review direct and transitive dependency licenses.
+- [ ] Restore exact dependency graph with release SDK/workloads.
+- [ ] Review direct/transitive dependency licenses.
 - [ ] Review known vulnerabilities and incompatible/deprecated dependencies.
-- [ ] Update `THIRD_PARTY_NOTICES.md` when the verified graph requires it.
-- [ ] Do not add a dependency only to satisfy a cosmetic feature if a maintained platform/API implementation already exists.
+- [ ] Update `THIRD_PARTY_NOTICES.md` when verified graph requires it.
+- [ ] Do not add a dependency only to satisfy a cosmetic feature when a maintained platform/API implementation exists.
 
 ## Build and analysis
 
 - [ ] `dotnet workload restore` succeeds on platform build hosts.
-- [ ] Core/test projects restore on the intended .NET 10 SDK.
+- [ ] Core/test projects restore on intended .NET 10 SDK.
 - [ ] Release build passes with warnings-as-errors.
 - [ ] Unit tests pass.
 - [ ] Integration tests pass.
 - [ ] UI-contract tests pass.
 - [ ] Platform MAUI builds pass on appropriate hosts.
-- [ ] CI structural/core/Windows+Android/Apple jobs have actual passing evidence for the release commit.
+- [ ] CI structural/core/Windows+Android/Apple jobs have actual passing evidence for release commit.
+- [ ] Do not infer GitHub Actions success from an empty classic combined-status response; retain actual check/workflow evidence.
 
 ## Database and data integrity
 
 - [ ] Fresh schema creation succeeds.
-- [ ] Every previously released schema migrates through the real production chain.
+- [ ] Every previously released schema migrates through real production chain.
 - [ ] Current declared schema version matches database documentation.
-- [ ] Migration failure/rollback is tested using synthetic copies.
+- [ ] Migration failure/rollback is tested with synthetic copies.
 - [ ] WAL/foreign-key/busy-timeout behavior is verified.
 - [ ] Hidden developer data-integrity report is healthy on release-candidate sample data.
-- [ ] Transaction signs/currencies/extreme values are valid.
+- [ ] Transaction signs/currencies/extreme values/deletion timestamps are valid.
 - [ ] Linked transfers remain balanced and paired after edits/deletes/restores/imports.
 - [ ] Split signs/totals/categories are valid.
 - [ ] Category hierarchy is acyclic.
-- [ ] Category merge/archive does not convert a subcategory budget into an invalid root-category budget.
+- [ ] Category merge/archive does not convert a subcategory budget into invalid root-category budget.
 - [ ] Custom budgets have non-overlapping explicit periods.
 - [ ] Custom budgets are absent outside configured windows.
-- [ ] Rollover cannot produce a non-positive/overflowed effective plan.
-- [ ] Failed budget-period replacement leaves the prior period set intact.
+- [ ] Rollover cannot produce non-positive/overflowed effective plan.
+- [ ] Failed budget-period replacement leaves prior period set intact.
 - [ ] Savings contribution history never goes below zero and linked transaction currency is valid.
 - [ ] Active recurrence references available matching-currency accounts/categories.
-- [ ] Recurrence occurrence paid/partial/unpaid state matches generated transaction state.
+- [ ] Recurrence occurrence paid/partial/unpaid/postponed state matches generated transaction state.
+- [ ] Paid-after-postponement history remains valid.
 - [ ] Reconciliation differences/adjustment links are internally consistent.
+- [ ] Direct EF writes reject malformed attachment, notification, recurrence-occurrence, reconciliation, revision, category/tag, setting, audit, and backup metadata.
 
 ## Currency correctness
 
 - [ ] No aggregate adds unlike currencies without explicit conversion.
-- [ ] Dashboard aggregate cards are scoped to the configured reporting currency.
-- [ ] Other-currency rows/goals/recurrence items retain their own currency labels.
+- [ ] Dashboard aggregate cards are scoped to configured reporting currency.
+- [ ] Other-currency rows/goals/recurrence items retain own currency labels.
 - [ ] Category/merchant/monthly/tag report totals are currency-scoped.
 - [ ] JPY-style 0-decimal and KWD-style 3-decimal conversion/import tests pass.
-- [ ] Cross-currency transfer remains blocked until an explicit exchange workflow exists.
+- [ ] Cross-currency transfer remains blocked until explicit exchange workflow exists.
 - [ ] No hidden/automatic exchange-rate lookup was introduced.
 
 ## Backup and restore
 
 - [ ] Create encrypted backup with synthetic accounts/transactions/budgets/goals/recurrence/receipts.
 - [ ] Preview reports correct schema/counts.
-- [ ] Restore succeeds into a clean test profile.
+- [ ] Restore succeeds into clean test profile.
 - [ ] Restore succeeds over existing synthetic data without partial replacement.
-- [ ] Attachment bytes and checksums round-trip.
-- [ ] Wrong password is rejected.
-- [ ] Modified ciphertext/tag is rejected.
-- [ ] Truncated/oversized file is rejected.
-- [ ] Unsupported schema is rejected.
-- [ ] Cryptographically valid but semantically invalid finance graph is rejected before destructive replacement.
-- [ ] Broken transaction/account currency, transfer, split, category, tag, custom-budget, goal, recurrence, reconciliation, attachment, and settings graphs are rejected.
-- [ ] Internal restore markers/settings cannot be imported from the backup snapshot.
-- [ ] Interrupted restore before DB commit restores the previous receipt tree on restart.
-- [ ] Interrupted restore after DB commit finalizes the new receipt tree on restart.
-- [ ] Orphan restore/rollback directories are cleaned only after recovery decision.
+- [ ] Attachment bytes/checksums round-trip.
+- [ ] Wrong password rejected.
+- [ ] Modified ciphertext/tag rejected.
+- [ ] Truncated/oversized file rejected.
+- [ ] Unsupported schema rejected.
+- [ ] Cryptographically valid but semantically invalid graph rejected before destructive replacement.
+- [ ] Broken transaction/account currency, transfer, split, category, tag, custom-budget, goal, recurrence, reconciliation, attachment, and settings graphs rejected.
+- [ ] Internal restore markers/settings cannot be imported from backup snapshot.
+- [ ] Lexical receipt path escape rejected.
+- [ ] Symbolic-link/reparse-point traversal rejected for live receipt storage, backup validation, restore staging/rollback, recovery journal, and rollback copy.
+- [ ] Interrupted restore before DB commit restores previous receipt tree on restart.
+- [ ] Interrupted restore after DB commit finalizes new receipt tree on restart.
+- [ ] Orphan restore/rollback directories cleaned only after recovery decision and never recursively follow linked directories.
 - [ ] Failure leaves prior data usable.
 - [ ] Backup password/key is never logged or persisted by Finora.
-- [ ] Plaintext/receipt buffers are cleared as early as practical on success and failure paths.
+- [ ] Backup password entry is masked and cleared after create/restore attempts.
+- [ ] Plaintext/receipt buffers are cleared as early as practical on success and every failure path.
+- [ ] UI encrypted-backup byte array is cleared after writing/sharing.
 
 ## Core functional smoke test
 
 - [ ] First-run onboarding with no account/login requirement.
 - [ ] Optional sample data is opt-in only.
 - [ ] Create/edit/archive/restore account.
-- [ ] Active recurrence blocks account archival; paused dependency behavior is understood.
+- [ ] Active recurrence blocks account archival; paused dependency behavior understood.
 - [ ] Credit-card metadata and billing-day 1–31 behavior.
 - [ ] Record expense/income/refund/adjustment.
 - [ ] Transfer between accounts.
@@ -109,49 +117,73 @@ Use this checklist for every candidate. Do not mark a box complete from source i
 - [ ] Accessible reports and textual equivalents.
 - [ ] Tag reporting with explicit currency scope.
 - [ ] CSV mapping/preview/import.
-- [ ] CSV and PDF selected/all export.
+- [ ] CSV/PDF selected/all export.
 - [ ] Full local finance-data deletion.
-- [ ] Developer sample reset requires typed confirmation and uses synthetic data only.
+- [ ] Developer sample reset requires typed confirmation and synthetic data only.
 
 ## Privacy and security
 
-- [ ] No login/internet is required for current release functionality.
-- [ ] No analytics, telemetry, advertising identifiers, or automatic cloud upload was introduced.
+- [ ] No login/internet required for current release functionality.
+- [ ] No analytics, telemetry, advertising identifiers, or automatic cloud upload introduced.
 - [ ] Manual location remains user-entered only; no background location collection.
-- [ ] Diagnostic logs are sanitized.
+- [ ] Android `allowBackup=false` remains packaged.
+- [ ] Android legacy full-backup rules exclude root/file/database/sharedpref/external domains.
+- [ ] Android 12+ cloud-backup/device-transfer rules exclude root/file/database/sharedpref/external domains.
+- [ ] Diagnostic logs are sanitized, bounded, and do not follow linked paths.
+- [ ] Exception messages, stacks, arbitrary logger properties, finance contents, secret values, and filesystem/provider details do not appear in diagnostics.
+- [ ] ViewModel bound errors and primary alerts use generic infrastructure failures rather than raw exception messages.
 - [ ] Integrity reports are sanitized.
 - [ ] Notification text is generic/privacy-safe.
 - [ ] Stale recurring/budget/backup schedules are cancelled after source-state changes.
-- [ ] PIN setup/change/removal and rate-limited lockout are tested.
-- [ ] PIN-enabled state with missing/corrupt verifier fails closed.
-- [ ] Inactivity lock is tested.
-- [ ] Biometric/Windows Hello success/cancel/unavailable/lockout uses PIN fallback.
-- [ ] Sensitive-screen protection is tested where supported and limitations are documented elsewhere.
-- [ ] Local premium demo flag is still labeled non-tamper-proof and is not represented as commercial licensing.
+- [ ] Failed dedupe replacement preserves previous valid reminder.
+- [ ] Successful notification replacement commits new state before stale OS cancellation.
+- [ ] PIN setup/change/removal and rate-limited lockout tested.
+- [ ] New/confirm PIN fields remain masked and clear after use.
+- [ ] Temporary secure-storage provider failure fails closed when explicit enabled marker exists.
+- [ ] Readable missing/corrupt verifier self-heals stale marker without permanent lock-screen trap.
+- [ ] PIN removal failure does not falsely announce success.
+- [ ] Inactivity lock tested.
+- [ ] Biometric/Windows Hello success/cancel/unavailable/lockout uses PIN fallback and generic failure text.
+- [ ] Sensitive-screen protection tested where supported and limitations documented.
+- [ ] Local premium demo flag still labeled non-tamper-proof and not represented as commercial licensing.
+
+## Temporary share artifacts
+
+- [ ] CSV/PDF/backup/integrity-report share copies are generated only after explicit user action.
+- [ ] Startup cleanup removes only matching Finora cache share copies older than 24 hours.
+- [ ] Fresh share copies remain long enough for system share sheet use.
+- [ ] Unrelated cache files and diagnostic logs are not deleted.
+- [ ] Linked file entries are not followed to their target during cleanup.
+- [ ] Copies saved/shared outside Finora cache are documented as destination-controlled.
 
 ## Accessibility and adaptive UI
 
 - [ ] Light, dark, and system appearance.
 - [ ] Large text / larger interface setting.
 - [ ] Screen-reader semantics for changed flows.
+- [ ] Lock screen has heading/status/PIN/biometric semantic descriptions.
+- [ ] Settings secret fields identify masked purpose to accessibility APIs without exposing entered value.
 - [ ] Recurring lifecycle controls have understandable labels/descriptions/state.
 - [ ] Keyboard navigation/focus on desktop.
 - [ ] Reduced motion.
 - [ ] Sufficient contrast.
 - [ ] Phone bottom-tab hierarchy and tablet/desktop flyout hierarchy.
-- [ ] Resize between navigation modes preserves a usable primary section.
+- [ ] Resize between navigation modes preserves usable primary section.
 - [ ] Empty/loading/error/permission-denied states remain actionable.
 
 ## Notifications
 
 - [ ] Permission not requested before explicit user action/need.
-- [ ] Denied permission is handled without blocking finance functionality.
-- [ ] Backup reminder can be disabled and stale schedule is cancelled.
-- [ ] Budget warning deduplicates and stale/inactive threshold schedules are cancelled.
+- [ ] Denied permission handled without blocking finance functionality.
+- [ ] Backup reminder can be disabled and stale schedule cancelled.
+- [ ] Budget warning deduplicates and stale/inactive threshold schedules cancelled.
 - [ ] Recurring reminder deduplicates.
 - [ ] Paused/completed/archived recurring rules have stale reminders cancelled.
+- [ ] Failed replacement scheduling does not cancel prior enabled reminder.
+- [ ] DB/OS cancellation drift is retried during reconciliation.
+- [ ] Expired enabled rows become disabled.
 - [ ] App restart does not create duplicate scheduled records.
-- [ ] OS-specific scheduling limitations are documented/tested.
+- [ ] OS-specific scheduling limitations documented/tested.
 
 ## Platform packaging
 
@@ -162,6 +194,8 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 - [ ] Signed AAB generated externally from repository secrets.
 - [ ] Adaptive/monochrome icon and splash validated.
 - [ ] Notification/biometric/file/share/capture behavior verified.
+- [ ] `backup_rules.xml` and `data_extraction_rules.xml` packaged and honored on representative API levels.
+- [ ] Device/cloud transfer test confirms Finora private finance store is not copied through ordinary Android backup mechanisms.
 - [ ] Upgrade/migration tested.
 
 ### Windows
@@ -181,7 +215,7 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 
 ## Store metadata
 
-- [ ] Version/build number matches source and artifacts.
+- [ ] Version/build number matches source/artifacts.
 - [ ] Product name is Finora.
 - [ ] Attribution is “Made by the Sanskar” in appropriate product surfaces, not over user content.
 - [ ] Business/security email is `sanskarin@outlook.in`.
@@ -189,11 +223,11 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 - [ ] Repository/profile links are correct.
 - [ ] Store screenshots use synthetic data only.
 - [ ] Store copy does not promise returns, financial advice, cloud sync, automatic exchange rates, bug-free operation, or tamper-proof local premium licensing.
-- [ ] Store privacy/data-safety declarations match actual app behavior and permissions.
+- [ ] Store privacy/data-safety declarations match actual app behavior, Android backup exclusions, and permissions.
 
 ## Release decision
 
 - [ ] All applicable gates above have evidence.
-- [ ] Known limitations are recorded in `PROJECT_STATUS.md` and release notes.
-- [ ] No unresolved issue can cause silent financial corruption, mixed-currency misreporting, unsafe restore, privacy leakage, app-lock bypass, or incorrect migration.
-- [ ] Release tag/artifacts are created only after the candidate passes the required gates.
+- [ ] Known limitations recorded in `PROJECT_STATUS.md` and release notes.
+- [ ] No unresolved issue can cause silent financial corruption, mixed-currency misreporting, unsafe restore, privacy leakage, app-lock bypass, notification-state loss, or incorrect migration.
+- [ ] Release tag/artifacts created only after candidate passes required gates.
