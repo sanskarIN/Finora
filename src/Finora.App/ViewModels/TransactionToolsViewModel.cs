@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 
 namespace Finora.App;
 
@@ -27,8 +28,8 @@ public sealed class TransactionToolsViewModel : ViewModelBase
     public ObservableCollection<Category> Categories { get; } = [];
     public ObservableCollection<DuplicateTransactionCandidate> Duplicates { get; } = [];
     public Category? BulkCategory { get => _bulkCategory; set => SetProperty(ref _bulkCategory, value); }
-    public DateTime FromDate { get => _fromDate; set => SetProperty(ref _fromDate, value); }
-    public DateTime ToDate { get => _toDate; set => SetProperty(ref _toDate, value); }
+    public DateTime FromDate { get => _fromDate; set => SetProperty(ref _fromDate, value.Date); }
+    public DateTime ToDate { get => _toDate; set => SetProperty(ref _toDate, value.Date); }
     public string Status { get => _status; private set => SetProperty(ref _status, value); }
     public System.Windows.Input.ICommand LoadCommand { get; }
     public System.Windows.Input.ICommand BulkCategorizeCommand { get; }
@@ -55,20 +56,24 @@ public sealed class TransactionToolsViewModel : ViewModelBase
 
     private async Task LoadTransactionsCoreAsync()
     {
-        var from = new DateTimeOffset(DateTime.SpecifyKind(FromDate.Date, DateTimeKind.Local)).ToUniversalTime();
-        var to = new DateTimeOffset(DateTime.SpecifyKind(ToDate.Date.AddDays(1), DateTimeKind.Local)).ToUniversalTime();
+        var range = ResolveRange();
         Transactions.Clear();
-        foreach (var tx in await _store.SearchTransactionsAsync(from: from, to: to)) Transactions.Add(new ToolTransactionItem(tx));
+        foreach (var tx in await _store.SearchTransactionsAsync(from: range.FromUtc, to: range.ToExclusiveUtc.AddTicks(-1)))
+            Transactions.Add(new ToolTransactionItem(tx));
     }
 
     private async Task ScanDuplicatesCoreAsync()
     {
-        if (ToDate.Date < FromDate.Date) throw new InvalidOperationException("The end date cannot be earlier than the start date.");
-        var from = new DateTimeOffset(DateTime.SpecifyKind(FromDate.Date, DateTimeKind.Local)).ToUniversalTime();
-        var to = new DateTimeOffset(DateTime.SpecifyKind(ToDate.Date.AddDays(1), DateTimeKind.Local)).ToUniversalTime();
+        var range = ResolveRange();
         Duplicates.Clear();
-        foreach (var item in await _maintenance.FindLikelyDuplicatesAsync(from, to)) Duplicates.Add(item);
+        foreach (var item in await _maintenance.FindLikelyDuplicatesAsync(range.FromUtc, range.ToExclusiveUtc.AddTicks(-1))) Duplicates.Add(item);
         Status = Duplicates.Count == 0 ? "No likely duplicates found in this period." : $"Found {Duplicates.Count} possible duplicate pair(s). Review before deleting anything.";
+    }
+
+    private UtcDateRange ResolveRange()
+    {
+        if (ToDate.Date < FromDate.Date) throw new InvalidOperationException("The end date cannot be earlier than the start date.");
+        return LocalDateRange.ToUtc(DateOnly.FromDateTime(FromDate), DateOnly.FromDateTime(ToDate), TimeZoneInfo.Local);
     }
 }
 
