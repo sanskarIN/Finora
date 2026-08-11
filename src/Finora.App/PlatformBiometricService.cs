@@ -41,7 +41,7 @@ public sealed class PlatformBiometricService : IBiometricService
         reason = string.IsNullOrWhiteSpace(reason) ? "Confirm your identity to unlock Finora." : reason.Trim();
 #if ANDROID
         if (Build.VERSION.SdkInt < BuildVersionCodes.P) return Result.Failure("Biometric unlock requires Android 9 or later on this build.");
-        var activity = Platform.CurrentActivity; if (activity is null) return Result.Failure("The Android activity is unavailable.");
+        var activity = Platform.CurrentActivity; if (activity is null) return Result.Failure("Biometric authentication is unavailable right now.");
         var tcs = new TaskCompletionSource<Result>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var signal = new CancellationSignal(); using var registration = cancellationToken.Register(signal.Cancel);
         var callback = new AndroidAuthenticationCallback(tcs); var negative = new AndroidNegativeButtonListener(tcs);
@@ -73,7 +73,8 @@ public sealed class PlatformBiometricService : IBiometricService
     {
         private readonly TaskCompletionSource<Result> _tcs = tcs;
         public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult? result) => _tcs.TrySetResult(Result.Success());
-        public override void OnAuthenticationError([Android.Runtime.GeneratedEnum] BiometricErrorCode errorCode, Java.Lang.ICharSequence? errString) => _tcs.TrySetResult(Result.Failure(errString?.ToString() ?? "Biometric authentication failed."));
+        public override void OnAuthenticationError([Android.Runtime.GeneratedEnum] BiometricErrorCode errorCode, Java.Lang.ICharSequence? errString)
+            => _tcs.TrySetResult(Result.Failure("Biometric authentication was not completed. Use the Finora PIN if needed."));
         public override void OnAuthenticationFailed() { }
     }
     private sealed class AndroidNegativeButtonListener(TaskCompletionSource<Result> tcs) : Java.Lang.Object, IDialogInterfaceOnClickListener
