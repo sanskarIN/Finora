@@ -237,13 +237,37 @@ Source presence is not the same as native release validation.
 
 ✅ Settings, lock, onboarding, Dashboard period, reports, transaction history/tools and finance pages include additional heading/semantic descriptions.
 
+✅ Accessibility/localization documentation now defines chart/text equivalence, privacy-safe screen-reader behavior, keyboard/focus/native test expectations, runtime locale/currency separation, current English-first/localization-ready state, and the initial Hindi resource boundary.
+
 ⚠️ TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast testing still requires native validation.
+
+## Documentation
+
+✅ A complete documentation hub now exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
+
+✅ End-user documentation covers onboarding through destructive reset, backup/restore, platform limitations, privacy, reports, import/export, notifications, Settings, and support.
+
+✅ Architecture documentation covers solution design, schema, service ownership, end-to-end data flow, adaptive navigation/UI contracts, engineering decisions, and repository code map.
+
+✅ Feature documentation covers accounts/transactions/reconciliation, budgets/goals/recurring, reports/import/export, and Settings.
+
+✅ Security/operations documentation covers threat model, app lock/privacy, encrypted backup/crash recovery, data lifecycle, diagnostics/integrity, and reset/sample data.
+
+✅ Developer/testing documentation covers build/run, troubleshooting, developer workflow, safe feature changes, test-layer selection, and native platform validation matrix.
+
+✅ Platform documentation covers Android, Windows, iOS, and Mac Catalyst target frameworks, minimum platform metadata, native APIs, privacy boundaries, accessibility, packaging, and release QA.
+
+✅ Release documentation covers release checklist, store readiness, versioning/migrations/backup compatibility, store metadata preparation, changelog, and project status.
+
+✅ Dependency-free structural preflight now treats every core documentation reference as required and validates repository-relative Markdown file links without network access.
+
+⚠️ External URLs, Markdown anchors, live store policy requirements, and native behavior described by platform docs still require external/current validation.
 
 ## Repository engineering
 
 ✅ Structural verifier, staged CI workflow, Dependabot, CodeQL, dependency review, CODEOWNERS, issue/PR templates and release/security documentation are present.
 
-✅ Structural preflight guards Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
+✅ Structural preflight guards required documentation, local Markdown file links, Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
 
 ⚠️ CI/check-run success must be confirmed from actual GitHub Actions evidence. An empty classic combined-status response is not a passing result.
 
