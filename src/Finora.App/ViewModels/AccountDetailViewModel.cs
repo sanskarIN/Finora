@@ -9,6 +9,7 @@ public sealed class AccountDetailViewModel : ViewModelBase
 {
     private readonly IAccountManagementService _accounts;
     private readonly IFinanceStore _store;
+    private readonly IAppSettingsService? _settings;
     private Guid _accountId;
     private string _name = string.Empty;
     private AccountType _type;
@@ -21,10 +22,11 @@ public sealed class AccountDetailViewModel : ViewModelBase
     private string _summary = string.Empty;
     private string _status = string.Empty;
 
-    public AccountDetailViewModel(IAccountManagementService accounts, IFinanceStore store)
+    public AccountDetailViewModel(IAccountManagementService accounts, IFinanceStore store, IAppSettingsService? settings = null)
     {
         _accounts = accounts;
         _store = store;
+        _settings = settings;
         SaveCommand = new AsyncCommand(SaveAsync);
         ArchiveOrRestoreCommand = new AsyncCommand(ArchiveOrRestoreAsync);
     }
@@ -56,11 +58,13 @@ public sealed class AccountDetailViewModel : ViewModelBase
         Type = account.Type;
         Icon = account.Icon;
         ColorLabel = account.ColorLabel ?? string.Empty;
-        OpeningBalance = new Money(account.OpeningBalanceMinor, account.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture);
-        CreditLimit = account.CreditLimitMinor is long limit ? new Money(limit, account.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture) : string.Empty;
+        OpeningBalance = FormatEditableAmount(account.OpeningBalanceMinor, account.Currency);
+        CreditLimit = account.CreditLimitMinor is long limit ? FormatEditableAmount(limit, account.Currency) : string.Empty;
         BillingDay = account.BillingDay ?? 1;
         State = account.State;
-        Summary = $"Current balance: {new Money(account.CurrentBalanceMinor, account.Currency).Format()} · {account.TransactionCount} transaction(s)" + (account.LastReconciledAtUtc is DateTimeOffset reconciled ? $" · Last reconciled {reconciled.ToLocalTime():g}" : string.Empty);
+        var hideAmounts = _settings?.PrivacyMode == true || _settings?.HideAmountsOnLaunch == true;
+        var currentBalance = hideAmounts ? "••••" : new Money(account.CurrentBalanceMinor, account.Currency).Format();
+        Summary = $"Current balance: {currentBalance} · {account.TransactionCount} transaction(s)" + (account.LastReconciledAtUtc is DateTimeOffset reconciled ? $" · Last reconciled {reconciled.ToLocalTime():g}" : string.Empty);
         Transactions.Clear();
         foreach (var tx in await _store.SearchTransactionsAsync(accountId: id)) Transactions.Add(tx);
     });
@@ -99,6 +103,12 @@ public sealed class AccountDetailViewModel : ViewModelBase
         await LoadAsync(_accountId);
         Status = wasArchived ? "Account restored." : "Account archived. Existing transactions were preserved.";
     });
+
+    private static string FormatEditableAmount(long minor, string currency)
+    {
+        var money = new Money(minor, currency);
+        return money.ToMajorUnits().ToString($"F{money.DecimalPlaces}", CultureInfo.CurrentCulture);
+    }
 
     private static bool TryParseDecimal(string value, out decimal result)
         => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result)
