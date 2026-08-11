@@ -4,6 +4,22 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Documentation — 2026-08-11 complete project documentation pass
+
+- Added `docs/README.md` as the complete documentation index and `docs/DOCUMENTATION_STATUS.md` as the documentation coverage/update-policy matrix.
+- Added a complete end-user guide covering onboarding, navigation, Dashboard, accounts, transfers, transactions, categories/tags, splits, receipts, reconciliation, budgets, savings, recurring items, reports, CSV import/export, encrypted backup/restore, privacy/app lock, notifications, Settings, developer tools, data deletion, accessibility, support, and current product limitations.
+- Added focused feature references for accounts/transactions/reconciliation, budgets/goals/recurring, reports/import/export, and Settings.
+- Added architecture references for service ownership, end-to-end data flow, adaptive navigation/UI contracts, and preserved the existing architecture/schema documentation.
+- Added security references for app lock/privacy/screen protection and encrypted backup/crash recovery, aligned with the existing threat model and data lifecycle.
+- Added operations references for privacy-safe diagnostics/integrity and destructive finance reset/synthetic sample reset.
+- Added contributor documentation: developer guide, repository code map, and safe feature-change workflow covering money/date/schema/backup/privacy/testing/documentation requirements.
+- Added practical testing guidance plus a cross-platform native validation matrix that separates source/unit/integration/UI-contract evidence from native build/device/store evidence.
+- Added Android, Windows, and iOS/Mac Catalyst platform engineering/QA guides using the current project target frameworks, minimum versions, manifests/plists, permissions, privacy boundaries, and release gates.
+- Added versioning/database migration/backup compatibility policy and a store metadata preparation template that explicitly requires live store-policy verification before submission.
+- Added accessibility/localization guidance describing current English-first/localization-ready state, initial Hindi resource structure, privacy-safe screen-reader requirements, chart equivalents, and native accessibility validation.
+- Extended dependency-free structural preflight so the complete core documentation tree is required and repository-relative Markdown file links are checked without network access.
+- Updated the build guide to document the complete documentation/preflight/platform/testing/release references.
+
 ### Changed — 2026-08-11 continuation hardening
 
 - Dashboard reporting-currency notice now binds to the actual `CurrencyScope` ViewModel property instead of a stale property name.
