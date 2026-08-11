@@ -4,6 +4,37 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Changed — 2026-08-11 continuation hardening
+
+- Dashboard reporting-currency notice now binds to the actual `CurrencyScope` ViewModel property instead of a stale property name.
+- Dashboard gained explicit current financial month, previous financial month, trailing 30-day, trailing 90-day, and year-to-date period selection through shared domain policy.
+- User-selected local calendar dates now resolve through shared timezone-safe `[fromUtc, toExclusiveUtc)` boundaries rather than duplicated UTC-midnight or 23:59:59 calculations.
+- Dashboard current balance now uses current account summaries directly instead of rebuilding current balance from an all-history trend query.
+- Advanced reports now include yearly comparison, recurring obligations, and savings progress in addition to category, income/expense, account trend, budget, merchant/payee, monthly, and tag reporting.
+- Monthly/yearly reports group by local calendar month/year and stop at the current local date so future-dated imported rows do not appear early.
+- Signed report charts now draw positive values above and negative values below a true zero baseline rather than using absolute magnitude.
+- Report values are masked and quantitative charts hidden while privacy/hide-on-launch is active.
+- Passive account, transaction, tools, budget, savings, recurring, reconciliation, and transaction-detail split amounts now use currency-aware privacy formatting instead of raw minor-unit labels.
+- Account detail and transaction detail edit formatting uses each currency's actual minor-unit precision rather than hard-coded two-decimal text.
+- Savings monthly contribution forecast hides its monetary estimate while privacy mode hides amounts.
+- Reconciliation preview/history uses privacy-safe formatted values and shared local end-of-day boundaries.
+- Transaction history gained deterministic sort choices and bounded 50-row incremental display with an explicit Load more action.
+- Transaction Tools date filters now use shared local-calendar boundaries; duplicate/tool amounts use currency/privacy formatting.
+- Onboarding now exposes both Privacy and Terms access with accessibility semantics while preserving revisit behavior.
+- Settings full local-finance deletion is explicitly wired to the dedicated complete-reset service handler.
+- Settings About exposes repository/profile, business/support contacts, license/notices, contributing/security/support guides, and version/build derived from packaged `AppInfo` metadata.
+- Android biometric callback failures no longer surface provider-supplied error strings.
+- Android reminder cancellation queries an existing immutable `PendingIntent` with `NoCreate` instead of creating a new cancellation artifact.
+- Structural preflight now guards complete-reset wiring, biometric provider-text redaction, and raw minor-unit user-facing XAML labels.
+
+### Added — 2026-08-11 continuation coverage
+
+- `DashboardPeriodPolicy` and unit tests for financial-month/trailing/year-to-date ranges.
+- `LocalDateRange` and unit tests for timezone-safe local-date to UTC-boundary conversion.
+- Integration coverage for yearly comparison, recurring obligations, savings progress, and future-dated comparison exclusion.
+- UI source-contract coverage for Dashboard periods/currency scope, complete report sections, Settings identity/reset/legal/support controls, transaction sorting/paging, onboarding legal links, true-zero chart behavior, and passive amount privacy.
+- Reusable `PrivacyMoneyConverter` for currency-aware hidden-money XAML display.
+
 ### Changed — 2026-08-10 continuation hardening
 
 - User-facing infrastructure failures in Reports/Settings and bound ViewModel errors no longer expose raw exception messages, provider details, filesystem paths, or stack-like text. Deliberate short validation messages remain actionable.
