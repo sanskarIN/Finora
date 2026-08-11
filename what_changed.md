@@ -1999,3 +1999,856 @@ The source line must still pass the external compiler, automated-test, native-de
 - `docs/releases/STORE_READINESS.md`.
 
 No source-only continuation should be represented as a production-store release until those gates have actual evidence.
+
+---
+
+## 65. Complete project documentation continuation
+
+A dedicated documentation completion pass was performed after the implementation-hardening continuation above.
+
+Starting documentation-pass head:
+
+`180aa293526eadfc4ad700017266f357ce22ede2`
+
+Starting commit message:
+
+`docs(status): finalize Finora dashboard reports privacy and local-date ledger`
+
+Before this final ledger write, `main` was **33 commits ahead** of that starting head for the documentation pass.
+
+The pass intentionally concentrated on complete user, developer, architecture, security, privacy, operations, testing, platform, migration, and store/release documentation while preserving the already-implemented source code on `main`.
+
+The final ledger commit itself is an additional focused documentation commit after those 33 pre-ledger commits.
+
+---
+
+## 66. Documentation hub and completeness matrix added
+
+New documentation entry point:
+
+`docs/README.md`
+
+It provides navigable links to:
+
+- project overview;
+- documentation status;
+- end-user guide;
+- architecture/schema/service/data-flow/navigation docs;
+- feature manuals;
+- accessibility/localization guide;
+- development docs;
+- testing docs;
+- diagnostics/operations docs;
+- security/privacy docs;
+- platform docs;
+- release docs;
+- community/legal docs.
+
+New completeness matrix:
+
+`docs/DOCUMENTATION_STATUS.md`
+
+It records current documentation coverage for:
+
+- public project overview;
+- user workflows;
+- architecture;
+- database/schema;
+- services/data flow/navigation;
+- finance feature families;
+- Settings;
+- accessibility/localization;
+- app lock/privacy;
+- backup/recovery;
+- threat model/data lifecycle;
+- diagnostics/reset/sample data;
+- build/troubleshooting;
+- developer/code-map/feature-change workflow;
+- testing/native validation;
+- Android/Windows/Apple platform guidance;
+- release/store/versioning docs;
+- project status/change ledger/changelog/legal/community files.
+
+The matrix also defines a documentation update policy for future persisted fields, passive monetary UI, native APIs/permissions, accessibility/localization work, and later-version network features.
+
+---
+
+## 67. Complete end-user guide added
+
+New file:
+
+`docs/USER_GUIDE.md`
+
+The guide documents current end-user behavior for:
+
+- local-first product model;
+- first launch/onboarding;
+- adaptive navigation;
+- Dashboard cards and period selection;
+- accounts and credit-card metadata;
+- same-currency transfers;
+- transaction quick-add/search/filter/sort/paging/detail;
+- categories/tags;
+- splits;
+- receipts;
+- reconciliation;
+- budgets;
+- savings goals;
+- recurring rules/occurrences;
+- report matrix;
+- CSV import;
+- CSV/PDF export;
+- encrypted backup/restore and crash recovery;
+- privacy mode/hide amounts;
+- PIN/biometric behavior;
+- notifications;
+- Settings;
+- developer tools;
+- full finance-data deletion;
+- accessibility;
+- troubleshooting/support;
+- current explicit product limitations.
+
+The user guide distinguishes implemented behavior from native/platform validation requirements and does not claim later-version cloud/login/FX features.
+
+---
+
+## 68. Finance feature manuals added
+
+New feature documentation:
+
+### `docs/features/ACCOUNTS_AND_TRANSACTIONS.md`
+
+Covers:
+
+- account lifecycle/currency invariants;
+- current/opening balances;
+- credit-card metadata;
+- archive restrictions;
+- linked same-currency transfers;
+- transaction sign rules;
+- quick add;
+- date/time behavior;
+- search/filter/sort/paging;
+- revisions;
+- soft delete/restore;
+- categories/tags;
+- splits;
+- receipts;
+- duplicate review;
+- bulk categorization;
+- Transaction Tools;
+- reconciliation;
+- passive amount privacy;
+- export/integrity boundaries.
+
+### `docs/features/BUDGETS_GOALS_RECURRING.md`
+
+Covers:
+
+- budget kinds/cadence;
+- `BudgetPeriodPolicy` semantics;
+- split/descendant actuals;
+- warning thresholds;
+- savings target/history/completion/forecast;
+- recurrence lifecycle;
+- occurrence-first payment model;
+- recurring transfers;
+- dependency safety;
+- backlog protection;
+- notifications/reporting/privacy/integrity.
+
+### `docs/features/REPORTS_IMPORT_EXPORT.md`
+
+Covers:
+
+- reporting currency isolation;
+- local-date range behavior;
+- category/income-expense/account/budget/merchant/monthly/yearly/recurring/savings/tag reports;
+- signed zero-baseline charts;
+- privacy chart suppression;
+- CSV limits/mapping/amount modes;
+- account/category/tag resolution;
+- duplicates/transfers;
+- preview/transactional import;
+- CSV/PDF export;
+- share/save trust boundary;
+- release validation.
+
+### `docs/features/SETTINGS_REFERENCE.md`
+
+Covers:
+
+- default currency/locale;
+- financial-month start;
+- privacy/hide amounts;
+- theme/reduced motion/larger interface;
+- backup reminders/notifications;
+- onboarding state;
+- auto-lock;
+- biometric/sensitive-screen settings;
+- receipt quality;
+- default account/type;
+- last backup timestamp;
+- Dashboard cards;
+- local premium demo;
+- transient backup password;
+- PIN storage boundary;
+- About/legal/support links;
+- backup/restore;
+- complete finance deletion;
+- developer panel;
+- preference storage/reset distinctions.
+
+---
+
+## 69. Architecture/service/data-flow/navigation documentation added
+
+New architecture docs:
+
+### `docs/architecture/SERVICE_CATALOG.md`
+
+Maps current dependency-injection/services to responsibilities, including:
+
+- `DatabaseInitializer`;
+- `IFinanceStore`;
+- finance reset/sample services;
+- restore recovery;
+- transaction maintenance;
+- account management;
+- category/tag service;
+- reconciliation;
+- recurring workflow;
+- CSV import;
+- advanced reports;
+- crash-safe backup;
+- export;
+- attachments;
+- integrity;
+- temporary cleanup;
+- privacy logger;
+- exception coordinator;
+- settings/app lock;
+- native notifications;
+- local notification persistence;
+- biometrics;
+- sensitive-screen protection;
+- reminder coordinator;
+- cross-cutting money/date/budget/error/platform rules.
+
+### `docs/architecture/DATA_FLOW.md`
+
+Documents end-to-end flows for:
+
+- startup/recovery;
+- Settings;
+- accounts;
+- transactions;
+- transfers;
+- splits;
+- transaction search;
+- reconciliation;
+- budgets;
+- savings;
+- recurring;
+- reports;
+- CSV import/export;
+- receipt attachments;
+- encrypted backup creation;
+- encrypted restore and recovery;
+- integrity diagnostics;
+- privacy logger;
+- notifications;
+- passive privacy display;
+- finance reset;
+- synthetic sample reset.
+
+### `docs/architecture/NAVIGATION_AND_UI.md`
+
+Documents:
+
+- mobile five-tab hierarchy;
+- desktop/tablet flyout equivalents;
+- 900-pixel adaptive threshold plus idiom behavior;
+- hidden onboarding/lock roots;
+- secondary workflow routes;
+- MVVM/code-behind boundary;
+- ViewModelBase behavior;
+- Dashboard/transactions/reports UI contracts;
+- signed chart semantics;
+- passive privacy display;
+- theme/accessibility;
+- onboarding/lock/Settings/About UI;
+- platform UI boundaries;
+- UI-contract vs native testing distinction.
+
+Existing `docs/architecture/OVERVIEW.md`, `DATABASE_SCHEMA.md`, and `DECISIONS.md` remain the higher-level design/schema/decision sources and are indexed from the new hub.
+
+---
+
+## 70. Security/privacy documentation expanded with dedicated manuals
+
+New file:
+
+`docs/security/APP_LOCK_AND_PRIVACY.md`
+
+Documents:
+
+- current PIN format;
+- PBKDF2-SHA256 verifier flow;
+- 150,000 app-lock iterations;
+- SecureStorage boundary;
+- fail-closed provider failure vs stale readable verifier state;
+- bounded failed-attempt lockout;
+- PIN removal behavior;
+- biometrics/Windows Hello with PIN fallback;
+- secret-entry masking;
+- privacy-mode surfaces;
+- chart privacy;
+- screen-capture limitations;
+- manual-only location;
+- notification privacy;
+- diagnostic privacy;
+- Android backup/device-transfer source controls;
+- local premium demo limitation;
+- native release validation.
+
+New file:
+
+`docs/security/BACKUP_AND_RECOVERY.md`
+
+Documents:
+
+- user-triggered-only backup boundary;
+- `FINORA01` format identity;
+- schema 2 relation;
+- PBKDF2-SHA256/AES-GCM format;
+- 210,000 backup key-derivation iterations;
+- registered `CrashSafeBackupService` wrapper;
+- creation/snapshot validation;
+- preview;
+- staging/database replacement;
+- rollback/finalization;
+- durable recovery journal/marker;
+- startup recovery decisions;
+- orphan restore-directory handling;
+- attachment path safety;
+- masked password handling;
+- cache share-copy lifecycle;
+- failure/error behavior;
+- automated and native failure-injection requirements;
+- recovery limitations.
+
+These complement rather than replace `docs/security/THREAT_MODEL.md` and `docs/privacy/DATA_LIFECYCLE.md`.
+
+---
+
+## 71. Diagnostics, integrity, reset and sample-data operations documented
+
+New file:
+
+`docs/operations/DIAGNOSTICS_AND_INTEGRITY.md`
+
+Documents:
+
+- privacy logger goals;
+- forbidden diagnostic content;
+- bounded log storage/rotation;
+- AsyncCommand/exception coordinator flow;
+- UI error mapping;
+- structural privacy preflight;
+- data-integrity service scope;
+- sanitized output;
+- persistence-boundary vs integrity distinction;
+- attachment integrity;
+- sanitized report export;
+- temporary artifact cleanup;
+- developer/support workflow;
+- release validation.
+
+New file:
+
+`docs/operations/DATA_RESET_AND_SAMPLE_DATA.md`
+
+Documents:
+
+- distinction between complete finance deletion and sample reset;
+- typed confirmation;
+- finance tables/relationships removed;
+- intentional preference/schema/security-state preservation boundary;
+- attachment orphan cleanup;
+- transactional database deletion;
+- external-copy limitation;
+- deterministic sample reset sequence;
+- synthetic-data privacy rule;
+- test/release expectations;
+- factory-reset distinction.
+
+---
+
+## 72. Developer documentation added
+
+New file:
+
+`docs/development/DEVELOPER_GUIDE.md`
+
+Covers:
+
+- prerequisites/clone/verification;
+- solution layering;
+- money/date/budget/transfer/recurrence rules;
+- persistence/migration requirements;
+- attachment/backup/privacy/display/platform rules;
+- UI/navigation;
+- async/cancellation;
+- testing layers;
+- structural preflight;
+- documentation requirements;
+- commit hygiene;
+- local Git email configuration;
+- review/release honesty.
+
+New file:
+
+`docs/development/CODE_MAP.md`
+
+Maps root, Shared, Domain, Application, Infrastructure, App, tests, build scripts, GitHub automation, and docs areas, with guidance on where different change types belong.
+
+New file:
+
+`docs/development/ADDING_A_FEATURE.md`
+
+Defines the change workflow for:
+
+- product boundary;
+- layer selection;
+- money/date/schema/service rules;
+- transfer/reconciliation/recurrence special rules;
+- file/security/privacy/UI/platform review;
+- test layers;
+- structural preflight;
+- documentation updates;
+- focused commit order;
+- final evidence separation.
+
+---
+
+## 73. Testing documentation added
+
+New file:
+
+`docs/testing/TESTING_GUIDE.md`
+
+Documents practical commands and test-layer selection for:
+
+- structural preflight;
+- UnitTests;
+- IntegrationTests;
+- UiTests source contracts;
+- host wrappers;
+- money/date/database/transfer/backup/import/privacy/accessibility cases;
+- native build commands via build guide;
+- synthetic test data;
+- regression-test policy;
+- release evidence.
+
+New file:
+
+`docs/testing/NATIVE_VALIDATION_MATRIX.md`
+
+Defines platform evidence requirements for:
+
+- common functional flows;
+- Android native APIs/privacy/backup/accessibility;
+- Windows package/Hello/toasts/capture/accessibility;
+- iOS LocalAuthentication/UserNotifications/accessibility;
+- Mac Catalyst desktop behavior;
+- privacy-mode surface checks;
+- local-calendar/time-zone checks;
+- backup/recovery process-kill checks;
+- notifications;
+- accessibility;
+- release evidence.
+
+Existing `docs/TEST_PLAN.md` remains the detailed formal test matrix and is linked from the new testing guide/hub.
+
+---
+
+## 74. Platform handbooks added
+
+New Android guide:
+
+`docs/platforms/ANDROID.md`
+
+Documents:
+
+- `net10.0-android`;
+- minimum API 26;
+- application ID/version;
+- build command;
+- manifest privacy flags;
+- USE_BIOMETRIC/USE_FINGERPRINT/POST_NOTIFICATIONS;
+- no background location;
+- backup/device-transfer exclusions;
+- notification and `NoCreate` cancellation QA;
+- biometric provider-text redaction;
+- `FLAG_SECURE` boundary;
+- app-private storage;
+- picker/share/receipts;
+- adaptive UI;
+- TalkBack/privacy/store QA.
+
+New Windows guide:
+
+`docs/platforms/WINDOWS.md`
+
+Documents:
+
+- `net10.0-windows10.0.19041.0`;
+- package identity/version metadata;
+- current publisher source value;
+- build command;
+- Windows Hello;
+- scheduled toasts;
+- display-affinity boundary;
+- file/share/export;
+- app-private storage;
+- NTFS/reparse safety;
+- adaptive desktop UI;
+- Narrator/keyboard/high-DPI/privacy/package release QA.
+
+New Apple guide:
+
+`docs/platforms/APPLE.md`
+
+Documents:
+
+- `net10.0-ios`;
+- `net10.0-maccatalyst`;
+- minimum 15.0 source settings;
+- build/archive prerequisites;
+- iOS/Mac plist metadata;
+- Face ID/biometric purpose strings;
+- LocalAuthentication;
+- UserNotifications;
+- file/share flows;
+- app-private storage;
+- restore recovery;
+- iOS orientation/iPad behavior;
+- Catalyst desktop behavior;
+- VoiceOver/Dynamic Type/keyboard;
+- screen-capture limitation;
+- privacy/local-calendar/store QA.
+
+---
+
+## 75. Accessibility and localization manual added
+
+New file:
+
+`docs/accessibility/ACCESSIBILITY_AND_LOCALIZATION.md`
+
+Documents:
+
+- accessibility goals;
+- chart text/table equivalence;
+- privacy-safe screen-reader behavior;
+- secret-entry accessibility;
+- keyboard/focus;
+- touch targets;
+- reduced motion;
+- theme/contrast;
+- adaptive layout;
+- current localization architecture;
+- English-first/localization-ready boundary;
+- initial Hindi common-string resource structure;
+- locale vs currency;
+- runtime culture;
+- number/date preview;
+- parsing/local-calendar behavior;
+- string extraction guidelines;
+- RTL-readiness caveat;
+- platform accessibility QA;
+- localization completion definition.
+
+The project still does not claim complete Hindi screen-by-screen localization.
+
+---
+
+## 76. Versioning, migration and store documentation added
+
+New file:
+
+`docs/releases/VERSIONING_AND_MIGRATIONS.md`
+
+Documents coordination of:
+
+- app display version 0.2.0;
+- build version 2;
+- Windows package 0.2.0.0;
+- DB schema 2;
+- backup magic FINORA01;
+- migration rules;
+- future schema-v3 workflow;
+- synthetic migration fixtures;
+- database schema vs backup compatibility;
+- semantic-version intent;
+- release tags;
+- upgrade/downgrade/rollback behavior;
+- release evidence.
+
+New file:
+
+`docs/releases/STORE_METADATA_TEMPLATE.md`
+
+Provides a store-preparation template for:
+
+- canonical product identity;
+- short/long description drafts;
+- privacy highlights;
+- prohibited/unverified claims;
+- feature bullets;
+- synthetic screenshot rules;
+- Android/Apple/Mac/Windows store preparation;
+- release notes/review notes;
+- contacts.
+
+The template explicitly states that live store policies, forms, SDK requirements, signing rules, fees, and current declarations must be verified at submission time rather than assumed from static documentation.
+
+---
+
+## 77. Documentation-aware structural preflight added
+
+`build/scripts/verify_structure.py` was expanded again during the documentation pass.
+
+It now explicitly requires the complete core documentation tree, including:
+
+- docs index/status/user guide;
+- accessibility guide;
+- architecture/schema/service/data-flow/navigation docs;
+- feature/Settings docs;
+- security/privacy docs;
+- operations docs;
+- setup/troubleshooting;
+- developer docs;
+- testing/native docs;
+- platform docs;
+- release/store/versioning docs.
+
+It also validates repository-relative Markdown file links without network access.
+
+The Markdown link check:
+
+- skips external HTTP/HTTPS/mailto/tel/data targets;
+- skips pure section anchors;
+- strips query/fragment for repository-file checks;
+- rejects repository-root escape;
+- reports missing relative targets.
+
+It intentionally does **not** claim to validate:
+
+- external URLs;
+- remote store-policy pages;
+- Markdown anchor existence;
+- C# compilation;
+- native platform behavior.
+
+Existing structural checks for money/privacy/XAML/project/version/schema/Android policy remain.
+
+---
+
+## 78. Build guide aligned to documentation and preflight
+
+`docs/setup/BUILD.md` now additionally documents:
+
+- the documentation index;
+- complete documentation/preflight checks;
+- repository-relative Markdown link validation behavior;
+- Android/Windows/Apple platform docs;
+- native validation matrix;
+- versioning/migration policy;
+- backup/recovery guide;
+- diagnostics/integrity guide;
+- testing guide;
+- store metadata template.
+
+It continues to separate structural/core verification from native target build evidence.
+
+---
+
+## 79. Changelog and project status aligned
+
+`CHANGELOG.md` now records the complete documentation pass under Unreleased, including:
+
+- documentation index/status;
+- user guide;
+- feature manuals;
+- architecture docs;
+- security/operations docs;
+- developer/testing docs;
+- platform guides;
+- versioning/store template;
+- accessibility/localization;
+- documentation-aware preflight;
+- build-guide alignment.
+
+`PROJECT_STATUS.md` now includes an explicit Documentation section marking source documentation coverage while preserving external validation caveats.
+
+It also records that structural preflight now requires the core documentation tree and local Markdown links.
+
+---
+
+## 80. Documentation pass exact pre-ledger changed-file inventory
+
+Compared with documentation-pass base `180aa293526eadfc4ad700017266f357ce22ede2`, the pre-ledger `main` was 33 commits ahead and changed/added the following files:
+
+### Existing files modified
+
+- `CHANGELOG.md`;
+- `PROJECT_STATUS.md`;
+- `build/scripts/verify_structure.py`;
+- `docs/setup/BUILD.md`.
+
+### New documentation files
+
+- `docs/README.md`;
+- `docs/DOCUMENTATION_STATUS.md`;
+- `docs/USER_GUIDE.md`;
+- `docs/accessibility/ACCESSIBILITY_AND_LOCALIZATION.md`;
+- `docs/architecture/DATA_FLOW.md`;
+- `docs/architecture/NAVIGATION_AND_UI.md`;
+- `docs/architecture/SERVICE_CATALOG.md`;
+- `docs/development/ADDING_A_FEATURE.md`;
+- `docs/development/CODE_MAP.md`;
+- `docs/development/DEVELOPER_GUIDE.md`;
+- `docs/features/ACCOUNTS_AND_TRANSACTIONS.md`;
+- `docs/features/BUDGETS_GOALS_RECURRING.md`;
+- `docs/features/REPORTS_IMPORT_EXPORT.md`;
+- `docs/features/SETTINGS_REFERENCE.md`;
+- `docs/operations/DATA_RESET_AND_SAMPLE_DATA.md`;
+- `docs/operations/DIAGNOSTICS_AND_INTEGRITY.md`;
+- `docs/platforms/ANDROID.md`;
+- `docs/platforms/APPLE.md`;
+- `docs/platforms/WINDOWS.md`;
+- `docs/releases/STORE_METADATA_TEMPLATE.md`;
+- `docs/releases/VERSIONING_AND_MIGRATIONS.md`;
+- `docs/security/APP_LOCK_AND_PRIVACY.md`;
+- `docs/security/BACKUP_AND_RECOVERY.md`;
+- `docs/testing/NATIVE_VALIDATION_MATRIX.md`;
+- `docs/testing/TESTING_GUIDE.md`.
+
+This is **25 newly added documentation files** in the documentation pass, plus four existing files aligned before the final ledger write.
+
+The final `what_changed.md` update is intentionally the final content commit after that pre-ledger inventory.
+
+---
+
+## 81. Representative documentation commit trail
+
+The documentation pass used many focused commits rather than one monolithic change.
+
+Representative messages include:
+
+- `docs: add complete documentation index`
+- `docs(user): add complete Finora user guide`
+- `docs(features): document accounts transactions and reconciliation`
+- `docs(features): document budgets goals and recurring workflows`
+- `docs(features): document reports import and export`
+- `docs(architecture): add service catalog`
+- `docs(architecture): document finance data flows`
+- `docs(architecture): document adaptive navigation and UI contracts`
+- `docs(security): document app lock privacy and screen protection`
+- `docs(security): document encrypted backup and crash recovery`
+- `docs(operations): document diagnostics and integrity tools`
+- `docs(operations): document finance reset and sample data`
+- `docs(development): add contributor developer guide`
+- `docs(development): add repository code map`
+- `docs(development): document safe feature change workflow`
+- `docs(testing): add practical testing guide`
+- `docs(testing): add native validation matrix`
+- `docs(platform): add Android engineering and QA guide`
+- `docs(platform): add Windows engineering and QA guide`
+- `docs(platform): add iOS and Mac Catalyst guide`
+- `docs(release): document versioning and migration policy`
+- `docs(release): add store metadata template`
+- `ci(preflight): require documentation tree and validate local links`
+- `docs(setup): align build guide with documentation preflight`
+- `docs: add documentation completeness matrix`
+- `docs: link documentation completeness matrix`
+- `docs(features): add settings reference`
+- `docs(accessibility): document accessibility and localization boundaries`
+- `docs: index settings and accessibility references`
+- `docs: complete documentation coverage matrix`
+- `ci(preflight): require every core documentation reference`
+- `docs(changelog): record complete documentation suite`
+- `docs(status): record complete documentation coverage`
+- `docs(status): finalize complete Finora project documentation ledger`
+
+The Git history on `main` remains the authoritative exact ordered commit list.
+
+---
+
+## 82. Git commit email handling for the documentation pass
+
+The requested commit email remains:
+
+`sanskarin@outlook.in`
+
+No connector write exposed an author/committer email override field, and there was no connector commit failure that could be solved by supplying that address through the available schema.
+
+Therefore this ledger continues to state the limitation truthfully rather than claiming the connector authored commits with that email.
+
+For local Git work, the documented configuration remains:
+
+```bash
+git config user.email "sanskarin@outlook.in"
+```
+
+---
+
+## 83. Documentation validation boundary
+
+The documentation pass used repository source/contracts/manifests/plists and the project's existing approved product boundary as its basis.
+
+No live store-policy or current external-web verification was performed because web search is unavailable in this environment.
+
+Accordingly:
+
+- static store metadata docs are templates, not live policy advice;
+- platform guides document current source + required QA, not proven native behavior;
+- external URLs are not claimed verified by the local Markdown link checker;
+- structural preflight source exists but was not locally executed from a complete checked-out repository in this connector-only workflow;
+- no `.NET` restore/build/test/native compile pass is claimed from this documentation continuation;
+- no Android/iOS/Windows/Mac Catalyst signing/device/store validation is claimed.
+
+The documentation repeatedly separates implemented source from required external evidence.
+
+---
+
+## 84. Final documentation state
+
+The current repository now has a structured documentation system covering the complete current Finora project from the perspectives needed for ongoing development and release work:
+
+- end user;
+- contributor/developer;
+- architecture maintainer;
+- database/migration maintainer;
+- security/privacy reviewer;
+- backup/recovery reviewer;
+- operations/support engineer;
+- tester/QA engineer;
+- Android engineer;
+- Windows engineer;
+- iOS/Mac Catalyst engineer;
+- accessibility/localization reviewer;
+- release/store preparer.
+
+The documentation does not erase or weaken the previously documented financial, privacy, backup, native-validation, migration, and later-version boundaries.
+
+`docs/README.md` is the documentation entry point.
+
+`docs/DOCUMENTATION_STATUS.md` is the documentation completeness/update-policy matrix.
+
+`what_changed.md` remains the cumulative detailed project ledger.
+
+No repository content should be changed after this final ledger commit in this continuation; subsequent activity should begin a new continuation and update the ledger last again.
