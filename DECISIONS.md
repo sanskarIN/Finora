@@ -163,3 +163,37 @@ Keystores, private keys, certificates, provisioning profiles containing secrets,
 ## 28. Open source license remains Apache-2.0
 
 Finora source is Apache-2.0 licensed. Third-party dependencies retain their own licenses and require exact release-time dependency/license review.
+
+## 29. User-selected calendar dates are resolved through one local-time policy
+
+A date picked in the UI represents the user's **local calendar day**, not UTC midnight. Use `LocalDateRange` to convert inclusive `DateOnly` ranges into UTC `[from, toExclusive)` boundaries before querying persisted UTC timestamps.
+
+The helper handles invalid and ambiguous local midnight transitions rather than duplicating `DateTimeKind.Local`/23:59:59 calculations in each ViewModel or report.
+
+Reason: users outside UTC must not lose or misclassify transactions near day boundaries, and daylight-saving transitions must not create hidden gaps/overlap mistakes.
+
+## 30. Dashboard periods are explicit domain policy
+
+`DashboardPeriodPolicy` is the source for current financial month, previous financial month, trailing 30/90 days, and year-to-date ranges. The financial-month start remains constrained to 1–28.
+
+Dashboard balance is a current account-state value and is not re-derived from an arbitrary selected activity period. Income, spending, net change, categories, recent history and date-sensitive budget context use the selected period.
+
+## 31. Privacy-mode money hiding applies to passive finance surfaces
+
+When `PrivacyMode` or `HideAmountsOnLaunch` is active, passive balance/history/report/budget/goal/recurring/reconciliation values must not reveal monetary magnitude.
+
+`PrivacyMoneyConverter` is the shared XAML currency-aware display path for entity rows. ViewModels that generate textual summaries use equivalent privacy-aware formatting. Quantitative report charts are hidden while amounts are hidden because bar height itself would reveal magnitude.
+
+Explicit amount-entry/edit controls may remain visible while the user is actively editing the value; the hide-amount policy is not implemented by corrupting or replacing editable finance input.
+
+## 32. Signed charts use a true zero baseline
+
+Report bar charts that can represent signed values (for example monthly/yearly net change) must draw positive values above zero and negative values below zero. Never render `abs(value)` as a positive bar for a negative net result.
+
+Text/tabular equivalents remain required independently of the chart.
+
+## 33. Report matrix is explicit and currency-aware
+
+The current report contract includes category spending, income/expense, account balance trend, budget performance, merchant/payee, monthly comparison, yearly comparison, recurring obligations and savings progress. Tag reporting remains available through the category/tag service with explicit currency scope.
+
+Current monthly/yearly comparison windows stop at the current local date rather than including future-dated imported rows. Recurring/savings/account/budget rows retain their own currencies; aggregate comparisons use the selected reporting currency.
