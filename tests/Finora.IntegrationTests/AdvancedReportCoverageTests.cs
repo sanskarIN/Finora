@@ -105,14 +105,15 @@ public sealed class AdvancedReportCoverageTests : IAsyncLifetime
     [Fact]
     public async Task YearlyComparison_SeparatesCurrentAndPreviousCalendarYears()
     {
-        var currentYear = DateTime.Today.Year;
+        var today = DateTime.Today;
+        var currentYear = today.Year;
         await _store.SaveTransactionAsync(new FinanceTransaction
         {
             Type = TransactionType.Income,
             AmountMinor = 10_000,
             Currency = "INR",
             AccountId = _account.Id,
-            OccurredAtUtc = LocalNoonUtc(currentYear, 1, 15)
+            OccurredAtUtc = LocalNoonUtc(today.Year, today.Month, today.Day)
         });
         await _store.SaveTransactionAsync(new FinanceTransaction
         {
