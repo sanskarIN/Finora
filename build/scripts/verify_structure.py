@@ -28,8 +28,10 @@ CLASS_PATTERN = re.compile(r'x:Class\s*=\s*"([A-Za-z_][A-Za-z0-9_.]*)"')
 MONEY_WORDS = r"(?:Amount|Balance|Limit|Target|Starting|Contribution|Paid|Price|Cost|Income|Expense|Budget|Net|Minor)"
 DOCUMENTATION_PATHS = [
     "docs/README.md",
+    "docs/DOCUMENTATION_STATUS.md",
     "docs/USER_GUIDE.md",
     "docs/TEST_PLAN.md",
+    "docs/accessibility/ACCESSIBILITY_AND_LOCALIZATION.md",
     "docs/architecture/OVERVIEW.md",
     "docs/architecture/DATABASE_SCHEMA.md",
     "docs/architecture/SERVICE_CATALOG.md",
@@ -38,6 +40,7 @@ DOCUMENTATION_PATHS = [
     "docs/features/ACCOUNTS_AND_TRANSACTIONS.md",
     "docs/features/BUDGETS_GOALS_RECURRING.md",
     "docs/features/REPORTS_IMPORT_EXPORT.md",
+    "docs/features/SETTINGS_REFERENCE.md",
     "docs/security/THREAT_MODEL.md",
     "docs/security/APP_LOCK_AND_PRIVACY.md",
     "docs/security/BACKUP_AND_RECOVERY.md",
