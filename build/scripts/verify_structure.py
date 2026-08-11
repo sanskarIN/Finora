@@ -223,14 +223,22 @@ def check_schema_consistency(errors: list[str]) -> None:
 
 def check_money_representation(errors: list[str]) -> None:
     domain_root = ROOT / "src/Finora.Domain"
-    if not domain_root.exists():
-        return
-    money_type_pattern = re.compile(rf"\b(?:double|float)\b[^;\n]*\b{MONEY_WORDS}\w*\b|\b{MONEY_WORDS}\w*\b[^;\n]*\b(?:double|float)\b", re.IGNORECASE)
-    for path in domain_root.rglob("*.cs"):
-        text = read(path)
-        for line_number, line in enumerate(text.splitlines(), start=1):
-            if money_type_pattern.search(line):
-                errors.append(f"{rel(path)}:{line_number}: floating-point type appears to represent a monetary value")
+    if domain_root.exists():
+        money_type_pattern = re.compile(rf"\b(?:double|float)\b[^;\n]*\b{MONEY_WORDS}\w*\b|\b{MONEY_WORDS}\w*\b[^;\n]*\b(?:double|float)\b", re.IGNORECASE)
+        for path in domain_root.rglob("*.cs"):
+            text = read(path)
+            for line_number, line in enumerate(text.splitlines(), start=1):
+                if money_type_pattern.search(line):
+                    errors.append(f"{rel(path)}:{line_number}: floating-point type appears to represent a monetary value")
+
+    app_pages = ROOT / "src/Finora.App/Pages"
+    raw_minor_display = re.compile(r"Binding\s+\w*Minor\b[^\n>]{0,220}StringFormat\s*=\s*['\"][^'\"]*\bminor\b", re.IGNORECASE)
+    raw_minor_display_reversed = re.compile(r"StringFormat\s*=\s*['\"][^'\"]*\bminor\b[^\n>]{0,220}Binding\s+\w*Minor\b", re.IGNORECASE)
+    if app_pages.exists():
+        for path in app_pages.rglob("*.xaml"):
+            text = read(path)
+            if raw_minor_display.search(text) or raw_minor_display_reversed.search(text):
+                errors.append(f"{rel(path)}: stored minor-unit values must be converted to currency-aware user-facing money, not labeled as raw minor units")
 
 
 def _assert_android_rule_domains(path: Path, errors: list[str]) -> None:
@@ -308,7 +316,7 @@ def main() -> int:
         return 1
 
     print(f"Finora structural preflight passed: {len(paths)} text/source files checked.")
-    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
+    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation/display, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
     print("This is not a compiler, analyzer, test runner, emulator, simulator, signing, or store-validation substitute.")
     return 0
 
