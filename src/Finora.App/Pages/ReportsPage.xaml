@@ -4,25 +4,25 @@
     <Label Text="Reports" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><DatePicker Date="{Binding FromDate}" SemanticProperties.Description="Report start date" /><DatePicker Grid.Column="1" Date="{Binding ToDate}" SemanticProperties.Description="Report end date" /></Grid>
     <Button Text="Refresh reports" Command="{Binding RefreshCommand}" />
-    <Label Text="{Binding ReportingCurrencyNotice}" FontSize="12" SemanticProperties.Description="Reporting currency and multi-currency behavior" />
+    <Label Text="{Binding ReportingCurrencyNotice}" FontSize="12" SemanticProperties.Description="Reporting currency, privacy, and multi-currency behavior" />
     <Border Style="{StaticResource Card}"><Label Text="{Binding Summary}" SemanticProperties.LiveSetting="Polite" /></Border>
 
     <Label Text="Spending by category" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <local:ReportBarChartView ItemsSource="{Binding CategoryPoints}" SemanticProperties.Description="{Binding CategorySummary}" />
+    <local:ReportBarChartView ItemsSource="{Binding CategoryPoints}" IsVisible="{Binding AmountsVisible}" SemanticProperties.Description="{Binding CategorySummary}" />
     <Label Text="{Binding CategorySummary}" />
 
     <Label Text="Income versus expense" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <local:ReportBarChartView ItemsSource="{Binding IncomeExpensePoints}" SemanticProperties.Description="{Binding IncomeExpenseSummary}" />
+    <local:ReportBarChartView ItemsSource="{Binding IncomeExpensePoints}" IsVisible="{Binding AmountsVisible}" SemanticProperties.Description="{Binding IncomeExpenseSummary}" />
     <Label Text="{Binding IncomeExpenseSummary}" />
 
     <Label Text="12-month net-change comparison" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <local:ReportBarChartView ItemsSource="{Binding MonthlyNetPoints}" SemanticProperties.Description="Monthly net-change comparison chart; equivalent values follow in a list" />
+    <local:ReportBarChartView ItemsSource="{Binding MonthlyNetPoints}" IsVisible="{Binding AmountsVisible}" SemanticProperties.Description="Monthly net-change comparison chart; equivalent values follow in a list" />
     <CollectionView ItemsSource="{Binding MonthlyNetRows}" HeightRequest="180" EmptyView="No monthly comparison data.">
       <CollectionView.ItemTemplate><DataTemplate><Grid Padding="6" ColumnDefinitions="*,Auto"><Label Text="{Binding Label}" /><Label Grid.Column="1" Text="{Binding Amount}" /></Grid></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
 
     <Label Text="5-year net-change comparison" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <local:ReportBarChartView ItemsSource="{Binding YearlyNetPoints}" SemanticProperties.Description="Yearly net-change comparison chart; equivalent values follow in a list" />
+    <local:ReportBarChartView ItemsSource="{Binding YearlyNetPoints}" IsVisible="{Binding AmountsVisible}" SemanticProperties.Description="Yearly net-change comparison chart; equivalent values follow in a list" />
     <CollectionView ItemsSource="{Binding YearlyNetRows}" HeightRequest="150" EmptyView="No yearly comparison data.">
       <CollectionView.ItemTemplate><DataTemplate><Grid Padding="6" ColumnDefinitions="*,Auto"><Label Text="{Binding Label}" /><Label Grid.Column="1" Text="{Binding Amount}" /></Grid></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
@@ -53,7 +53,7 @@
     </CollectionView>
 
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Export CSV" Clicked="OnExportCsvClicked" /><Button Grid.Column="1" Text="Export PDF" Clicked="OnExportPdfClicked" /></Grid>
-    <Label Text="Every chart is accompanied by equivalent text or tabular values for screen-reader access and uses a zero baseline for magnitude bars." FontSize="12" />
+    <Label Text="Quantitative charts are hidden when privacy mode hides amounts. Otherwise, every chart has equivalent text or tabular values and signed charts use a true zero baseline." FontSize="12" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
