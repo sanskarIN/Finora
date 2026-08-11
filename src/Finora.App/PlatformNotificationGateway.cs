@@ -89,9 +89,16 @@ public sealed class PlatformNotificationGateway : IPlatformNotificationGateway
     {
         cancellationToken.ThrowIfCancellationRequested();
 #if ANDROID
-        var context = Android.App.Application.Context; var intent = new Intent(context, typeof(FinoraReminderReceiver)); intent.SetAction($"in.sanskar.finora.REMINDER.{reminderId:N}");
-        var pending = PendingIntent.GetBroadcast(context, RequestCode(reminderId), intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable); var alarm = (AlarmManager?)context.GetSystemService(Context.AlarmService);
-        if (pending is not null) alarm?.Cancel(pending); pending?.Cancel();
+        var context = Android.App.Application.Context;
+        var intent = new Intent(context, typeof(FinoraReminderReceiver));
+        intent.SetAction($"in.sanskar.finora.REMINDER.{reminderId:N}");
+        var pending = PendingIntent.GetBroadcast(context, RequestCode(reminderId), intent, PendingIntentFlags.NoCreate | PendingIntentFlags.Immutable);
+        if (pending is not null)
+        {
+            var alarm = (AlarmManager?)context.GetSystemService(Context.AlarmService);
+            alarm?.Cancel(pending);
+            pending.Cancel();
+        }
 #elif IOS || MACCATALYST
         UNUserNotificationCenter.Current.RemovePendingNotificationRequests([reminderId.ToString("N")]);
 #elif WINDOWS
