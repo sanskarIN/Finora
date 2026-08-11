@@ -200,8 +200,7 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone).DateTime);
         var thisMonth = new DateOnly(today.Year, today.Month, 1);
         var startMonth = thisMonth.AddMonths(-(months - 1));
-        var endMonth = thisMonth.AddMonths(1).AddDays(-1);
-        var utcRange = LocalDateRange.ToUtc(startMonth, endMonth, timeZone);
+        var utcRange = LocalDateRange.ToUtc(startMonth, today, timeZone);
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var rows = await db.Transactions.AsNoTracking()
             .Where(x => !x.IsDeleted && x.Currency == currency && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc && x.Type != TransactionType.Transfer)
@@ -234,7 +233,7 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
         var timeZone = TimeZoneInfo.Local;
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone).DateTime);
         var firstYear = today.Year - (years - 1);
-        var utcRange = LocalDateRange.ToUtc(new DateOnly(firstYear, 1, 1), new DateOnly(today.Year, 12, 31), timeZone);
+        var utcRange = LocalDateRange.ToUtc(new DateOnly(firstYear, 1, 1), today, timeZone);
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var rows = await db.Transactions.AsNoTracking()
             .Where(x => !x.IsDeleted && x.Currency == currency && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc && x.Type != TransactionType.Transfer)
