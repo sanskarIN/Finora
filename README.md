@@ -1,381 +1,463 @@
 # Finora
 
-> A local-first personal finance application built with .NET MAUI, C#, XAML, SQLite/EF Core, and MVVM.
+**Finora** is an open-source, local-first personal finance application built with .NET MAUI, C#, XAML, SQLite/Entity Framework Core, and MVVM-oriented presentation architecture.
 
-**Made by the Sanskar**
+> **Made by the Sanskar**
 
-Current source line: **Finora 0.2.0 (build 2)**  
+Current source version: **0.2.0 (build 2)**  
 Current database schema: **2**
 
-## Product principles
+Finora's current product model requires no Finora account, login, email address, phone number, subscription account, or internet connection for core finance functionality. Financial records remain on the user's device unless the user explicitly imports, exports, shares, or saves an encrypted backup.
 
-Finora's current release is intentionally local-first:
+## Product goals
 
-- no Finora account/login required;
-- core finance workflows work without internet;
-- no automatic cloud sync;
-- no automatic backup upload;
-- no analytics/advertising telemetry dependency;
-- no background location collection;
-- manually entered transaction location only;
-- user-triggered encrypted backups;
-- Android ordinary automatic backup/device-transfer paths are explicitly excluded;
-- money stored/calculated as signed integer minor units with decimal major-unit conversion;
-- no implicit FX conversion or exchange-rate lookup.
+Finora is designed to help users:
 
-## Current target platforms
+- record income, expenses, refunds, adjustments, and transfers;
+- understand balances, cash flow, spending, and budget performance;
+- manage categories, subcategories, and tags;
+- create budgets and warning thresholds;
+- track savings goals and contributions;
+- manage recurring obligations and reminders;
+- reconcile account statements;
+- attach local receipt/document files;
+- import CSV files through mapping/preview/validation;
+- export finance records to CSV/PDF;
+- create encrypted backups and restore them safely;
+- keep working fully offline without an account requirement.
 
-The MAUI app source targets:
+## Current source highlights
 
-- Android;
-- iOS;
-- Mac Catalyst;
-- Windows.
+### Local-first privacy
 
-Native release validation still requires the corresponding .NET/MAUI workloads, Apple Xcode host for Apple targets, signing/provisioning, emulators/simulators/physical devices and store checks. Source presence is not a claim that those release gates have passed.
+- No mandatory login/account creation.
+- No automatic cloud synchronization or backup upload.
+- No required analytics/advertising telemetry service.
+- Manual-only transaction location text; no background location collection.
+- Explicit system picker/share/save boundaries for import/export/backup/receipts.
+- Android source explicitly disables ordinary app backup and ships cloud/device-transfer exclusion rules for private app data.
+- Uninstall/reset can remove local data, so users should save a verified external encrypted backup when needed.
 
-## Architecture
+### Privacy-mode amount hiding
 
-```text
-Finora.App
-  ↓
-Finora.Application + Finora.Infrastructure
-  ↓
-Finora.Domain
-  ↓
-Finora.Shared
-```
+`PrivacyMode` and `HideAmountsOnLaunch` are display controls; they do not rewrite stored finance data.
 
-Projects:
+Passive monetary surfaces use currency-aware hidden-money behavior across:
 
-```text
-src/Finora.Shared
-src/Finora.Domain
-src/Finora.Application
-src/Finora.Infrastructure
-src/Finora.App
+- Dashboard;
+- account list/detail/history;
+- transaction history and Transaction Tools;
+- transaction-detail split display;
+- budget cards;
+- savings cards and contribution forecast;
+- recurring rules and occurrences;
+- reconciliation preview/history;
+- Reports rows.
 
-tests/Finora.UnitTests
-tests/Finora.IntegrationTests
-tests/Finora.UiTests
-```
-
-## Finance capabilities implemented in source
+When amounts are hidden, quantitative report charts are also hidden because bar height would otherwise reveal monetary magnitude. Explicit amount input/edit controls remain editable when the user intentionally edits money.
 
 ### Accounts and transfers
 
-- Cash, bank, credit-card, wallet, savings, investment-placeholder and custom account types.
-- Opening/current balances and account state.
-- Credit-card limit/billing day metadata.
-- Account archive/restore and detail history.
-- Same-currency atomic paired transfers.
-- Explicit prevention of unsupported implicit cross-currency transfers.
-- Account currency change blocked after financial/recurring dependencies exist.
-- Active recurrence dependencies block account archival until paused/completed/archived.
+- Cash, bank, credit card, digital wallet, savings, investment-placeholder, and custom account types.
+- Name/icon/color/currency/opening/current balance.
+- Active/hidden/archived states.
+- Credit limit and billing day 1–31 metadata.
+- Account detail/history, edit/archive/restore.
+- Currency-aware account amount formatting, including non-two-decimal currencies.
+- Same-currency linked transfer pairs.
+- Account reconciliation preview/history with explicit adjustment option.
+- Reconciled opening-balance protection.
+- Account currency cannot change after financial/recurring dependencies exist.
+- Active recurring dependencies block account archival until paused/completed/archived.
 
 ### Transactions
 
-- Expense, income, refund and adjustment quick-add.
-- Decimal-only calculator.
-- Account/category/date/time/merchant/payee/payment-method/manual-location/note fields.
-- Advanced text/account/category/type/date filtering.
-- Detailed edits with privacy-safe revision snapshots.
-- Bulk categorization.
-- Duplicate-candidate review without automatic deletion.
-- Splits and tags.
-- Receipt/document attachments.
+- Expense, income, transfer, refund, and adjustment.
+- Decimal-safe amount entry and calculator.
+- Account/category/date/time/merchant-payee/note/tags/payment method/manual location.
+- Split transactions with sign/total/category validation.
+- Search and account/category/type/date/text filters.
+- Deterministic sort choices: newest, oldest, amount high-to-low, amount low-to-high, merchant A–Z.
+- Bounded 50-row history display with explicit **Load more** behavior.
+- Shared local-calendar date-range policy for advanced filters and Transaction Tools.
+- Transaction detail/edit workflow with currency-specific edit precision.
+- Transaction revision history for critical edits.
 - Soft delete/restore.
-- Selected/all CSV and PDF export.
-- Linked-transfer editing preserves both sides.
+- Bulk categorization and duplicate review without automatic deletion.
+- Receipt/document attachment lifecycle.
+- Selected/all CSV and PDF export paths.
+
+### Money and currency correctness
+
+Finora stores money as signed 64-bit integer **minor units** plus currency code. User-entered major-unit text is handled with `decimal`; known currency precision supports 0-/2-/3-/4-decimal conventions where configured rather than assuming two decimals universally.
+
+- zero and `long.MinValue` persisted transaction amounts are rejected;
+- Expense uses negative minor units;
+- Income/Refund use positive minor units;
+- transfer pairs are equal/opposite and same-currency;
+- split sums/signs must match parent transaction;
+- persistence-boundary validation protects tracked EF writes;
+- reporting uses checked arithmetic;
+- passive UI money is formatted through currency-aware `Money` semantics instead of labeling stored minor units directly.
+
+Finora does **not** invent exchange rates. Dashboard/report/tag aggregate totals are scoped to an explicit reporting currency. Other-currency rows retain their own currency.
+
+### Local calendar and UTC persistence
+
+Transactions persist UTC timestamps, but user-selected dates mean local calendar days.
+
+`LocalDateRange` converts inclusive local dates into UTC `[fromUtc, toExclusiveUtc)` boundaries and centralizes invalid/ambiguous midnight handling. The policy is reused by Dashboard periods, Reports, transaction filters/tools, reconciliation statement-date boundaries, budget report windows, and account trend calculations where local calendar meaning matters.
+
+This avoids common UTC-midnight and `23:59:59` boundary mistakes for users outside UTC and around daylight-saving transitions.
 
 ### Categories and tags
 
-- Category/subcategory hierarchy.
-- Cycle prevention.
-- Reorder/archive/restore/merge/reassign workflows.
-- Subcategory-budget hierarchy protection during mutation.
-- Tag create/update/archive/restore.
-- Currency-scoped tag reporting.
-
-### Reconciliation
-
-- Statement/book preview.
-- Explicit difference.
-- Optional adjustment transaction.
-- Persisted reconciliation history.
-- Checked reconciliation arithmetic.
-- Opening balance protected after reconciliation history exists.
+- Default categories.
+- User categories and subcategories.
+- Reorder/archive/restore.
+- Safe reassignment/merge.
+- Parent-cycle prevention.
+- Subcategory-budget-safe category reassignment.
+- Tag creation/archive/restore.
+- Tag reports require explicit currency scope so unlike currencies cannot be mixed silently.
 
 ### Budgets
 
 - Overall/category/subcategory budgets.
 - Weekly/monthly/custom cadence.
-- Explicit custom periods.
-- Warning threshold and optional rollover.
-- Recursive descendant-category and split-aware actuals.
-- Central period policy prevents overlap and makes custom budgets inactive outside explicit windows.
-- Effective rollover plan must remain positive.
-- Explicit-period replacement is transactional.
+- Shared `BudgetPeriodPolicy` used by store/report paths.
+- Weekly Monday–Sunday windows.
+- Calendar-month windows.
+- Custom budgets require explicit non-overlapping periods and are inactive outside those periods.
+- Rollover applies only when enabled; effective planned value uses checked arithmetic and must remain positive.
+- Warning threshold calculation is overflow-safe.
+- Recursive category descendants and transaction splits are included correctly.
+- Explicit-period replacement has a transactional rollback path/regression coverage.
+- Passive planned/actual values honor privacy and currency formatting.
 
 ### Savings goals
 
-- Target/starting values, target date, icon/note.
-- Contributions/withdrawals.
-- Optional linked transaction.
+- Target/starting amount and optional target date.
+- Notes/icon.
+- Contributions and withdrawals.
+- Optional linked account transaction.
 - Running progress cannot fall below zero.
-- Linked transaction must use goal currency.
-- Forecast/milestone/completion state.
-- New goals initialize completion from starting progress; startup safely repairs stale derived completion flags from earlier source behavior when history validates.
+- Linked transaction currency must match goal.
+- Forecast/milestones/completion state.
+- Reduced-motion-aware completion messaging.
+- Goal cards and forecast amount respect privacy/hide-on-launch.
+- Startup can repair a stale derived completion flag only when underlying goal history validates.
 
 ### Recurring items
 
-- Expense/income/transfer/refund templates.
-- Daily/weekly/monthly/yearly/custom intervals.
-- Source/destination accounts, category, amount, merchant/payee, note, date range, grace/reminder lead.
-- Persisted pending occurrences before financial transaction creation.
-- Paid, partially paid, skipped, postponed and reopened states.
-- Generated transaction linkage.
-- Recurring transfers create linked transfer pairs.
-- Pause/resume/archive lifecycle.
-- Resume revalidates account/category/currency/end-date dependencies.
-- Paid history can retain a valid historical postponed date.
+- Daily/weekly/monthly/yearly/custom interval.
+- Expense/income/transfer/refund template support.
+- Start/end date, grace period, reminder lead time.
+- Persisted unique occurrence state.
+- Paid/partial-paid/skipped/postponed/reopened occurrence actions.
+- Idempotent processing so repeated startup/scheduler runs do not create duplicate occurrences.
+- Bounded recurrence backlog processing.
+- Generated-payment and recurring-transfer link validation.
+- Rule Pause / Resume / Archive lifecycle.
+- Paused rules stop generation; resume revalidates end date/account/category/currency dependencies.
+- Archived rules retain occurrence history but disappear from active rule lists.
+- Reminder synchronization cancels stale recurring schedules.
+- Recurring monetary rows retain their own currency and respect privacy mode.
 
-## Dashboard and reports
+### Dashboard
 
-Dashboard cards can include:
+Dashboard cards are configurable and currency-scoped. The current source includes:
 
-- balance;
-- income/spending/net;
+- current balance;
+- income/spending/net change;
 - remaining budget;
-- upcoming recurring;
-- top categories;
+- upcoming recurring items;
+- top spending categories;
 - savings goals;
 - recent transactions;
-- six-month cash flow.
+- cash-flow trend;
+- privacy mode;
+- explicit reporting-currency explanation.
 
-Privacy mode can hide amounts. Aggregate dashboard/report values are currency-scoped; other-currency rows retain their own currency rather than being silently converted or added together.
+Dashboard now supports selectable activity periods through `DashboardPeriodPolicy`:
 
-Advanced reports include:
+- current financial month;
+- previous financial month;
+- last 30 days;
+- last 90 days;
+- year to date.
 
-- category spending;
-- income vs expense;
-- account balance trend;
+The financial-month start is configurable from day 1–28. Current balance remains a current account-state value; activity cards use the selected period. The Dashboard does not call the legacy mixed-currency aggregate API.
+
+### Reports
+
+Current report source includes:
+
+- spending by category;
+- income versus expense;
+- account balance trends;
 - budget performance;
-- merchant/payee;
-- monthly comparison;
-- tag report.
+- merchant/payee report;
+- 12-month comparison;
+- 5-year/yearly comparison;
+- recurring-obligation report;
+- savings-progress report;
+- tag reporting through category/tag services with explicit currency scope.
 
-The chart surface includes a textual/tabular equivalent.
+Monthly/yearly current comparisons use local calendar grouping and stop at today, so future-dated imported rows are not included before their local date arrives.
 
-## CSV import and export
+Charts use dependency-free MAUI `GraphicsView` rendering and always have text/tabular equivalents. Signed net-change charts use a true zero baseline: positive values render above zero and negative values below zero. Quantitative charts are suppressed while amounts are hidden by privacy settings.
 
-Mapped CSV import provides:
+### CSV import
 
-- column mapping/preview;
-- required Date/Type/Amount/Account fields;
-- optional Currency/Category/Merchant/Note/Payment Method/Location/Transfer Group/Counterparty/Tags;
-- major/minor amount-unit modes;
-- currency-aware decimal conversion;
-- fallback account;
-- optional category creation;
-- duplicate protection including same-batch duplicates;
-- transfer-pair/counterparty validation;
-- 50 MB / 100k row limits;
-- UTF-8 validation;
-- transactional import.
+- System file picker.
+- Detected headers and explicit mapping.
+- Required date/type/amount/account fields plus optional currency/category/merchant/note/payment method/location/transfer group/counterparty/tags.
+- Currency-specific major-versus-minor-unit handling.
+- Decimal-safe conversion.
+- UTF-8 validation.
+- File/row limits.
+- Quoted-field parsing.
+- Account/category/tag resolution.
+- Duplicate protection including duplicates within one import batch.
+- Transfer-group/counterparty validation.
+- `long.MinValue` protection.
+- Transactional commit and explicit row errors.
 
-Export supports CSV and dependency-free multipage PDF.
+### Receipts and attachments
 
-## Receipt and private-file safety
+- App-private local storage.
+- Sanitized/generated internal filenames.
+- Canonical path confinement with platform-correct case sensitivity.
+- Symbolic-link/reparse-point rejection across attachment/backup/recovery/integrity paths.
+- Image/PDF content-type allow-list.
+- Per-file size limit.
+- Asynchronous copy.
+- SHA-256 checksum and byte-size metadata.
+- Open/delete/storage-usage/orphan-cleanup workflow.
+- Receipt bytes included in encrypted backups.
 
-Receipt files are stored under Finora app-private storage with:
+### Encrypted backup and restore
 
-- safe generated internal filenames;
-- JPEG/PNG/WebP/HEIC/HEIF/PDF allowlist;
-- 20 MB/file limit;
-- byte-size + SHA-256 metadata;
-- list/open/delete/storage-usage/orphan cleanup;
-- canonical path confinement using platform-correct comparison;
-- symbolic-link/reparse-point traversal rejection;
-- no-link traversal shared by attachment cleanup, backup/restore/recovery and integrity diagnostics.
+- Explicit user-created backup only; no automatic upload.
+- PBKDF2-SHA256 password-derived key with random salt.
+- AES-GCM authenticated encryption with random nonce/tag.
+- Schema metadata/preview.
+- Receipt path/size/checksum/link verification.
+- Complete financial-graph validation before encryption and after authenticated decryption.
+- Validation covers IDs, account/currency links, transfers, splits, categories/tags, budgets/periods, goals/contributions, recurrence, attachments, revisions, reconciliation, notification metadata, and settings boundaries.
+- Internal restore markers/settings are not imported from snapshot settings.
+- Sensitive plaintext/receipt buffers are cleared as early as practical after use/failure.
+- Crash-safe restore operation gate, durable journal, database commit marker, startup recovery, attachment rollback/finalization, and orphan staging cleanup.
+- Wrong/tampered/truncated/incompatible/semantically-invalid backups are rejected.
+- Settings backup-password entry is masked and cleared from UI after operation.
 
-## Backup and restore
+Finora cannot recover a forgotten backup password.
 
-Encrypted local backups are user-triggered only.
+### App lock and privacy controls
 
-Crypto:
+- Optional 4–12 digit PIN.
+- Random-salt PBKDF2-SHA256 verifier.
+- OS secure storage for small verifier/security values.
+- Explicit PIN-enabled marker distinguishes temporary provider failure from readable missing/corrupt verifier state.
+- Temporary secure-storage provider failure fails closed.
+- Readable missing/corrupt verifier can clear stale marker rather than permanently trapping app behind nonexistent verifier.
+- Escalating bounded local lockout.
+- Configurable inactivity auto-lock.
+- Optional biometric/Windows Hello with PIN fallback.
+- Android biometric provider error text is not forwarded verbatim to user-visible Results.
+- Privacy mode/hide amounts.
+- Platform sensitive-screen protection where supported.
+- Apple Face ID purpose text included where required.
+- Platform limitations documented rather than represented as universal screenshot blocking.
 
-- PBKDF2-SHA256 with random salt;
-- 210,000 iterations;
-- AES-GCM with random nonce/tag;
-- authenticated Finora format magic.
+### Local reminders
 
-Backup/restore validates:
+- Local notification scheduling only after permission where applicable.
+- Persisted schedule/dedupe state.
+- Backup, budget, and recurring-item reminder coordination.
+- Android, Apple, and Windows platform source paths.
+- Generic privacy-safe notification text.
+- Stale backup/budget/recurrence schedules removed when source state no longer needs them.
+- Deduplicated replacement schedules the new native reminder before committing replacement state and only then cancels stale native ID.
+- Failed replacement preserves prior enabled reminder.
+- Android cancellation looks up an existing immutable `PendingIntent` with `NoCreate` rather than creating a cancellation artifact.
 
-- size/magic/schema;
-- authenticated decryption;
-- unique IDs;
-- full supported finance graph relationships;
-- schema-v2 metadata Domain rules;
-- attachment path/size/hash;
-- symbolic-link/reparse-point confinement;
-- custom-budget periods;
-- account/transaction currency relations;
-- transfers/splits/categories/tags;
-- goals/contributions;
-- recurrence state;
-- reconciliation links;
-- notification/settings boundaries.
+### Diagnostics and integrity
 
-Restore uses staged receipt files, database transaction, filesystem rollback, and a durable crash-recovery journal/commit marker. Startup recovers interrupted restore state before finance navigation.
+- Privacy logger stores sanitized event/type tokens rather than private finance payloads.
+- Bounded/rotated local diagnostic log and sanitized export.
+- Linked/reparse diagnostic paths are rejected.
+- Bound infrastructure errors and user alerts avoid raw filesystem/database/crypto/provider messages.
+- Hidden developer integrity checker covers:
+  - SQLite integrity and foreign keys;
+  - transaction values/account/currency state;
+  - transfer pairing;
+  - split signs/totals;
+  - category cycles;
+  - budgets/custom periods/category relations;
+  - savings goal/contribution/link/completion state;
+  - recurrence dependencies/occurrence payment state;
+  - reconciliation arithmetic/adjustment links;
+  - receipt path/presence/size/SHA-256/link state.
+- Integrity export contains health codes/counts rather than account names, merchants, notes, amounts, or receipt contents.
 
-Plaintext/receipt byte buffers are cleared as early as managed APIs permit, including accumulated receipt buffers on later-file/query/validation failure. UI-side encrypted backup bytes are also cleared after write/share handling.
+### Adaptive UI, localization and accessibility
 
-## Privacy and security
+- Mobile bottom-tab navigation.
+- Tablet/desktop flyout/sidebar navigation.
+- Runtime adaptive switching with primary-section preservation.
+- Onboarding/unlock route through adaptive root.
+- Runtime locale normalization/application and number/date format preview.
+- English resource baseline plus initial Hindi common-string resource structure.
+- Light/dark/system theme.
+- Reduced-motion and larger-interface settings.
+- Accessible report text equivalents.
+- Accessible recurring-rule lifecycle controls.
+- Accessible Dashboard period selection, transaction sort/load-more, Settings security/destructive/About controls, and Onboarding Privacy/Terms controls in source.
 
-### App lock
+Full screen-by-screen Hindi localization and final native accessibility validation are not represented as complete.
 
-- 4–12 ASCII-digit PIN.
-- PBKDF2 verifier + random salt.
-- OS secure storage.
-- Fixed-time verification.
-- Escalating lockout.
-- Inactivity auto-lock.
-- Biometric/Windows Hello where supported, with PIN fallback.
-- Secure-storage provider failure fails closed when explicit lock marker exists.
-- Readable missing/corrupt verifier clears stale marker to avoid permanent lock-screen trap.
+### Settings, onboarding and developer tools
 
-Backup password/new PIN/confirm PIN Settings fields are masked and cleared after use; lock-screen PIN is masked and cleared after attempts.
+Settings includes:
 
-### Screen privacy
+- default currency/locale/financial month start;
+- privacy/hide amounts;
+- theme, reduced motion, larger interface;
+- default account/transaction type;
+- notifications/backup reminders;
+- receipt quality/storage;
+- auto lock/biometric/sensitive-screen preferences;
+- Dashboard cards;
+- local premium demo flag (explicitly non-tamper-proof);
+- hidden developer panel;
+- reminder sync;
+- expanded local integrity checker;
+- typed destructive full-finance reset through dedicated complete reset service;
+- typed deterministic synthetic sample-data reset;
+- masked backup password/PIN fields;
+- Revisit onboarding control.
 
-- Privacy mode / hide amounts.
-- Android secure-window protection.
-- Windows display-affinity protection where supported.
-- Platform limitations are documented rather than claiming universal screenshot prevention.
+Onboarding explains local-first/no-account/no-automatic-upload behavior, currency/locale/financial month, optional opening balance and explicit sample-data opt-in. It exposes Privacy and Terms access and can be revisited safely when accounts already exist.
 
-### Android automatic backup/device transfer
+About uses packaged `AppInfo` version/build metadata and exposes:
 
-Android source keeps:
+- **Made by the Sanskar**;
+- .NET MAUI / C# / XAML / SQLite / MVVM technology summary;
+- repository and creator GitHub profile;
+- business/security and support contacts;
+- Apache-2.0 license/notices;
+- Privacy and Terms;
+- Contributing, Security and Support guides.
 
-- `android:allowBackup="false"`;
-- legacy `backup_rules.xml` excluding root/file/database/shared preferences/external domains;
-- Android 12+ `data_extraction_rules.xml` excluding the same domains from cloud backup and device transfer;
-- `android:usesCleartextTraffic="false"`.
+### Temporary share artifacts
 
-Final packaged/physical-device behavior remains a release validation gate.
+Generated CSV/PDF/backup/integrity-report share copies are cache artifacts, not durable records. Startup best-effort cleanup targets only known Finora share-copy names older than a 24-hour grace period while preserving fresh, unrelated, and diagnostic files. File links are removed as links rather than traversed to targets.
 
-### Diagnostics
+## Architecture
 
-Privacy logger stores only sanitized event/type tokens. It ignores arbitrary caller properties and does not serialize exception messages/stacks. Diagnostic paths reject link/reparse traversal and the log is bounded/rotated.
+```text
+src/
+  Finora.App/                 # .NET MAUI UI, resources, platform integrations
+  Finora.Domain/              # Entities, money/domain rules, dashboard/budget policies
+  Finora.Application/         # Use-case/report contracts and DTOs
+  Finora.Infrastructure/      # SQLite, files, reports, backup, import/export, diagnostics
+  Finora.Shared/              # Shared constants/primitives/local-date policy
 
-Bound ViewModel infrastructure errors and primary Settings/Reports alerts use generic messages rather than raw filesystem/database/crypto/provider details. Unexpected `AsyncCommand` failures are contained and routed to the privacy logger.
+tests/
+  Finora.UnitTests/
+  Finora.IntegrationTests/
+  Finora.UiTests/
 
-The developer integrity report contains counts/codes rather than private finance contents.
+docs/
+  architecture/
+  branding/
+  privacy/
+  releases/
+  security/
+  setup/
 
-## Local notifications
-
-Local reminders are permission-gated and use generic privacy-safe text.
-
-Implemented gateways cover Android, Apple platforms and Windows. Reminder synchronization handles weekly backup, budget threshold and recurring rules.
-
-Deduplicated replacement is failure-safe: the new OS reminder is accepted before database replacement; old rows are disabled transactionally; stale OS reminders are cancelled afterward. Failed replacement preserves the prior enabled reminder.
-
-## Temporary share files
-
-User-requested CSV/PDF exports, encrypted backup share copies and integrity-report share copies can exist temporarily in Finora cache. On serialized startup, Finora best-effort deletes only known matching share-copy files older than 24 hours. Fresh files, unrelated cache files and diagnostic logs are preserved.
-
-Copies explicitly saved/shared into another application/location are controlled by that destination.
-
-## Data integrity and persistence boundary
-
-Finora validates finance data through several layers:
-
-1. Domain/entity rules.
-2. EF `SaveChanges` structural validation for Added/Modified schema-v2 entities.
-3. SQLite foreign keys/unique indexes.
-4. Application/infrastructure relationship and atomic workflow checks.
-5. Authenticated backup graph validation.
-6. Local data-integrity diagnostics.
-7. Safe startup normalization of derived savings completion state only when underlying history validates.
-8. Automated tests and native release QA.
-
-The integrity service checks SQLite/foreign keys, account/currency relations, transactions, transfers, splits, category hierarchy, budgets, goal histories, recurrence state, reconciliations and receipt metadata/files.
-
-## Accessibility and adaptive UI
-
-Current source includes:
-
-- phone bottom tabs and tablet/desktop flyout hierarchy;
-- system/light/dark theme;
-- larger-interface option;
-- reduced-motion preference;
-- textual chart equivalent;
-- semantic descriptions on key security/recurring/settings surfaces;
-- lock-screen heading/status/PIN/biometric accessibility metadata.
-
-Native TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast validation is still required before store-ready status.
-
-## Synthetic developer data
-
-Hidden developer controls can reset to deterministic synthetic sample data after typed confirmation. Sample data is opt-in and must never be confused with user finance history.
-
-## Build
-
-Prerequisites:
-
-- supported .NET 10 SDK;
-- MAUI workloads for required targets;
-- platform SDKs;
-- macOS/Xcode for iOS/Mac Catalyst archive/build.
-
-Run repository verification:
-
-```powershell
-./build/scripts/verify.ps1
+build/
+  scripts/
 ```
 
-Dependency-free structural preflight:
+Architecture details: [`docs/architecture/OVERVIEW.md`](docs/architecture/OVERVIEW.md)  
+Database schema: [`docs/architecture/DATABASE_SCHEMA.md`](docs/architecture/DATABASE_SCHEMA.md)  
+Engineering decisions: [`DECISIONS.md`](DECISIONS.md)
+
+## Build and validation
+
+Dependency-free structural check:
 
 ```bash
 python build/scripts/verify_structure.py
 ```
 
-Structural preflight also guards Android backup-rule wiring, masked Settings secret fields, XAML event handlers, and raw exception-alert regressions. It is not a compiler/test/native-device substitute.
+The structural verifier checks repository/XML/XAML/project wiring, version/schema drift, floating-point monetary fields, raw minor-unit user-facing labels, selected Android privacy/backup rules, masked secret fields, complete-reset handler wiring, biometric provider-text redaction, and raw exception-alert regressions.
 
-See:
+Full compiler/test verification requires a compatible .NET 10/MAUI environment and platform SDK/workloads described in [`docs/setup/BUILD.md`](docs/setup/BUILD.md).
 
-- [`docs/setup/BUILD.md`](docs/setup/BUILD.md)
-- [`docs/setup/TROUBLESHOOTING.md`](docs/setup/TROUBLESHOOTING.md)
-- [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md)
-- [`docs/releases/RELEASE_CHECKLIST.md`](docs/releases/RELEASE_CHECKLIST.md)
-- [`docs/releases/STORE_READINESS.md`](docs/releases/STORE_READINESS.md)
-- [`docs/security/THREAT_MODEL.md`](docs/security/THREAT_MODEL.md)
-- [`docs/privacy/DATA_LIFECYCLE.md`](docs/privacy/DATA_LIFECYCLE.md)
+The implementation environment used in the current ChatGPT continuation does **not** provide a local `dotnet` executable, so this repository does not claim a local `dotnet build` or `dotnet test` pass from this session.
 
-## Current validation status
+## Target platforms
 
-The repository contains source, tests, structural verification, CI definitions and release documentation. In this ChatGPT execution environment, a .NET/MAUI compiler/toolchain was not available, so no claim is made that current head passed restore/build/tests/native compilation here.
+The MAUI application project currently declares:
 
-GitHub classic commit-status output can be empty even when Actions uses check runs; release evidence must come from actual workflow/check-run results.
+- Android: `net10.0-android`
+- iOS: `net10.0-ios`
+- Mac Catalyst: `net10.0-maccatalyst`
+- Windows: `net10.0-windows10.0.19041.0`
 
-Before release, follow `docs/releases/RELEASE_CHECKLIST.md` and retain actual platform build/test/device/signing/store evidence.
+Platform source presence is **not** proof of a successful native release. Final notification/biometric/screen-protection/file-picker behavior, local-calendar/time-zone behavior, privacy display, chart rendering, packaging, signing, accessibility, upgrade, and store compliance must be tested with appropriate SDK/host/device.
 
-## Current intentionally later-version scope
+Use [`docs/releases/STORE_READINESS.md`](docs/releases/STORE_READINESS.md) and [`docs/releases/RELEASE_CHECKLIST.md`](docs/releases/RELEASE_CHECKLIST.md).
 
-Not represented as complete current-release features:
+## Current source validation status
 
-- Finora remote account/login;
+See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for distinction between implemented source and external compiler/device/store gates.
+
+No claim is made that Finora is bug-free.
+
+## Testing
+
+See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Current automated/source-contract areas include money/currency, domain/persistence metadata, linked transfers, split/category behavior, recurrence payment/rule lifecycle, account/reconciliation dependencies, custom budget periods, Dashboard periods, local-date UTC conversion, complete report matrix, future-date comparison exclusion, currency-aware import/reporting, encrypted backup graph validation, crash-safe restore recovery, schema migration, expanded integrity diagnostics, privacy-safe amount surfaces, signed chart baseline, transaction sorting/incremental display, adaptive navigation, reset safety, onboarding/About controls, and platform privacy source contracts.
+
+## Security
+
+Private vulnerability reporting: [`SECURITY.md`](SECURITY.md)  
+Threat model: [`docs/security/THREAT_MODEL.md`](docs/security/THREAT_MODEL.md)
+
+Do not attach real finance databases, receipts, PINs, backup passwords, or other secrets to public issues.
+
+## Local premium/demo state
+
+The local premium flag is a development/demo capability only. It is **not** tamper-proof commercial entitlement validation. A future paid build would require store/server-backed entitlement design.
+
+## Later-version boundaries
+
+Not part of current local-first release:
+
 - cloud synchronization;
-- collaboration/shared-finance server flows;
-- server/store-backed commercial entitlement validation;
+- remote Finora account/login;
+- collaboration;
+- mobile-number authentication;
+- server-backed commercial entitlement;
 - automatic exchange-rate conversion;
 - analytics/advertising telemetry by default.
 
-## Repository and contact
+These require new architecture, privacy, security, retention, and migration decisions before implementation.
+
+## Repository and contacts
 
 - Repository: https://github.com/sanskarIN/Finora
-- Creator/open-source projects: https://www.github.com/sanskarIN
+- Creator/open-source profile: https://www.github.com/sanskarIN
 - Business/security: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
-- License: Apache-2.0
+- Attribution: **Made by the Sanskar**
+
+## License
+
+Finora is licensed under Apache License 2.0. See [`LICENSE`](LICENSE).
+
+Third-party components retain their own licenses. Exact direct/transitive package license metadata must be reviewed with release toolchain before publishing binaries. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
