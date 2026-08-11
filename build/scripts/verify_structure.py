@@ -266,6 +266,14 @@ def check_privacy_configuration(errors: list[str]) -> None:
             match = re.search(rf'<Entry\b(?=[^>]*\bx:Name="{name}")[^>]*>', text)
             if match is None or 'IsPassword="True"' not in match.group(0):
                 errors.append(f"{rel(settings_xaml)}: {name} must remain a masked password Entry")
+        if 'Clicked="OnDeleteAllFinanceDataClicked"' not in text:
+            errors.append(f"{rel(settings_xaml)}: complete finance deletion must remain wired to the dedicated reset service handler")
+
+    biometric_service = ROOT / "src/Finora.App/PlatformBiometricService.cs"
+    if biometric_service.exists():
+        text = read(biometric_service)
+        if re.search(r"Result\.Failure\s*\([^)]*errString", text, re.IGNORECASE | re.DOTALL) or re.search(r"errString\s*\?*\.ToString", text):
+            errors.append(f"{rel(biometric_service)}: platform biometric provider text must not flow into public failure messages")
 
     app_root = ROOT / "src/Finora.App"
     secret_prompt = re.compile(r"DisplayPromptAsync\s*\([^;]{0,900}\b(?:password|PIN)\b", re.IGNORECASE | re.DOTALL)
@@ -300,7 +308,7 @@ def main() -> int:
         return 1
 
     print(f"Finora structural preflight passed: {len(paths)} text/source files checked.")
-    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation, masked secrets, and Android privacy/backup rules.")
+    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
     print("This is not a compiler, analyzer, test runner, emulator, simulator, signing, or store-validation substitute.")
     return 0
 
