@@ -15,5 +15,9 @@
     <None Include="..\..\src\Finora.App\ViewModels\DashboardViewModel.cs" Link="Contracts\DashboardViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\ReportsPage.xaml" Link="Contracts\ReportsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\ReportsViewModel.cs" Link="Contracts\ReportsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\SettingsPage.xaml" Link="Contracts\SettingsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\SettingsPage.Reset.cs" Link="Contracts\SettingsPage.Reset.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\SettingsPage.Security.cs" Link="Contracts\SettingsPage.Security.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\SettingsPage.About.cs" Link="Contracts\SettingsPage.About.cs" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
