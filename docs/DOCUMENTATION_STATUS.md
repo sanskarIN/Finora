@@ -8,6 +8,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 |---|---|---|
 | Public project overview | `README.md` | Current |
 | Documentation index | `docs/README.md` | Current |
+| Documentation completeness | `docs/DOCUMENTATION_STATUS.md` | Current |
 | End-user workflows | `docs/USER_GUIDE.md` | Current |
 | Architecture overview | `docs/architecture/OVERVIEW.md` | Current |
 | Database/schema | `docs/architecture/DATABASE_SCHEMA.md` | Current |
@@ -17,6 +18,8 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Accounts/transactions | `docs/features/ACCOUNTS_AND_TRANSACTIONS.md` | Current |
 | Budgets/goals/recurrence | `docs/features/BUDGETS_GOALS_RECURRING.md` | Current |
 | Reports/import/export | `docs/features/REPORTS_IMPORT_EXPORT.md` | Current |
+| Settings reference | `docs/features/SETTINGS_REFERENCE.md` | Current |
+| Accessibility/localization | `docs/accessibility/ACCESSIBILITY_AND_LOCALIZATION.md` | Current |
 | App lock/privacy | `docs/security/APP_LOCK_AND_PRIVACY.md` | Current |
 | Encrypted backup/recovery | `docs/security/BACKUP_AND_RECOVERY.md` | Current |
 | Threat model | `docs/security/THREAT_MODEL.md` | Current |
@@ -67,6 +70,8 @@ Do not document later-version features as if implemented. Current explicit later
 ## Documentation build/preflight rule
 
 `build/scripts/verify_structure.py` treats the core documentation tree as required repository structure and validates repository-relative Markdown file links without network access.
+
+The documentation index itself links the remaining cross-cutting manuals, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
 
 The link check deliberately does not prove:
 
@@ -129,6 +134,16 @@ Update:
 - App Store/Play/Windows metadata template as applicable;
 - native validation matrix;
 - store readiness.
+
+### New accessibility/localization behavior
+
+Update:
+
+- accessibility/localization guide;
+- user guide;
+- affected feature/UI architecture documentation;
+- native validation matrix;
+- localization resources and tests/source contracts as applicable.
 
 ### New later-version network feature
 
