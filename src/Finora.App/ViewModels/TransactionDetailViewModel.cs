@@ -11,6 +11,7 @@ public sealed class TransactionDetailViewModel : ViewModelBase
     private readonly ITransactionMaintenanceService _maintenance;
     private readonly IFinanceStore _store;
     private readonly ICategoryTagService _categoryTags;
+    private readonly IAppSettingsService? _settings;
     private Guid _transactionId;
     private TransactionType _type;
     private AccountSummary? _account;
@@ -31,11 +32,12 @@ public sealed class TransactionDetailViewModel : ViewModelBase
     private bool _isTransfer;
     private string _status = string.Empty;
 
-    public TransactionDetailViewModel(ITransactionMaintenanceService maintenance, IFinanceStore store, ICategoryTagService categoryTags)
+    public TransactionDetailViewModel(ITransactionMaintenanceService maintenance, IFinanceStore store, ICategoryTagService categoryTags, IAppSettingsService? settings = null)
     {
         _maintenance = maintenance;
         _store = store;
         _categoryTags = categoryTags;
+        _settings = settings;
         SaveCommand = new AsyncCommand(SaveAsync);
         AddSplitCommand = new AsyncCommand(AddSplitAsync);
         RemoveSplitCommand = new AsyncCommand(RemoveSplitAsync);
@@ -90,8 +92,7 @@ public sealed class TransactionDetailViewModel : ViewModelBase
         IsTransfer = detail.Type == TransactionType.Transfer;
         Account = Accounts.FirstOrDefault(x => x.Id == detail.AccountId);
         Category = Categories.FirstOrDefault(x => x.Id == detail.CategoryId);
-        var displayMinor = detail.Type is TransactionType.Expense or TransactionType.Transfer ? Math.Abs(detail.AmountMinor) : detail.AmountMinor;
-        Amount = new Money(displayMinor, detail.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture);
+        Amount = FormatEditableMagnitude(detail.AmountMinor, detail.Currency);
         var local = detail.OccurredAtUtc.ToLocalTime();
         TransactionDate = local.Date;
         TransactionTime = local.TimeOfDay;
@@ -104,8 +105,13 @@ public sealed class TransactionDetailViewModel : ViewModelBase
         Splits.Clear();
         foreach (var split in detail.Splits)
         {
-            var amount = new Money(Math.Abs(split.AmountMinor), detail.Currency).ToMajorUnits().ToString("0.00", CultureInfo.CurrentCulture);
-            Splits.Add(new SplitEditorItem(split.CategoryId, Categories.FirstOrDefault(x => x.Id == split.CategoryId)?.Name ?? "Uncategorized", amount, split.Note));
+            var amountMajor = FormatEditableMagnitude(split.AmountMinor, detail.Currency);
+            Splits.Add(new SplitEditorItem(
+                split.CategoryId,
+                Categories.FirstOrDefault(x => x.Id == split.CategoryId)?.Name ?? "Uncategorized",
+                amountMajor,
+                DisplayMagnitude(split.AmountMinor, detail.Currency),
+                split.Note));
         }
         Tags.Clear();
         var selectedTagIds = detail.Tags.Select(x => x.Id).ToHashSet();
@@ -125,7 +131,9 @@ public sealed class TransactionDetailViewModel : ViewModelBase
     {
         if (Account is null) throw new InvalidOperationException("Choose an account.");
         if (!TryParseDecimal(Amount, out var major) || major == 0) throw new InvalidOperationException("Enter a non-zero amount.");
-        var unsignedMinor = Math.Abs(Money.FromMajorUnits(major, Account.Currency).MinorUnits);
+        var converted = Money.FromMajorUnits(major, Account.Currency).MinorUnits;
+        if (converted == long.MinValue) throw new OverflowException("Transaction amount is outside the supported range.");
+        var unsignedMinor = converted < 0 ? -converted : converted;
         var occurredLocal = DateTime.SpecifyKind(TransactionDate.Date + TransactionTime, DateTimeKind.Local);
         if (occurredLocal > DateTime.Now.AddMinutes(5)) throw new InvalidOperationException("Transaction time cannot be in the future.");
         var occurredAt = new DateTimeOffset(occurredLocal).ToUniversalTime();
@@ -147,8 +155,9 @@ public sealed class TransactionDetailViewModel : ViewModelBase
             var splitInputs = Splits.Select(x =>
             {
                 if (!TryParseDecimal(x.AmountMajor, out var splitMajor) || splitMajor <= 0) throw new InvalidOperationException("Each split must have a positive amount.");
-                var splitMinor = Math.Abs(Money.FromMajorUnits(splitMajor, Account.Currency).MinorUnits);
-                if (amountMinor < 0) splitMinor = -splitMinor;
+                var convertedSplit = Money.FromMajorUnits(splitMajor, Account.Currency).MinorUnits;
+                if (convertedSplit <= 0) throw new InvalidOperationException("Each split must have a positive representable amount.");
+                var splitMinor = amountMinor < 0 ? -convertedSplit : convertedSplit;
                 return new TransactionSplitInput(x.CategoryId, splitMinor, x.Note);
             }).ToList();
             var request = new TransactionEditRequest(_transactionId, Type, amountMinor, Account.Currency, Account.Id, Category?.Id, occurredAt, Merchant, Note, PaymentMethod, ManualLocation, splitInputs, Tags.Where(x => x.IsSelected).Select(x => x.Id).ToList());
@@ -163,7 +172,14 @@ public sealed class TransactionDetailViewModel : ViewModelBase
     {
         if (Account is null) throw new InvalidOperationException("Choose an account first.");
         if (!TryParseDecimal(NewSplitAmount, out var amount) || amount <= 0) throw new InvalidOperationException("Enter a positive split amount.");
-        Splits.Add(new SplitEditorItem(NewSplitCategory?.Id, NewSplitCategory?.Name ?? "Uncategorized", amount.ToString("0.00", CultureInfo.CurrentCulture), string.IsNullOrWhiteSpace(NewSplitNote) ? null : NewSplitNote.Trim()));
+        var money = Money.FromMajorUnits(amount, Account.Currency);
+        if (money.MinorUnits <= 0) throw new InvalidOperationException("Enter a split amount that is representable in the account currency.");
+        Splits.Add(new SplitEditorItem(
+            NewSplitCategory?.Id,
+            NewSplitCategory?.Name ?? "Uncategorized",
+            money.ToMajorUnits().ToString($"F{money.DecimalPlaces}", CultureInfo.CurrentCulture),
+            IsAmountHidden ? "••••" : money.Format(),
+            string.IsNullOrWhiteSpace(NewSplitNote) ? null : NewSplitNote.Trim()));
         NewSplitAmount = string.Empty;
         NewSplitNote = string.Empty;
         NewSplitCategory = null;
@@ -218,7 +234,26 @@ public sealed class TransactionDetailViewModel : ViewModelBase
         foreach (var item in values) Revisions.Add(item);
     }
 
-    private static bool TryParseDecimal(string value, out decimal result) => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result) || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
+    private bool IsAmountHidden => _settings?.PrivacyMode == true || _settings?.HideAmountsOnLaunch == true;
+
+    private string DisplayMagnitude(long minor, string currency)
+        => IsAmountHidden ? "••••" : new Money(SafeMagnitude(minor), currency).Format();
+
+    private static string FormatEditableMagnitude(long minor, string currency)
+    {
+        var money = new Money(SafeMagnitude(minor), currency);
+        return money.ToMajorUnits().ToString($"F{money.DecimalPlaces}", CultureInfo.CurrentCulture);
+    }
+
+    private static long SafeMagnitude(long value)
+    {
+        if (value == long.MinValue) throw new InvalidDataException("Transaction amount is outside the supported range.");
+        return value < 0 ? -value : value;
+    }
+
+    private static bool TryParseDecimal(string value, out decimal result)
+        => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result)
+           || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
 }
 
 public sealed class SelectableTagItem(Guid id, string name, bool isSelected) : INotifyPropertyChanged
@@ -230,4 +265,4 @@ public sealed class SelectableTagItem(Guid id, string name, bool isSelected) : I
     public event PropertyChangedEventHandler? PropertyChanged;
 }
 
-public sealed record SplitEditorItem(Guid? CategoryId, string CategoryName, string AmountMajor, string? Note);
+public sealed record SplitEditorItem(Guid? CategoryId, string CategoryName, string AmountMajor, string DisplayAmount, string? Note);
