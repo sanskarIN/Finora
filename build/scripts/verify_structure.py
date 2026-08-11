@@ -26,6 +26,39 @@ PLACEHOLDER_PATTERNS = [
 HANDLER_PATTERN = re.compile(r"(?:Clicked|Tapped|CheckedChanged|SelectionChanged|TextChanged|Completed|Unfocused|Focused|Toggled)\s*=\s*\"([A-Za-z_][A-Za-z0-9_]*)\"")
 CLASS_PATTERN = re.compile(r'x:Class\s*=\s*"([A-Za-z_][A-Za-z0-9_.]*)"')
 MONEY_WORDS = r"(?:Amount|Balance|Limit|Target|Starting|Contribution|Paid|Price|Cost|Income|Expense|Budget|Net|Minor)"
+DOCUMENTATION_PATHS = [
+    "docs/README.md",
+    "docs/USER_GUIDE.md",
+    "docs/TEST_PLAN.md",
+    "docs/architecture/OVERVIEW.md",
+    "docs/architecture/DATABASE_SCHEMA.md",
+    "docs/architecture/SERVICE_CATALOG.md",
+    "docs/architecture/DATA_FLOW.md",
+    "docs/architecture/NAVIGATION_AND_UI.md",
+    "docs/features/ACCOUNTS_AND_TRANSACTIONS.md",
+    "docs/features/BUDGETS_GOALS_RECURRING.md",
+    "docs/features/REPORTS_IMPORT_EXPORT.md",
+    "docs/security/THREAT_MODEL.md",
+    "docs/security/APP_LOCK_AND_PRIVACY.md",
+    "docs/security/BACKUP_AND_RECOVERY.md",
+    "docs/privacy/DATA_LIFECYCLE.md",
+    "docs/operations/DIAGNOSTICS_AND_INTEGRITY.md",
+    "docs/operations/DATA_RESET_AND_SAMPLE_DATA.md",
+    "docs/setup/BUILD.md",
+    "docs/setup/TROUBLESHOOTING.md",
+    "docs/development/DEVELOPER_GUIDE.md",
+    "docs/development/CODE_MAP.md",
+    "docs/development/ADDING_A_FEATURE.md",
+    "docs/testing/TESTING_GUIDE.md",
+    "docs/testing/NATIVE_VALIDATION_MATRIX.md",
+    "docs/platforms/ANDROID.md",
+    "docs/platforms/WINDOWS.md",
+    "docs/platforms/APPLE.md",
+    "docs/releases/RELEASE_CHECKLIST.md",
+    "docs/releases/STORE_READINESS.md",
+    "docs/releases/VERSIONING_AND_MIGRATIONS.md",
+    "docs/releases/STORE_METADATA_TEMPLATE.md",
+]
 REQUIRED_PATHS = [
     "LICENSE",
     "README.md",
@@ -42,12 +75,7 @@ REQUIRED_PATHS = [
     "what_changed.md",
     "Finora.sln",
     ".github/workflows/ci.yml",
-    "docs/TEST_PLAN.md",
-    "docs/architecture/OVERVIEW.md",
-    "docs/architecture/DATABASE_SCHEMA.md",
-    "docs/security/THREAT_MODEL.md",
-    "docs/releases/RELEASE_CHECKLIST.md",
-    "docs/releases/STORE_READINESS.md",
+    *DOCUMENTATION_PATHS,
     "src/Finora.App/Platforms/Android/Resources/xml/backup_rules.xml",
     "src/Finora.App/Platforms/Android/Resources/xml/data_extraction_rules.xml",
 ]
@@ -75,6 +103,37 @@ def check_required_paths(errors: list[str]) -> None:
     for item in REQUIRED_PATHS:
         if not (ROOT / item).is_file():
             errors.append(f"{item}: required repository file is missing")
+
+
+def check_markdown_links(paths: list[Path], errors: list[str]) -> None:
+    """Validate repository-relative file links without attempting network or anchor checks."""
+    link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    for path in paths:
+        if path.suffix.lower() != ".md":
+            continue
+        text = read(path)
+        for match in link_pattern.finditer(text):
+            raw_target = match.group(1).strip()
+            if not raw_target:
+                continue
+            if raw_target.startswith("<") and raw_target.endswith(">"):
+                raw_target = raw_target[1:-1].strip()
+            # Markdown permits an optional title after a whitespace-separated target.
+            target = raw_target.split(maxsplit=1)[0]
+            lowered = target.lower()
+            if lowered.startswith(("http://", "https://", "mailto:", "tel:", "data:")) or target.startswith("#"):
+                continue
+            target = target.split("#", 1)[0].split("?", 1)[0]
+            if not target:
+                continue
+            candidate = (path.parent / target).resolve()
+            try:
+                candidate.relative_to(ROOT.resolve())
+            except ValueError:
+                errors.append(f"{rel(path)}: Markdown link escapes repository root: {raw_target}")
+                continue
+            if not candidate.exists():
+                errors.append(f"{rel(path)}: broken repository-relative Markdown link: {raw_target}")
 
 
 def check_xml(paths: list[Path], errors: list[str]) -> None:
@@ -298,6 +357,7 @@ def main() -> int:
     paths = files()
     errors: list[str] = []
     check_required_paths(errors)
+    check_markdown_links(paths, errors)
     check_xml(paths, errors)
     check_empty(paths, errors)
     check_placeholders(paths, errors)
@@ -316,7 +376,7 @@ def main() -> int:
         return 1
 
     print(f"Finora structural preflight passed: {len(paths)} text/source files checked.")
-    print("Validated required files, XML/XAML, project wiring, event handlers, version/schema drift, money representation/display, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
+    print("Validated required documentation/repository files and local Markdown links, XML/XAML, project wiring, event handlers, version/schema drift, money representation/display, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
     print("This is not a compiler, analyzer, test runner, emulator, simulator, signing, or store-validation substitute.")
     return 0
 
