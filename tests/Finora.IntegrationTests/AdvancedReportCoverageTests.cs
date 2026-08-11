@@ -134,6 +134,31 @@ public sealed class AdvancedReportCoverageTests : IAsyncLifetime
         Assert.Equal(10_000, current.NetMinor);
     }
 
+    [Fact]
+    public async Task CurrentMonthlyAndYearlyComparisons_ExcludeFutureDatedRows()
+    {
+        var tomorrow = DateTime.Today.AddDays(1);
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            db.Transactions.Add(new FinanceTransaction
+            {
+                Type = TransactionType.Income,
+                AmountMinor = 99_999,
+                Currency = "INR",
+                AccountId = _account.Id,
+                OccurredAtUtc = LocalNoonUtc(tomorrow.Year, tomorrow.Month, tomorrow.Day)
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var service = new AdvancedReportService(_factory);
+        var monthly = await service.GetMonthlyComparisonAsync(1, "INR");
+        var yearly = await service.GetYearlyComparisonAsync(1, "INR");
+
+        Assert.Equal(0, Assert.Single(monthly).IncomeMinor);
+        Assert.Equal(0, Assert.Single(yearly).IncomeMinor);
+    }
+
     private static DateTimeOffset LocalNoonUtc(int year, int month, int day)
     {
         var local = new DateTime(year, month, day, 12, 0, 0, DateTimeKind.Unspecified);
