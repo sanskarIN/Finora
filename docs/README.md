@@ -7,6 +7,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 ## Start here
 
 - [Project README](../README.md) — product overview, current capabilities, privacy boundary, build entry points, contacts, and release status.
+- [Documentation Status](DOCUMENTATION_STATUS.md) — coverage/completeness matrix and documentation update policy.
 - [User Guide](USER_GUIDE.md) — complete end-user workflow guide.
 - [Architecture Overview](architecture/OVERVIEW.md) — solution layering and major design decisions.
 - [Database Schema](architecture/DATABASE_SCHEMA.md) — current schema 2 model and migration notes.
