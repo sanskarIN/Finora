@@ -1,6 +1,6 @@
 # Finora Project Status
 
-Last source review: **2026-08-10**
+Last source review: **2026-08-11**
 
 Current source line: **Finora 0.2.0 (build 2)**  
 Current database schema: **2**  
@@ -53,7 +53,9 @@ Source presence is not the same as native release validation.
 - audit entries;
 - backup metadata.
 
-🧪 Safe startup repair normalizes only derived `SavingsGoal.IsCompleted` when the underlying contribution history validates. Corrupt histories remain untouched for the integrity checker.
+🧪 Safe startup repair normalizes only derived `SavingsGoal.IsCompleted` when underlying contribution history validates. Corrupt histories remain untouched for the integrity checker.
+
+🧪 Passive finance displays use currency-aware formatted money instead of showing raw stored minor units. Account/transaction edit surfaces use the currency's actual supported decimal precision rather than a universal two-decimal assumption.
 
 ## Accounts and transfers
 
@@ -65,11 +67,17 @@ Source presence is not the same as native release validation.
 
 🧪 Active recurrence blocks account archival until paused/completed/archived.
 
+🧪 Account list/detail/history monetary display honors privacy/hide-on-launch; credit/opening edit formatting uses currency precision and billing-day UI/domain range is consistently 1–31.
+
 ## Transactions
 
 🧪 Expense/income/refund/adjustment quick-add/edit, calculator, advanced filtering, revision history, bulk categorization, duplicate review, splits, tags, receipts, soft-delete/restore, selected/all export, and linked transfer editing are present.
 
 🧪 Direct transaction persistence rejects zero/`long.MinValue`, invalid signs, transfer linkage, currency shape, and inconsistent deletion metadata.
+
+🧪 Transaction history includes deterministic sort choices and a bounded 50-row incremental display with explicit Load more behavior.
+
+🧪 Transaction/history/tools/detail split displays honor privacy and currency formatting; transaction/tool date filters use shared local-calendar boundaries.
 
 ## Categories and tags
 
@@ -85,6 +93,8 @@ Source presence is not the same as native release validation.
 
 🧪 Failed explicit-period replacement is covered for transactional rollback.
 
+🧪 Passive budget planned/actual amounts use currency-aware privacy display.
+
 ## Savings goals
 
 🧪 Goals, contributions/withdrawals, optional linked transaction, forecasts/milestones and completion state are present.
@@ -92,6 +102,8 @@ Source presence is not the same as native release validation.
 🧪 Goal history uses checked arithmetic, cannot fall below zero, and linked transaction currency must match the goal.
 
 🧪 New goals initialize completion from starting progress; startup repairs stale derived completion flags from older source behavior when history is valid.
+
+🧪 Goal cards and monthly contribution forecast no longer reveal monetary values while privacy/hide-on-launch is active.
 
 ## Recurring items
 
@@ -105,13 +117,25 @@ Source presence is not the same as native release validation.
 
 🧪 Paid occurrence may retain a valid historical postponed date; unpaid states cannot silently contain payment data.
 
+🧪 Rule/occurrence monetary displays use each row's own currency and honor privacy/hide-on-launch.
+
 ## Dashboard and reports
 
 🧪 Dashboard is configurable/privacy-aware and does not invoke the legacy mixed-currency aggregate API.
 
 🧪 Aggregate dashboard/report/tag values are currency-scoped. Other-currency rows retain own currency and no implicit FX conversion is performed.
 
-🧪 Reports include category spending, income/expense, account trend, budget performance, merchant/payee, monthly comparison and tag data; category/budget reporting is split-aware and descendant-aware.
+🧪 Dashboard has explicit current financial month, previous financial month, trailing 30-day, trailing 90-day, and year-to-date selection through `DashboardPeriodPolicy`.
+
+🧪 Local-calendar date selections use shared `LocalDateRange` conversion to UTC `[from,toExclusive)` boundaries rather than UTC-midnight assumptions.
+
+🧪 Current balance uses direct current account summaries; period-sensitive cards use the selected Dashboard date range.
+
+🧪 Reports include category spending, income/expense, account trend, budget performance, merchant/payee, monthly comparison, yearly comparison, recurring obligations, savings progress and tag data; category/budget reporting is split-aware and descendant-aware.
+
+🧪 Monthly/yearly comparisons group by local calendar and stop at today, excluding future-dated imported rows until their date arrives.
+
+🧪 Signed chart renderer uses a true zero baseline; negative net values render below zero. Quantitative charts are hidden while privacy mode hides amounts, while textual/list monetary values are masked.
 
 ## Import/export
 
@@ -129,7 +153,7 @@ Source presence is not the same as native release validation.
 
 🧪 No-link policy is reused by attachment open/write/cleanup, encrypted backup validation/staging, crash-safe restore rollback copy, restore recovery journal/directories and integrity checking.
 
-🧪 Optional symlink regression tests run where the host permits link creation.
+🧪 Optional symlink regression tests run where host permits link creation.
 
 ## Backup and restore
 
@@ -151,6 +175,8 @@ Source presence is not the same as native release validation.
 
 🧪 Failed replacement leaves old enabled reminder untouched; cancellation drift and expired schedules are reconciled best-effort.
 
+🧪 Android cancellation looks up an existing immutable `PendingIntent` using `NoCreate` instead of creating a pending broadcast only to cancel it.
+
 🧪 Notification text remains privacy-safe/generic.
 
 ## App lock and secret entry
@@ -159,13 +185,25 @@ Source presence is not the same as native release validation.
 
 🧪 PIN input is bounded to 4–12 ASCII digits before hashing; derived/verifier byte buffers are zeroed where possible.
 
-🧪 Secure-storage provider failure fails closed when the explicit enabled marker exists; readable missing/corrupt verifier clears stale marker to avoid permanent lock-screen trap.
+🧪 Secure-storage provider failure fails closed when explicit enabled marker exists; readable missing/corrupt verifier clears stale marker to avoid permanent lock-screen trap.
 
 🧪 Settings backup password/new PIN/confirm PIN fields are masked and cleared after use. Lock-screen PIN is masked and cleared after attempts.
 
 🧪 PIN removal failure is handled without falsely reporting success.
 
-🧪 Biometric/Windows Hello failure returns stable generic PIN-fallback text rather than raw provider text.
+🧪 Biometric/Windows Hello failure returns stable generic PIN-fallback text rather than raw provider text; Android callback no longer forwards `errString`.
+
+## Settings, onboarding and About
+
+🧪 Onboarding covers local-first/no-account/no-auto-upload behavior, currency, locale, financial-month start, optional opening balance, explicit sample-data opt-in and safe revisit behavior.
+
+🧪 Onboarding exposes Privacy and Terms links with accessible headings/descriptions.
+
+🧪 Settings can revisit onboarding without duplicating opening/sample data when accounts already exist.
+
+🧪 Full local-finance deletion is wired to the dedicated complete reset service and retains typed destructive confirmation.
+
+🧪 About version/build comes from packaged `AppInfo`; attribution, technology summary, repository/profile, business/support contacts, Apache-2.0, notices, privacy/terms, contributing, security and support guide links are exposed.
 
 ## Diagnostics and integrity
 
@@ -175,9 +213,9 @@ Source presence is not the same as native release validation.
 
 🧪 Bound ViewModel infrastructure errors and primary Settings/Reports alerts avoid raw filesystem/database/crypto/provider text.
 
-🧪 Unexpected `AsyncCommand` failures are contained and routed to the privacy logger.
+🧪 Unexpected `AsyncCommand` failures are contained and routed to privacy logger.
 
-🧪 Integrity checker now covers SQLite/foreign keys, transaction/account/currency values, transfers, splits, category hierarchy, budgets, goal histories/completion, recurrence relations/state, reconciliation links and attachment path/size/hash/parent data.
+🧪 Integrity checker covers SQLite/foreign keys, transaction/account/currency values, transfers, splits, category hierarchy, budgets, goal histories/completion, recurrence relations/state, reconciliation links and attachment path/size/hash/parent data.
 
 ## Android privacy packaging
 
@@ -187,7 +225,7 @@ Source presence is not the same as native release validation.
 
 ✅ Android 12+ `data_extraction_rules.xml` excludes same domains from cloud backup and device transfer.
 
-✅ Structural preflight requires/wires these resources and guards masked secret fields/raw exception-alert regressions.
+✅ Structural preflight requires/wires these resources and guards masked secret fields, complete-reset wiring, biometric provider-text redaction, raw exception-alert regressions, and raw minor-unit display labels.
 
 ⚠️ Final merged-manifest/package behavior and device backup/transfer behavior still require Android build/device evidence.
 
@@ -197,7 +235,7 @@ Source presence is not the same as native release validation.
 
 ✅ Theme, larger interface, reduced motion and privacy settings are present.
 
-✅ Settings and lock screen now include additional heading/semantic descriptions; lock/PIN/biometric controls are screen-reader described.
+✅ Settings, lock, onboarding, Dashboard period, reports, transaction history/tools and finance pages include additional heading/semantic descriptions.
 
 ⚠️ TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast testing still requires native validation.
 
@@ -205,7 +243,7 @@ Source presence is not the same as native release validation.
 
 ✅ Structural verifier, staged CI workflow, Dependabot, CodeQL, dependency review, CODEOWNERS, issue/PR templates and release/security documentation are present.
 
-✅ Structural preflight now additionally guards Android backup exclusions, masked secret inputs and raw exception-message alerts.
+✅ Structural preflight guards Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
 
 ⚠️ CI/check-run success must be confirmed from actual GitHub Actions evidence. An empty classic combined-status response is not a passing result.
 
@@ -222,14 +260,16 @@ Before store-ready status, execute and retain evidence for:
 5. Android + Windows MAUI builds;
 6. iOS + Mac Catalyst builds on macOS/Xcode host;
 7. migration/integrity/backup failure-path tests;
-8. notification replacement/lifecycle tests;
-9. secret-entry/app-lock/biometric/capture tests;
-10. Android merged-manifest backup/data-transfer exclusion validation;
-11. Android physical/emulator backup-transfer behavior;
-12. receipt symlink/reparse tests where platform permits;
-13. accessibility/adaptive/native device smoke tests;
-14. signing/package/store validation;
-15. final privacy/data-safety/store metadata review.
+8. local-calendar/date/report regression tests;
+9. notification replacement/lifecycle/cancellation tests;
+10. secret-entry/app-lock/biometric/capture tests;
+11. Android merged-manifest backup/data-transfer exclusion validation;
+12. Android physical/emulator backup-transfer behavior;
+13. receipt symlink/reparse tests where platform permits;
+14. privacy-mode passive display/chart tests on native UI;
+15. Dashboard period/transaction paging/sort/accessibility smoke tests;
+16. signing/package/store validation;
+17. final privacy/data-safety/store metadata review.
 
 ## Intentionally later-version scope
 
@@ -245,4 +285,4 @@ Before store-ready status, execute and retain evidence for:
 
 🧭 Analytics/advertising telemetry by default.
 
-These are product-boundary decisions, not incomplete source claims for the current local-first release.
+These are product-boundary decisions, not incomplete source claims for current local-first release.
