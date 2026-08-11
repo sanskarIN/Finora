@@ -1,0 +1,95 @@
+# Finora Documentation
+
+This directory is the documentation entry point for the current Finora 0.2.0 (build 2) source line and database schema 2.
+
+Finora is a local-first personal-finance application built with .NET MAUI, C#, XAML, SQLite/EF Core, and MVVM-style presentation/service separation. The current release requires no Finora account or login, core finance workflows are offline-capable, backups are user-triggered, and the application does not silently aggregate unlike currencies or invent exchange rates.
+
+## Start here
+
+- [Project README](../README.md) — product overview, current capabilities, privacy boundary, build entry points, contacts, and release status.
+- [User Guide](USER_GUIDE.md) — complete end-user workflow guide.
+- [Architecture Overview](architecture/OVERVIEW.md) — solution layering and major design decisions.
+- [Database Schema](architecture/DATABASE_SCHEMA.md) — current schema 2 model and migration notes.
+- [Service Catalog](architecture/SERVICE_CATALOG.md) — application/infrastructure responsibilities and service ownership.
+- [Data Flow](architecture/DATA_FLOW.md) — how finance data moves through UI, services, persistence, files, backups, imports, exports, and notifications.
+- [Navigation and UI Architecture](architecture/NAVIGATION_AND_UI.md) — adaptive Shell navigation, pages, ViewModels, privacy/display behavior, and accessibility boundaries.
+
+## Feature documentation
+
+- [Accounts and Transactions](features/ACCOUNTS_AND_TRANSACTIONS.md)
+- [Budgets, Savings, and Recurring Items](features/BUDGETS_GOALS_RECURRING.md)
+- [Reports, Import, and Export](features/REPORTS_IMPORT_EXPORT.md)
+- [Backup and Restore](security/BACKUP_AND_RECOVERY.md)
+- [App Lock and Privacy](security/APP_LOCK_AND_PRIVACY.md)
+
+## Development
+
+- [Build and Run](setup/BUILD.md)
+- [Troubleshooting](setup/TROUBLESHOOTING.md)
+- [Developer Guide](development/DEVELOPER_GUIDE.md)
+- [Repository Code Map](development/CODE_MAP.md)
+- [Adding or Changing a Feature](development/ADDING_A_FEATURE.md)
+- [Engineering Decisions](../DECISIONS.md)
+
+## Testing and quality
+
+- [Test Plan](TEST_PLAN.md)
+- [Testing Guide](testing/TESTING_GUIDE.md)
+- [Native Validation Matrix](testing/NATIVE_VALIDATION_MATRIX.md)
+- [Project Status](../PROJECT_STATUS.md)
+- [What Changed](../what_changed.md)
+
+## Operations and diagnostics
+
+- [Diagnostics and Integrity](operations/DIAGNOSTICS_AND_INTEGRITY.md)
+- [Data Reset and Sample Data](operations/DATA_RESET_AND_SAMPLE_DATA.md)
+- [Data Lifecycle](privacy/DATA_LIFECYCLE.md)
+
+## Security and privacy
+
+- [Threat Model](security/THREAT_MODEL.md)
+- [App Lock and Privacy](security/APP_LOCK_AND_PRIVACY.md)
+- [Backup and Recovery](security/BACKUP_AND_RECOVERY.md)
+- [Privacy Policy](../PRIVACY.md)
+- [Terms](../TERMS.md)
+- [Security Policy](../SECURITY.md)
+
+## Platform documentation
+
+- [Android](platforms/ANDROID.md)
+- [Windows](platforms/WINDOWS.md)
+- [iOS and Mac Catalyst](platforms/APPLE.md)
+
+## Release documentation
+
+- [Release Checklist](releases/RELEASE_CHECKLIST.md)
+- [Store Readiness](releases/STORE_READINESS.md)
+- [Versioning and Migration Policy](releases/VERSIONING_AND_MIGRATIONS.md)
+- [Store Metadata Template](releases/STORE_METADATA_TEMPLATE.md)
+- [Changelog](../CHANGELOG.md)
+
+## Community and legal
+
+- [Contributing](../CONTRIBUTING.md)
+- [Code of Conduct](../CODE_OF_CONDUCT.md)
+- [Support](../SUPPORT.md)
+- [Third-Party Notices](../THIRD_PARTY_NOTICES.md)
+- [Apache-2.0 License](../LICENSE)
+
+## Product identity
+
+- Product: **Finora**
+- Attribution: **Made by the Sanskar**
+- Repository: https://github.com/sanskarIN/Finora
+- Creator profile: https://www.github.com/sanskarIN
+- Business/security contact: `sanskarin@outlook.in`
+- Support: `supportramsandesh@gmail.com`
+- License: Apache-2.0
+
+## Current release boundary
+
+The current local-first source line intentionally does not claim remote Finora accounts, cloud synchronization, collaboration, server-backed commercial entitlement, automatic exchange-rate conversion, or default analytics/advertising telemetry. Those are later-version product decisions and require new architecture, privacy, security, migration, and release review before implementation.
+
+## Validation statement
+
+Documentation describes implemented source and required validation. A documented native capability is not automatically a verified store-ready capability. Android, Windows, iOS, and Mac Catalyst builds, package signing, device behavior, notification APIs, biometrics, screenshot protection, accessibility, file sharing, interrupted-restore behavior, and store declarations require evidence on the corresponding platform/toolchain before release.
