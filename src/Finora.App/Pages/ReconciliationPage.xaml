@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage x:Class="Finora.App.ReconciliationPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Reconcile Account">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
-    <Label Text="Reconcile account" Style="{StaticResource Title}" />
-    <Label Text="Compare Finora's book balance with a bank/card statement. A difference is never hidden; you can resolve it manually or create an explicit adjustment." />
+    <Label Text="Reconcile account" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
+    <Label Text="Compare Finora's book balance with a bank/card statement. A difference is never hidden as data; privacy mode can mask the displayed amount. You can resolve a difference manually or create an explicit adjustment." />
     <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Account}" />
-    <Entry Placeholder="Statement ending balance" Keyboard="Numeric" Text="{Binding StatementBalance}" />
+    <Entry Placeholder="Statement ending balance" Keyboard="Numeric" Text="{Binding StatementBalance}" SemanticProperties.Description="Statement ending balance in major currency units" />
     <DatePicker Date="{Binding StatementDate}" />
     <Editor Placeholder="Optional reconciliation note" Text="{Binding Note}" AutoSize="TextChanges" />
     <Button Text="Preview reconciliation" Command="{Binding PreviewCommand}" />
-    <Border Style="{StaticResource Card}"><Label Text="{Binding PreviewText}" /></Border>
+    <Border Style="{StaticResource Card}"><Label Text="{Binding PreviewText}" SemanticProperties.LiveSetting="Polite" /></Border>
     <Grid ColumnDefinitions="*,Auto"><Label Text="Create explicit adjustment if needed" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding CreateAdjustment}" /></Grid>
     <Button Text="Complete reconciliation" Command="{Binding CompleteCommand}" />
-    <Label Text="History" Style="{StaticResource SectionTitle}" />
-    <CollectionView ItemsSource="{Binding History}" EmptyView="No reconciliation history for this account." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding StatementDateUtc, StringFormat='Statement: {0:d}'}" FontAttributes="Bold" /><Label Text="{Binding DifferenceMinor, StringFormat='Difference: {0} minor'}" /><Label Text="{Binding AdjustmentCreated, StringFormat='Adjustment created: {0}'}" /><Label Text="{Binding Note}" FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Label Text="History" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+    <CollectionView ItemsSource="{Binding History}" EmptyView="No reconciliation history for this account." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding StatementDateUtc, StringFormat='Statement: {0:d}'}" FontAttributes="Bold" /><Label Text="{Binding Difference, StringFormat='Difference: {0}'}" /><Label Text="{Binding AdjustmentCreated, StringFormat='Adjustment created: {0}'}" /><Label Text="{Binding Note}" FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
