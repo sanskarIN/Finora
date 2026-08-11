@@ -16,6 +16,7 @@ public sealed class ReportsViewModel : ViewModelBase
     private string _categorySummary = string.Empty;
     private string _incomeExpenseSummary = string.Empty;
     private string _reportingCurrencyNotice = string.Empty;
+    private bool _amountsHidden;
 
     public ReportsViewModel(IAdvancedReportService reports, IAppSettingsService settings)
     {
@@ -41,6 +42,8 @@ public sealed class ReportsViewModel : ViewModelBase
     public string CategorySummary { get => _categorySummary; private set => SetProperty(ref _categorySummary, value); }
     public string IncomeExpenseSummary { get => _incomeExpenseSummary; private set => SetProperty(ref _incomeExpenseSummary, value); }
     public string ReportingCurrencyNotice { get => _reportingCurrencyNotice; private set => SetProperty(ref _reportingCurrencyNotice, value); }
+    public bool AmountsHidden { get => _amountsHidden; private set { if (SetProperty(ref _amountsHidden, value)) OnPropertyChanged(nameof(AmountsVisible)); } }
+    public bool AmountsVisible => !AmountsHidden;
     public System.Windows.Input.ICommand RefreshCommand { get; }
 
     public Task LoadAsync() => RunAsync(async () =>
@@ -48,11 +51,14 @@ public sealed class ReportsViewModel : ViewModelBase
         if (ToDate.Date < FromDate.Date)
             throw new InvalidOperationException("The report end date cannot be earlier than the start date.");
 
+        AmountsHidden = _settings.PrivacyMode || _settings.HideAmountsOnLaunch;
         var selectedRange = LocalDateRange.ToUtc(DateOnly.FromDateTime(FromDate), DateOnly.FromDateTime(ToDate), TimeZoneInfo.Local);
         var from = selectedRange.FromUtc;
         var to = selectedRange.ToExclusiveUtc;
         var currency = _settings.DefaultCurrency;
-        ReportingCurrencyNotice = $"Aggregated spending, income, merchant, monthly, and yearly comparisons use {currency}. Account, budget, recurring, and savings rows retain their own currencies; Finora does not silently convert between currencies.";
+        ReportingCurrencyNotice = AmountsHidden
+            ? $"Report amounts and quantitative charts are hidden by privacy mode. Aggregated reports use {currency}; rows retain their own currencies and Finora does not silently convert between currencies."
+            : $"Aggregated spending, income, merchant, monthly, and yearly comparisons use {currency}. Account, budget, recurring, and savings rows retain their own currencies; Finora does not silently convert between currencies.";
 
         var category = await _reports.GetCategorySpendingAsync(from, to, currency);
         var incomeExpense = await _reports.GetIncomeExpenseAsync(from, to, currency);
@@ -64,59 +70,68 @@ public sealed class ReportsViewModel : ViewModelBase
         var recurring = await _reports.GetRecurringObligationsAsync();
         var savings = await _reports.GetSavingsProgressAsync();
 
-        Replace(CategoryPoints, category.Points);
-        Replace(IncomeExpensePoints, incomeExpense.Points);
-        Replace(MonthlyNetPoints, monthly.Select(item => new ReportPoint($"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}", item.NetMinor)));
+        Replace(CategoryPoints, AmountsHidden ? [] : category.Points);
+        Replace(IncomeExpensePoints, AmountsHidden ? [] : incomeExpense.Points);
+        Replace(MonthlyNetPoints, AmountsHidden ? [] : monthly.Select(item => new ReportPoint($"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}", item.NetMinor)));
         Replace(MonthlyNetRows, monthly.Select(item => new ReportDisplayPoint(
             $"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}",
-            new Money(item.NetMinor, currency).Format())));
-        Replace(YearlyNetPoints, yearly.Select(item => new ReportPoint(item.Year.ToString(CultureInfo.InvariantCulture), item.NetMinor)));
+            DisplayMoney(item.NetMinor, currency))));
+        Replace(YearlyNetPoints, AmountsHidden ? [] : yearly.Select(item => new ReportPoint(item.Year.ToString(CultureInfo.InvariantCulture), item.NetMinor)));
         Replace(YearlyNetRows, yearly.Select(item => new ReportDisplayPoint(
             item.Year.ToString(CultureInfo.InvariantCulture),
-            new Money(item.NetMinor, currency).Format())));
+            DisplayMoney(item.NetMinor, currency))));
         Replace(MerchantRows, merchants.Select(item => new MerchantReportDisplayItem(
             item.Merchant,
             item.TransactionCount,
-            new Money(item.ExpenseMinor, currency).Format(),
-            new Money(item.IncomeMinor, currency).Format())));
+            DisplayMoney(item.ExpenseMinor, currency),
+            DisplayMoney(item.IncomeMinor, currency))));
         Replace(BudgetRows, budgets.Select(item => new BudgetPerformanceDisplayItem(
             item.Name,
             item.Currency,
-            new Money(item.PlannedMinor, item.Currency).Format(),
-            new Money(item.ActualMinor, item.Currency).Format(),
-            new Money(item.VarianceMinor, item.Currency).Format())));
+            DisplayMoney(item.PlannedMinor, item.Currency),
+            DisplayMoney(item.ActualMinor, item.Currency),
+            DisplayMoney(item.VarianceMinor, item.Currency))));
         Replace(AccountTrendRows, trends.Select(series => new AccountBalanceDisplaySeries(
             series.AccountId,
             series.AccountName,
             series.Currency,
             series.Points.Select(point => new AccountBalanceDisplayPoint(
                 point.Date.ToString("d", CultureInfo.CurrentCulture),
-                new Money(point.BalanceMinor, series.Currency).Format())).ToList())));
+                DisplayMoney(point.BalanceMinor, series.Currency))).ToList())));
         Replace(RecurringRows, recurring.Select(item => new RecurringObligationDisplayItem(
             item.Name,
             item.Type.ToString(),
             item.Status.ToString(),
-            new Money(item.AmountMinor, item.Currency).Format(),
+            DisplayMoney(item.AmountMinor, item.Currency),
             item.Currency,
             item.NextDueOn?.ToString("d", CultureInfo.CurrentCulture) ?? "No next due date",
             item.EndsOn?.ToString("d", CultureInfo.CurrentCulture) ?? "No end date")));
         Replace(SavingsRows, savings.Select(item => new SavingsProgressDisplayItem(
             item.Name,
             item.Currency,
-            new Money(item.CurrentMinor, item.Currency).Format(),
-            new Money(item.TargetMinor, item.Currency).Format(),
+            DisplayMoney(item.CurrentMinor, item.Currency),
+            DisplayMoney(item.TargetMinor, item.Currency),
             $"{Math.Clamp(item.Progress * 100d, 0d, 100d):0}%",
             item.TargetDate?.ToString("d", CultureInfo.CurrentCulture) ?? "No target date",
             item.IsCompleted ? "Completed" : "In progress")));
 
         var income = incomeExpense.Points.FirstOrDefault(item => string.Equals(item.Label, "Income", StringComparison.OrdinalIgnoreCase))?.ValueMinor ?? 0;
         var expense = incomeExpense.Points.FirstOrDefault(item => string.Equals(item.Label, "Expense", StringComparison.OrdinalIgnoreCase))?.ValueMinor ?? 0;
-        Summary = $"{FromDate:d}–{ToDate:d}: income {new Money(income, currency).Format()}, spending {new Money(expense, currency).Format()}, net {new Money(checked(income - expense), currency).Format()}.";
-        CategorySummary = CategoryPoints.Count == 0
+        Summary = AmountsHidden
+            ? $"{FromDate:d}–{ToDate:d}: monetary values hidden by privacy mode."
+            : $"{FromDate:d}–{ToDate:d}: income {DisplayMoney(income, currency)}, spending {DisplayMoney(expense, currency)}, net {DisplayMoney(checked(income - expense), currency)}.";
+        CategorySummary = category.Points.Count == 0
             ? "No category spending exists for this period."
-            : "Spending by category: " + string.Join("; ", CategoryPoints.Select(item => $"{item.Label} {new Money(item.ValueMinor, currency).Format()}")) + ".";
-        IncomeExpenseSummary = $"Income {new Money(income, currency).Format()}; expense {new Money(expense, currency).Format()}.";
+            : AmountsHidden
+                ? "Category spending amounts are hidden by privacy mode."
+                : "Spending by category: " + string.Join("; ", category.Points.Select(item => $"{item.Label} {DisplayMoney(item.ValueMinor, currency)}")) + ".";
+        IncomeExpenseSummary = AmountsHidden
+            ? "Income and expense amounts are hidden by privacy mode."
+            : $"Income {DisplayMoney(income, currency)}; expense {DisplayMoney(expense, currency)}.";
     });
+
+    private string DisplayMoney(long minor, string currency)
+        => AmountsHidden ? "••••" : new Money(minor, currency).Format();
 
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values)
     {
