@@ -81,7 +81,9 @@ public sealed class SavingsViewModel : ViewModelBase
         Milestones = achieved.Length == 0 ? $"Next milestone: {next}%." : next == 0 ? "Milestones achieved: 25%, 50%, 75%, 100%." : $"Achieved: {string.Join(", ", achieved.Select(x => $"{x}%"))}. Next: {next}%.";
         if (goal.TargetDate is null || goal.CurrentMinor >= goal.TargetMinor) { Forecast = goal.CurrentMinor >= goal.TargetMinor ? "Target reached." : "Add a target date to calculate a contribution forecast."; return; }
         var days = Math.Max(1, goal.TargetDate.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber); var remaining = checked(goal.TargetMinor - goal.CurrentMinor); var months = Math.Max(1m, days / 30.4375m); var monthly = (long)Math.Ceiling(remaining / months);
-        Forecast = $"To reach the target by {goal.TargetDate:yyyy-MM-dd}, aim for about {new Money(monthly, goal.Currency).Format()} per month over the remaining {days} day(s).";
+        Forecast = _settings.PrivacyMode || _settings.HideAmountsOnLaunch
+            ? $"To reach the target by {goal.TargetDate:yyyy-MM-dd}, the monthly contribution estimate is hidden by privacy mode. {days} day(s) remain."
+            : $"To reach the target by {goal.TargetDate:yyyy-MM-dd}, aim for about {new Money(monthly, goal.Currency).Format()} per month over the remaining {days} day(s).";
     }
 
     private static bool TryParse(string value, out decimal result) => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result) || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
