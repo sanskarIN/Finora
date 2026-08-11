@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 
 namespace Finora.App;
 
@@ -17,6 +18,8 @@ public sealed class DashboardViewModel : ViewModelBase
     private string _netChange = "—";
     private string _remainingBudget = "—";
     private string _currencyScope = string.Empty;
+    private string _periodRange = string.Empty;
+    private DashboardPeriodChoice _selectedPeriod;
     private bool _privacyMode;
     private bool _showConfiguration;
 
@@ -27,6 +30,10 @@ public sealed class DashboardViewModel : ViewModelBase
         _reports = reports;
         _settings = settings;
         _privacyMode = settings.PrivacyMode || settings.HideAmountsOnLaunch;
+        PeriodChoices = Enum.GetValues<DashboardPeriod>()
+            .Select(period => new DashboardPeriodChoice(period, DashboardPeriodPolicy.GetLabel(period)))
+            .ToArray();
+        _selectedPeriod = PeriodChoices[0];
         RefreshCommand = new AsyncCommand(LoadAsync);
         TogglePrivacyCommand = new Command(() => { PrivacyMode = !PrivacyMode; _settings.PrivacyMode = PrivacyMode; _ = LoadAsync(); });
         ToggleConfigurationCommand = new Command(() => ShowConfiguration = !ShowConfiguration);
@@ -37,6 +44,9 @@ public sealed class DashboardViewModel : ViewModelBase
     public ObservableCollection<DashboardAmountItem> UpcomingItems { get; } = [];
     public ObservableCollection<DashboardGoalItem> Goals { get; } = [];
     public ObservableCollection<DashboardAmountItem> CashFlow { get; } = [];
+    public IReadOnlyList<DashboardPeriodChoice> PeriodChoices { get; }
+    public DashboardPeriodChoice SelectedPeriod { get => _selectedPeriod; set => SetProperty(ref _selectedPeriod, value ?? PeriodChoices[0]); }
+    public string PeriodRange { get => _periodRange; private set => SetProperty(ref _periodRange, value); }
     public string TotalBalance { get => _totalBalance; private set => SetProperty(ref _totalBalance, value); }
     public string Income { get => _income; private set => SetProperty(ref _income, value); }
     public string Expense { get => _expense; private set => SetProperty(ref _expense, value); }
@@ -69,25 +79,22 @@ public sealed class DashboardViewModel : ViewModelBase
         OnPropertyChanged(nameof(ShowCashFlow));
 
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var startDay = Math.Min(_settings.FinancialMonthStartDay, 28);
-        var previousMonth = today.AddMonths(-1);
-        var monthStart = today.Day >= startDay
-            ? new DateOnly(today.Year, today.Month, startDay)
-            : new DateOnly(previousMonth.Year, previousMonth.Month, startDay);
-        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-        var from = new DateTimeOffset(monthStart.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-        var toExclusive = new DateTimeOffset(monthEnd.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var dateRange = DashboardPeriodPolicy.Resolve(SelectedPeriod.Period, today, _settings.FinancialMonthStartDay);
+        var utcRange = LocalDateRange.ToUtc(dateRange.From, dateRange.Through, TimeZoneInfo.Local);
+        var from = utcRange.FromUtc;
+        var toExclusive = utcRange.ToExclusiveUtc;
         var reportingCurrency = _settings.DefaultCurrency;
+        PeriodRange = $"{SelectedPeriod.Label}: {dateRange.From.ToString("d", CultureInfo.CurrentCulture)} – {dateRange.Through.ToString("d", CultureInfo.CurrentCulture)}";
 
         var incomeExpense = await _reports.GetIncomeExpenseAsync(from, toExclusive, reportingCurrency);
         var categorySeries = await _reports.GetCategorySpendingAsync(from, toExclusive, reportingCurrency);
-        var accountTrends = await _reports.GetAccountBalanceTrendsAsync(DateTimeOffset.UnixEpoch, DateTimeOffset.UtcNow.AddSeconds(1));
-        var reportingAccounts = accountTrends.Where(x => string.Equals(x.Currency, reportingCurrency, StringComparison.OrdinalIgnoreCase)).ToList();
-        var otherCurrencyAccounts = accountTrends.Count - reportingAccounts.Count;
-        var totalBalance = SumChecked(reportingAccounts.Select(x => x.Points.LastOrDefault()?.BalanceMinor ?? 0L));
+        var accounts = await _store.GetAccountsAsync();
+        var reportingAccounts = accounts.Where(x => x.State != AccountState.Archived && string.Equals(x.Currency, reportingCurrency, StringComparison.OrdinalIgnoreCase)).ToList();
+        var otherCurrencyAccounts = accounts.Count(x => x.State != AccountState.Archived && !string.Equals(x.Currency, reportingCurrency, StringComparison.OrdinalIgnoreCase));
+        var totalBalance = SumChecked(reportingAccounts.Select(x => x.BalanceMinor));
         var income = incomeExpense.Points.FirstOrDefault(x => x.Label == "Income")?.ValueMinor ?? 0L;
         var expense = incomeExpense.Points.FirstOrDefault(x => x.Label == "Expense")?.ValueMinor ?? 0L;
-        var budgets = (await _reports.GetBudgetPerformanceAsync(today)).Where(x => string.Equals(x.Currency, reportingCurrency, StringComparison.OrdinalIgnoreCase)).ToList();
+        var budgets = (await _reports.GetBudgetPerformanceAsync(dateRange.Through)).Where(x => string.Equals(x.Currency, reportingCurrency, StringComparison.OrdinalIgnoreCase)).ToList();
         var remainingBudget = SumChecked(budgets.Select(x => Math.Max(0L, x.VarianceMinor)));
 
         TotalBalance = Display(totalBalance, reportingCurrency);
@@ -96,7 +103,7 @@ public sealed class DashboardViewModel : ViewModelBase
         NetChange = Display(checked(income - expense), reportingCurrency);
         RemainingBudget = Display(remainingBudget, reportingCurrency);
         CurrencyScope = otherCurrencyAccounts > 0
-            ? $"Dashboard totals use {reportingCurrency}. {otherCurrencyAccounts} account(s) in other currencies are shown only in their own-currency rows/reports; Finora does not invent exchange rates."
+            ? $"Dashboard totals use {reportingCurrency}. {otherCurrencyAccounts} active/hidden account(s) in other currencies are excluded from aggregate cards; Finora does not invent exchange rates."
             : $"Dashboard totals use {reportingCurrency}.";
 
         var recent = await _store.SearchTransactionsAsync(from: from, to: toExclusive.AddTicks(-1));
@@ -138,6 +145,7 @@ public sealed class DashboardViewModel : ViewModelBase
     }
 }
 
+public sealed record DashboardPeriodChoice(DashboardPeriod Period, string Label);
 public sealed record DashboardAmountItem(string Label, string Amount, string? Detail);
 public sealed record DashboardGoalItem(string Name, string ProgressText, string PercentText);
 public sealed record DashboardTransactionItem(Guid Id, string Label, string Account, DateTimeOffset OccurredAt, string Amount);
