@@ -70,13 +70,15 @@ public sealed class ReportsViewModel : ViewModelBase
         var recurring = await _reports.GetRecurringObligationsAsync();
         var savings = await _reports.GetSavingsProgressAsync();
 
-        Replace(CategoryPoints, AmountsHidden ? [] : category.Points);
-        Replace(IncomeExpensePoints, AmountsHidden ? [] : incomeExpense.Points);
-        Replace(MonthlyNetPoints, AmountsHidden ? [] : monthly.Select(item => new ReportPoint($"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}", item.NetMinor)));
+        Replace(CategoryPoints, AmountsHidden ? Array.Empty<ReportPoint>() : category.Points);
+        Replace(IncomeExpensePoints, AmountsHidden ? Array.Empty<ReportPoint>() : incomeExpense.Points);
+        IEnumerable<ReportPoint> monthlyPoints = monthly.Select(item => new ReportPoint($"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}", item.NetMinor));
+        Replace(MonthlyNetPoints, AmountsHidden ? Array.Empty<ReportPoint>() : monthlyPoints);
         Replace(MonthlyNetRows, monthly.Select(item => new ReportDisplayPoint(
             $"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}",
             DisplayMoney(item.NetMinor, currency))));
-        Replace(YearlyNetPoints, AmountsHidden ? [] : yearly.Select(item => new ReportPoint(item.Year.ToString(CultureInfo.InvariantCulture), item.NetMinor)));
+        IEnumerable<ReportPoint> yearlyPoints = yearly.Select(item => new ReportPoint(item.Year.ToString(CultureInfo.InvariantCulture), item.NetMinor));
+        Replace(YearlyNetPoints, AmountsHidden ? Array.Empty<ReportPoint>() : yearlyPoints);
         Replace(YearlyNetRows, yearly.Select(item => new ReportDisplayPoint(
             item.Year.ToString(CultureInfo.InvariantCulture),
             DisplayMoney(item.NetMinor, currency))));
