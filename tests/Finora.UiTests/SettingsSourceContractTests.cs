@@ -20,7 +20,6 @@ public sealed class SettingsSourceContractTests
             "Preferred receipt image quality",
             "Export sanitized diagnostic log",
             "Delete all local finance data",
-            "Finora 0.2.0 (2)",
             "Made by the Sanskar",
             ".NET MAUI · C# · XAML · SQLite · MVVM",
             "sanskarin@outlook.in",
@@ -32,9 +31,19 @@ public sealed class SettingsSourceContractTests
         ];
 
         foreach (var value in requiredText) Assert.Contains(value, xaml, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding AppVersion}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Clicked=\"OnDeleteAllFinanceDataClicked\"", xaml, StringComparison.Ordinal);
         Assert.DoesNotContain("Clicked=\"OnDeleteAllClicked\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Clicked=\"OnOnboardingClicked\"", xaml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Settings_AboutVersionComesFromPackagedMetadata()
+    {
+        var viewModel = ReadContract("SettingsViewModel.cs");
+
+        Assert.Contains("AppInfo.Current.VersionString", viewModel, StringComparison.Ordinal);
+        Assert.Contains("AppInfo.Current.BuildString", viewModel, StringComparison.Ordinal);
     }
 
     [Fact]
