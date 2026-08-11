@@ -15,6 +15,11 @@
     <None Include="..\..\src\Finora.App\ViewModels\DashboardViewModel.cs" Link="Contracts\DashboardViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\ReportsPage.xaml" Link="Contracts\ReportsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\ReportsViewModel.cs" Link="Contracts\ReportsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Controls\ReportBarChartView.cs" Link="Contracts\ReportBarChartView.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\TransactionsPage.xaml" Link="Contracts\TransactionsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\TransactionsViewModel.cs" Link="Contracts\TransactionsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\OnboardingPage.xaml" Link="Contracts\OnboardingPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\OnboardingPage.Links.cs" Link="Contracts\OnboardingPage.Links.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.xaml" Link="Contracts\SettingsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\SettingsViewModel.cs" Link="Contracts\SettingsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.Reset.cs" Link="Contracts\SettingsPage.Reset.cs" CopyToOutputDirectory="PreserveNewest" />
