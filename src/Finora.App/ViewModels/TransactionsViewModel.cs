@@ -2,13 +2,16 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 
 namespace Finora.App;
 
 public sealed class TransactionsViewModel : ViewModelBase
 {
+    private const int PageSize = 50;
     private readonly IFinanceStore _store;
     private readonly IAppSettingsService _settings;
+    private IReadOnlyList<TransactionListItem> _allMatches = [];
     private string _searchText = string.Empty;
     private TransactionType _type;
     private AccountSummary? _selectedAccount;
@@ -27,6 +30,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private string _filterType = "All";
     private DateTime _filterFromDate = DateTime.Today.AddMonths(-3);
     private DateTime _filterToDate = DateTime.Today;
+    private string _sortOrder = "Newest first";
 
     public TransactionsViewModel(IFinanceStore store, IAppSettingsService settings)
     {
@@ -36,6 +40,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         RefreshCommand = new AsyncCommand(LoadAsync);
         SearchCommand = new AsyncCommand(SearchAsync);
         AddCommand = new AsyncCommand(AddAsync);
+        LoadMoreCommand = new AsyncCommand(LoadMoreAsync);
         ToggleFiltersCommand = new Command(() => ShowAdvancedFilters = !ShowAdvancedFilters);
         ClearFiltersCommand = new AsyncCommand(ClearFiltersAsync);
     }
@@ -45,6 +50,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     public ObservableCollection<Category> Categories { get; } = [];
     public IReadOnlyList<TransactionType> TransactionTypes { get; } = [TransactionType.Expense, TransactionType.Income, TransactionType.Refund, TransactionType.Adjustment];
     public IReadOnlyList<string> FilterTypes { get; } = ["All", "Expense", "Income", "Transfer", "Refund", "Adjustment"];
+    public IReadOnlyList<string> SortOrders { get; } = ["Newest first", "Oldest first", "Amount high to low", "Amount low to high", "Merchant A–Z"];
     public string SearchText { get => _searchText; set => SetProperty(ref _searchText, value); }
     public TransactionType Type { get => _type; set => SetProperty(ref _type, value); }
     public AccountSummary? SelectedAccount { get => _selectedAccount; set => SetProperty(ref _selectedAccount, value); }
@@ -63,9 +69,13 @@ public sealed class TransactionsViewModel : ViewModelBase
     public string FilterType { get => _filterType; set => SetProperty(ref _filterType, value); }
     public DateTime FilterFromDate { get => _filterFromDate; set => SetProperty(ref _filterFromDate, value); }
     public DateTime FilterToDate { get => _filterToDate; set => SetProperty(ref _filterToDate, value); }
+    public string SortOrder { get => _sortOrder; set => SetProperty(ref _sortOrder, value); }
+    public bool HasMore => Transactions.Count < _allMatches.Count;
+    public string HistoryStatus => _allMatches.Count == 0 ? "No matching transactions." : $"Showing {Transactions.Count} of {_allMatches.Count} matching transaction(s).";
     public System.Windows.Input.ICommand RefreshCommand { get; }
     public System.Windows.Input.ICommand SearchCommand { get; }
     public System.Windows.Input.ICommand AddCommand { get; }
+    public System.Windows.Input.ICommand LoadMoreCommand { get; }
     public System.Windows.Input.ICommand ToggleFiltersCommand { get; }
     public System.Windows.Input.ICommand ClearFiltersCommand { get; }
 
@@ -85,9 +95,16 @@ public sealed class TransactionsViewModel : ViewModelBase
         FilterType = "All";
         FilterFromDate = DateTime.Today.AddMonths(-3);
         FilterToDate = DateTime.Today;
+        SortOrder = "Newest first";
         ShowAdvancedFilters = false;
         await SearchCoreAsync();
     });
+
+    private Task LoadMoreAsync()
+    {
+        AppendNextPage();
+        return Task.CompletedTask;
+    }
 
     private Task AddAsync() => RunAsync(async () =>
     {
@@ -166,8 +183,9 @@ public sealed class TransactionsViewModel : ViewModelBase
         if (ShowAdvancedFilters)
         {
             if (FilterToDate.Date < FilterFromDate.Date) throw new InvalidOperationException("Filter end date cannot be before start date.");
-            from = new DateTimeOffset(DateTime.SpecifyKind(FilterFromDate.Date, DateTimeKind.Local)).ToUniversalTime();
-            to = new DateTimeOffset(DateTime.SpecifyKind(FilterToDate.Date.AddDays(1).AddTicks(-1), DateTimeKind.Local)).ToUniversalTime();
+            var range = LocalDateRange.ToUtc(DateOnly.FromDateTime(FilterFromDate), DateOnly.FromDateTime(FilterToDate), TimeZoneInfo.Local);
+            from = range.FromUtc;
+            to = range.ToExclusiveUtc.AddTicks(-1);
         }
 
         var items = await _store.SearchTransactionsAsync(
@@ -180,8 +198,25 @@ public sealed class TransactionsViewModel : ViewModelBase
         if (ShowAdvancedFilters && !string.Equals(FilterType, "All", StringComparison.OrdinalIgnoreCase) && Enum.TryParse<TransactionType>(FilterType, true, out var parsed))
             items = items.Where(x => x.Type == parsed).ToArray();
 
+        _allMatches = Sort(items).ToArray();
         Transactions.Clear();
-        foreach (var item in items) Transactions.Add(item);
+        AppendNextPage();
+    }
+
+    private IEnumerable<TransactionListItem> Sort(IEnumerable<TransactionListItem> items) => SortOrder switch
+    {
+        "Oldest first" => items.OrderBy(x => x.OccurredAtUtc).ThenBy(x => x.Id),
+        "Amount high to low" => items.OrderByDescending(x => x.AmountMinor).ThenByDescending(x => x.OccurredAtUtc),
+        "Amount low to high" => items.OrderBy(x => x.AmountMinor).ThenByDescending(x => x.OccurredAtUtc),
+        "Merchant A–Z" => items.OrderBy(x => x.Merchant ?? string.Empty, StringComparer.CurrentCultureIgnoreCase).ThenByDescending(x => x.OccurredAtUtc),
+        _ => items.OrderByDescending(x => x.OccurredAtUtc).ThenByDescending(x => x.Id)
+    };
+
+    private void AppendNextPage()
+    {
+        foreach (var item in _allMatches.Skip(Transactions.Count).Take(PageSize)) Transactions.Add(item);
+        OnPropertyChanged(nameof(HasMore));
+        OnPropertyChanged(nameof(HistoryStatus));
     }
 
     private static string? NullIfBlank(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
