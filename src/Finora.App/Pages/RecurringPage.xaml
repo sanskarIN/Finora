@@ -5,12 +5,12 @@
              Title="Recurring">
   <ScrollView>
     <VerticalStackLayout Padding="20" Spacing="14">
-      <Label Text="Recurring items" Style="{StaticResource Title}" />
+      <Label Text="Recurring items" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
       <Label Text="Recurring rules prepare due occurrences. Money is recorded only when you mark an occurrence paid or partially paid." />
       <Button Text="Prepare due occurrences now" Command="{Binding ProcessNowCommand}" />
       <Label Text="{Binding ProcessingResult}" SemanticProperties.LiveSetting="Polite" />
 
-      <Label Text="Rules" Style="{StaticResource SectionTitle}" />
+      <Label Text="Rules" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
       <Picker Title="Choose recurring rule"
               ItemsSource="{Binding Rules}"
               ItemDisplayBinding="{Binding Name}"
@@ -22,7 +22,7 @@
           <Label Text="{Binding SelectedRule.Status, StringFormat='Status: {0}'}" />
           <Label Text="{Binding SelectedRule.TransactionType, StringFormat='Type: {0}'}" />
           <Label Text="{Binding SelectedRule.Frequency, StringFormat='Frequency: {0}'}" />
-          <Label Text="{Binding SelectedRule.AmountMinor, StringFormat='Scheduled amount: {0} minor units'}" />
+          <Label><Label.Text><MultiBinding StringFormat="Scheduled amount: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="SelectedRule.AmountMinor" /><Binding Path="SelectedRule.Currency" /></MultiBinding></Label.Text></Label>
           <Label Text="{Binding SelectedRule.NextDueOn, StringFormat='Next due: {0}'}" />
         </VerticalStackLayout>
       </Border>
@@ -54,7 +54,7 @@
                 </VerticalStackLayout>
                 <VerticalStackLayout Grid.Column="1" HorizontalOptions="End">
                   <Label Text="{Binding Status}" HorizontalTextAlignment="End" />
-                  <Label Text="{Binding AmountMinor, StringFormat='{0} minor'}" HorizontalTextAlignment="End" />
+                  <Label HorizontalTextAlignment="End"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label>
                   <Label Text="{Binding NextDueOn, StringFormat='Next: {0}'}" HorizontalTextAlignment="End" />
                 </VerticalStackLayout>
               </Grid>
@@ -63,7 +63,7 @@
         </CollectionView.ItemTemplate>
       </CollectionView>
 
-      <Label Text="Occurrence workflow" Style="{StaticResource SectionTitle}" />
+      <Label Text="Occurrence workflow" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
       <Picker Title="Choose occurrence"
               ItemsSource="{Binding Occurrences}"
               ItemDisplayBinding="{Binding RuleName}"
@@ -74,8 +74,8 @@
           <Label Text="{Binding SelectedOccurrence.Status}" />
           <Label Text="{Binding SelectedOccurrence.DueOn, StringFormat='Due {0}'}" />
           <Label Text="{Binding SelectedOccurrence.PostponedTo, StringFormat='Postponed to {0}'}" />
-          <Label Text="{Binding SelectedOccurrence.AmountMinor, StringFormat='Scheduled: {0} minor'}" />
-          <Label Text="{Binding SelectedOccurrence.PaidAmountMinor, StringFormat='Paid: {0} minor'}" />
+          <Label><Label.Text><MultiBinding StringFormat="Scheduled: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="SelectedOccurrence.AmountMinor" /><Binding Path="SelectedOccurrence.Currency" /></MultiBinding></Label.Text></Label>
+          <Label><Label.Text><MultiBinding StringFormat="Paid: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="SelectedOccurrence.PaidAmountMinor" /><Binding Path="SelectedOccurrence.Currency" /></MultiBinding></Label.Text></Label>
         </VerticalStackLayout>
       </Border>
       <Entry Placeholder="Paid amount (full or partial)" Keyboard="Numeric" Text="{Binding PaidAmount}" />
@@ -91,7 +91,7 @@
       <DatePicker Date="{Binding PostponeDate}" />
       <Button Text="Postpone to selected date" Command="{Binding PostponeCommand}" />
 
-      <Label Text="Create recurring item" Style="{StaticResource SectionTitle}" />
+      <Label Text="Create recurring item" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
       <Entry Placeholder="Name" Text="{Binding Name}" />
       <Picker Title="Type" ItemsSource="{Binding Types}" SelectedItem="{Binding Type}" />
       <Picker Title="Frequency" ItemsSource="{Binding Frequencies}" SelectedItem="{Binding Frequency}" />
@@ -101,7 +101,7 @@
       <Picker Title="Account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Account}" />
       <Picker Title="Destination account" ItemsSource="{Binding Accounts}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding DestinationAccount}" IsVisible="{Binding IsTransfer}" />
       <Picker Title="Category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding Category}" IsVisible="{Binding IsTransfer, Converter={StaticResource InverseBoolConverter}}" />
-      <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" />
+      <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding Amount}" SemanticProperties.Description="Recurring amount in major currency units" />
       <Entry Placeholder="Merchant / payee" Text="{Binding Merchant}" />
       <Editor Placeholder="Note" Text="{Binding Note}" AutoSize="TextChanges" />
       <Label Text="Start date" />
