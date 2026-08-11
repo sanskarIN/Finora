@@ -10,7 +10,7 @@ Run on every pull request and release candidate:
 python build/scripts/verify_structure.py
 ```
 
-Expected: no malformed XML/XAML/RESX/project files, missing project references, empty implementation/resource files, unfinished placeholder markers, missing XAML event handlers, version/schema drift, missing required repository/policy files, forbidden floating-point money fields, Android automatic-backup/data-transfer regressions, unmasked Settings backup/PIN fields, password/PIN `DisplayPromptAsync` regressions, or raw exception messages passed into user alerts.
+Expected: no malformed XML/XAML/RESX/project files, missing project references, empty implementation/resource files, unfinished placeholder markers, missing XAML event handlers, version/schema drift, missing required repository/policy files, forbidden floating-point money fields, raw minor-unit user-facing money bindings, Android automatic-backup/data-transfer regressions, unmasked Settings backup/PIN fields, password/PIN `DisplayPromptAsync` regressions, biometric provider-text regressions, or raw exception messages passed into user alerts.
 
 ## 2. Build/static analysis
 
@@ -42,6 +42,8 @@ Cover pure/domain behavior:
 - attachment/revision/reconciliation/notification metadata rules;
 - decimal calculator precedence/parentheses/division/error cases;
 - locale normalization/application helpers;
+- dashboard current/previous financial-month, trailing 30/90-day, and year-to-date period policy;
+- local calendar date range conversion to exclusive UTC bounds, including non-UTC offsets and invalid ranges;
 - PIN attempt escalation/lockout policy;
 - ViewModel busy/error/command behavior;
 - safe error mapper preserves short validation text but redacts path/database/crypto/provider details;
@@ -83,7 +85,10 @@ Use isolated SQLite databases per test.
 - invalid split totals/categories are rejected/detected;
 - tag linking and removal;
 - duplicate detection does not delete data automatically;
-- search/filter by account/category/type/date/text.
+- search/filter by account/category/type/date/text;
+- local-calendar filter dates use the shared UTC boundary policy;
+- transaction history sort choices remain deterministic;
+- first history page is bounded to 50 rows and Load more appends the next page without duplicating rows.
 
 ### Schema-v2 metadata persistence boundary
 
@@ -135,7 +140,9 @@ These tests complement relational services, foreign keys, backup graph validatio
 - withdrawal never drives running progress below zero;
 - optional linked contribution transaction exists and uses goal currency;
 - target/milestone/completion behavior;
-- checked contribution aggregation.
+- checked contribution aggregation;
+- savings-progress report derives current amount/completion from validated history;
+- savings forecast does not expose estimated money while privacy mode hides amounts.
 
 ### Recurrence
 
@@ -155,7 +162,22 @@ These tests complement relational services, foreign keys, backup graph validatio
 - archived rule is removed from active rule list while occurrence history remains;
 - completed/archived rule cannot be resumed;
 - backlog guard prevents unbounded occurrence generation;
-- end date and custom interval behavior.
+- end date and custom interval behavior;
+- recurring-obligation report retains rule type/status/currency/next-due information.
+
+### Reports and local-calendar boundaries
+
+- category spending remains split-aware and currency-scoped;
+- income-versus-expense remains currency-scoped;
+- account balance trend uses local-calendar boundaries;
+- budget performance resolves budget windows through `BudgetPeriodPolicy` and local-calendar UTC boundaries;
+- monthly comparison groups by local calendar month rather than UTC month;
+- yearly comparison groups by local calendar year;
+- current monthly/yearly comparisons exclude future-dated imported rows;
+- yearly comparison returns the requested trailing-year range with checked income/expense/net values;
+- savings-progress report uses checked contribution history;
+- recurring-obligation report excludes archived rules but preserves active/paused/completed report state as applicable;
+- chart source can represent negative net values without applying absolute magnitude.
 
 ### Local notifications
 
@@ -167,7 +189,8 @@ These tests complement relational services, foreign keys, backup graph validatio
 - expired enabled rows become disabled during reconciliation;
 - disabled/expired IDs are retried for OS cancellation;
 - pending enabled reminders are rescheduled after reconciliation;
-- generic privacy-safe content remains free of amount/account/merchant/note details.
+- generic privacy-safe content remains free of amount/account/merchant/note details;
+- Android cancellation queries an existing `PendingIntent` with `NoCreate` rather than creating a cancellation artifact.
 
 ### CSV import
 
@@ -267,18 +290,31 @@ Current required migration coverage includes v1 → v2.
 Cover navigation contracts and state behavior without pretending this is native UI automation:
 
 - onboarding → adaptive root;
+- onboarding exposes privacy and terms access and tells users it can be revisited;
 - mobile bottom-tab hierarchy and desktop/tablet flyout hierarchy;
 - startup/unlock preserve adaptive destination;
-- privacy mode/hidden amounts;
+- privacy mode/hidden amounts across dashboard, accounts, transaction history/tools/detail splits, budgets, savings, recurring, reconciliation and reports;
+- quantitative report charts hidden while amounts are hidden;
+- passive monetary rows use currency-aware formatting rather than raw minor-unit labels;
+- account/transaction detail editable amounts use currency-specific decimal precision rather than a hard-coded two-decimal assumption;
 - transaction quick-add/detail routes;
+- account detail billing-day UI remains 1–31;
 - accounts/detail/reconciliation routes;
 - import and transaction-tool routes;
+- transaction history sort picker and bounded Load more contract;
 - category/tag management route;
 - budget/goal/recurring/report routes;
 - recurring page exposes pause/resume/archive and skipped-occurrence reopen bindings;
 - dashboard source does not call legacy mixed-currency aggregate API;
 - dashboard displays explicit reporting-currency scope;
+- dashboard exposes current/previous financial month, trailing 30/90 days and year-to-date period selection;
+- Reports page exposes category, income/expense, monthly, yearly, merchant, budget, recurring, savings and account-trend sections;
+- signed report chart source uses a true zero baseline and does not call `Math.Abs(item.ValueMinor)`;
 - backup/restore/settings/legal routes;
+- Settings can revisit onboarding;
+- Settings About version/build comes from packaged `AppInfo` metadata;
+- Settings exposes repository/profile/business/support/license/privacy/terms/notices/contributing/security/support-guide information;
+- Settings full deletion remains wired to dedicated complete finance reset handler;
 - Settings backup password/new PIN/confirm PIN fields remain masked;
 - secret fields are cleared after use;
 - lock PIN field remains masked and screen-reader described;
@@ -301,8 +337,10 @@ At minimum test a current emulator and a physical device when available:
 - interrupted restore/relaunch recovery where practical;
 - notification permission and scheduled reminders;
 - dedupe replacement failure/success behavior where practical;
+- cancelling a nonexistent reminder does not create a new pending alarm artifact;
 - reboot/doze/force-stop reminder limitations;
 - biometric success/cancel/unavailable/lockout with PIN fallback;
+- biometric OS/provider error strings are not surfaced verbatim;
 - `FLAG_SECURE` behavior;
 - verify app data is excluded from Android automatic backup/cloud backup/device transfer according to manifest/rules;
 - dark/light/system theme;
@@ -374,6 +412,8 @@ Verify:
 - no network/account requirement for current release;
 - no analytics/telemetry/advertising SDK introduced;
 - logs do not include amounts, account names, merchant/payee names, notes, locations, receipt names/contents, PINs, backup passwords, provider exception messages, or encryption material;
+- passive money surfaces hide monetary values when privacy/hide-on-launch is active;
+- quantitative chart magnitude is not visible while amounts are hidden;
 - bound errors and alerts do not expose raw storage/database/crypto/provider paths/messages;
 - local notification text remains generic/privacy-safe;
 - stale local reminders are cancelled when source state is no longer active;
