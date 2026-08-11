@@ -2,6 +2,8 @@
 
 Finora is a multi-project .NET MAUI solution. The current source targets .NET 10 TFMs for Android, iOS, Mac Catalyst, and Windows. Use a .NET/MAUI toolchain that supports the target frameworks declared in `src/Finora.App/Finora.App.csproj`.
 
+Complete documentation index: [`docs/README.md`](../README.md)
+
 ## Required development tools
 
 Common:
@@ -34,9 +36,30 @@ Run this first:
 python build/scripts/verify_structure.py
 ```
 
-The current preflight checks required repository files, XML/XAML/RESX/project parsing, project/solution references, empty files, unfinished placeholder markers, XAML event handlers, app/package version consistency, schema-document consistency, suspicious floating-point monetary representation, and Android local-data privacy flags.
+The current preflight checks:
 
-It does **not** compile C#, restore NuGet packages, execute analyzers, run tests, build native targets, sign packages, or validate devices/stores.
+- required repository/legal/community files;
+- the complete required documentation tree;
+- repository-relative Markdown file links;
+- XML/XAML/RESX/project parsing;
+- project/solution references;
+- empty files;
+- unfinished placeholder markers;
+- XAML event handlers;
+- app/package version consistency;
+- schema-document consistency;
+- suspicious floating-point monetary representation;
+- raw minor-unit passive XAML display patterns;
+- masked Settings backup/PIN secret fields;
+- password/PIN prompt regressions;
+- complete finance-reset handler wiring;
+- biometric provider-text redaction;
+- raw exception-message alert regressions;
+- Android local-data privacy/backup rules.
+
+The Markdown check validates repository-relative file targets only. It does not make network requests and does not attempt to prove external URLs or section anchors are reachable.
+
+Structural preflight does **not** compile C#, restore NuGet packages, execute analyzers, run tests, build native targets, sign packages, or validate devices/stores.
 
 ## Recommended repository wrappers
 
@@ -108,6 +131,13 @@ Mac Catalyst on supported Mac/Xcode host:
 dotnet build src/Finora.App/Finora.App.csproj -f net10.0-maccatalyst -c Release --no-restore
 ```
 
+Platform-specific engineering/QA docs:
+
+- [`docs/platforms/ANDROID.md`](../platforms/ANDROID.md)
+- [`docs/platforms/WINDOWS.md`](../platforms/WINDOWS.md)
+- [`docs/platforms/APPLE.md`](../platforms/APPLE.md)
+- [`docs/testing/NATIVE_VALIDATION_MATRIX.md`](../testing/NATIVE_VALIDATION_MATRIX.md)
+
 ## Local data locations
 
 Finora uses `FileSystem.AppDataDirectory` for the SQLite database, receipt files, and transient crash-recovery metadata. Cache exports/diagnostics are placed under `FileSystem.CacheDirectory` before the user explicitly shares/saves them through system UI.
@@ -142,6 +172,12 @@ Before releasing, test:
 11. deterministic synthetic sample reset;
 12. the hidden developer data-integrity check.
 
+References:
+
+- [`docs/releases/VERSIONING_AND_MIGRATIONS.md`](../releases/VERSIONING_AND_MIGRATIONS.md)
+- [`docs/security/BACKUP_AND_RECOVERY.md`](../security/BACKUP_AND_RECOVERY.md)
+- [`docs/operations/DIAGNOSTICS_AND_INTEGRITY.md`](../operations/DIAGNOSTICS_AND_INTEGRITY.md)
+
 ## Currency validation
 
 Finora stores integer minor units and contains built-in zero-/two-/three-decimal precision metadata. Release QA must verify the currency precision metadata needed for targeted release markets. Unlike currencies are not converted/aggregated silently; multi-currency reporting behavior must be tested explicitly.
@@ -163,9 +199,12 @@ A source file existing in the repository is not proof that a platform feature wo
 
 Use:
 
-- `docs/releases/RELEASE_CHECKLIST.md`
-- `docs/releases/STORE_READINESS.md`
-- `docs/TEST_PLAN.md`
-- `docs/security/THREAT_MODEL.md`
+- [`docs/README.md`](../README.md)
+- [`docs/testing/TESTING_GUIDE.md`](../testing/TESTING_GUIDE.md)
+- [`docs/TEST_PLAN.md`](../TEST_PLAN.md)
+- [`docs/releases/RELEASE_CHECKLIST.md`](../releases/RELEASE_CHECKLIST.md)
+- [`docs/releases/STORE_READINESS.md`](../releases/STORE_READINESS.md)
+- [`docs/releases/STORE_METADATA_TEMPLATE.md`](../releases/STORE_METADATA_TEMPLATE.md)
+- [`docs/security/THREAT_MODEL.md`](../security/THREAT_MODEL.md)
 
 Never commit API keys, signing secrets, backup passwords, PINs, certificates, private keys, real finance databases, or real receipt images.
