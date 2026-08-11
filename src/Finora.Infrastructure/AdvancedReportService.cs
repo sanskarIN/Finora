@@ -1,5 +1,6 @@
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace Finora.Infrastructure;
@@ -80,7 +81,7 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
             .Select(x => new { x.AccountId, x.OccurredAtUtc, x.AmountMinor })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        var boundaries = BuildBoundaries(from, to);
+        var boundaries = BuildBalanceBoundaries(from, to, TimeZoneInfo.Local);
         var result = new List<AccountBalanceSeries>();
 
         foreach (var account in accounts)
@@ -90,9 +91,9 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
             var points = new List<AccountBalancePoint>();
             foreach (var boundary in boundaries)
             {
-                var movement = SumChecked(accountRows.Where(x => x.OccurredAtUtc < boundary).Select(x => x.AmountMinor));
+                var movement = SumChecked(accountRows.Where(x => x.OccurredAtUtc < boundary.ToExclusiveUtc).Select(x => x.AmountMinor));
                 var balance = checked(account.OpeningBalanceMinor + movement);
-                points.Add(new AccountBalancePoint(DateOnly.FromDateTime(boundary.Date), balance));
+                points.Add(new AccountBalancePoint(boundary.Through, balance));
             }
             result.Add(new AccountBalanceSeries(account.Id, account.Name, account.Currency, points));
         }
@@ -117,12 +118,12 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
         foreach (var budget in budgets)
         {
             DomainRules.ValidateBudget(budget);
-            var (startDate, endDate, planned) = ResolveBudgetPeriod(budget, periodDate);
-            var from = new DateTimeOffset(startDate.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-            var to = new DateTimeOffset(endDate.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+            var resolved = BudgetPeriodPolicy.Resolve(budget, periodDate);
+            if (!resolved.IsActive) continue;
+            var utcRange = LocalDateRange.ToUtc(resolved.StartsOn, resolved.EndsOn, TimeZoneInfo.Local);
             var transactions = await db.Transactions.AsNoTracking()
                 .Include(x => x.Splits)
-                .Where(x => !x.IsDeleted && x.Currency == budget.Currency && x.AmountMinor < 0 && x.Type != TransactionType.Transfer && x.OccurredAtUtc >= from && x.OccurredAtUtc < to)
+                .Where(x => !x.IsDeleted && x.Currency == budget.Currency && x.AmountMinor < 0 && x.Type != TransactionType.Transfer && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -157,9 +158,9 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
             result.Add(new BudgetPerformanceItem(
                 budget.Id,
                 budget.Name,
-                planned,
+                resolved.EffectivePlannedMinor,
                 actual,
-                checked(planned - actual),
+                checked(resolved.EffectivePlannedMinor - actual),
                 budget.Currency));
         }
         return result;
@@ -196,16 +197,19 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
     {
         months = Math.Clamp(months, 1, 60);
         currency = NormalizeCurrency(currency);
-        var thisMonth = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var timeZone = TimeZoneInfo.Local;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone).DateTime);
+        var thisMonth = new DateOnly(today.Year, today.Month, 1);
         var startMonth = thisMonth.AddMonths(-(months - 1));
-        var from = new DateTimeOffset(startMonth.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-        var to = new DateTimeOffset(thisMonth.AddMonths(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var endMonth = thisMonth.AddMonths(1).AddDays(-1);
+        var utcRange = LocalDateRange.ToUtc(startMonth, endMonth, timeZone);
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var rows = await db.Transactions.AsNoTracking()
-            .Where(x => !x.IsDeleted && x.Currency == currency && x.OccurredAtUtc >= from && x.OccurredAtUtc < to && x.Type != TransactionType.Transfer)
+            .Where(x => !x.IsDeleted && x.Currency == currency && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc && x.Type != TransactionType.Transfer)
             .Select(x => new DatedAmount(x.OccurredAtUtc, x.AmountMinor))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+        var localRows = rows.Select(x => new LocalDatedAmount(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(x.OccurredAtUtc, timeZone).DateTime), x.AmountMinor)).ToList();
         var result = new List<MonthlyComparisonItem>(months);
 
         for (var i = 0; i < months; i++)
@@ -213,7 +217,7 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
             var month = startMonth.AddMonths(i);
             long income = 0;
             long expense = 0;
-            foreach (var row in rows.Where(x => x.OccurredAtUtc.Year == month.Year && x.OccurredAtUtc.Month == month.Month))
+            foreach (var row in localRows.Where(x => x.Date.Year == month.Year && x.Date.Month == month.Month))
             {
                 EnsureSupportedAmount(row.AmountMinor);
                 if (row.AmountMinor > 0) income = checked(income + row.AmountMinor);
@@ -224,30 +228,111 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
         return result;
     }
 
-    private static IReadOnlyList<DateTimeOffset> BuildBoundaries(DateTimeOffset from, DateTimeOffset to)
+    public async Task<IReadOnlyList<YearlyComparisonItem>> GetYearlyComparisonAsync(int years, string currency, CancellationToken cancellationToken = default)
     {
-        if ((to - from).TotalDays <= 31)
+        years = Math.Clamp(years, 1, 20);
+        currency = NormalizeCurrency(currency);
+        var timeZone = TimeZoneInfo.Local;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, timeZone).DateTime);
+        var firstYear = today.Year - (years - 1);
+        var utcRange = LocalDateRange.ToUtc(new DateOnly(firstYear, 1, 1), new DateOnly(today.Year, 12, 31), timeZone);
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var rows = await db.Transactions.AsNoTracking()
+            .Where(x => !x.IsDeleted && x.Currency == currency && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc && x.Type != TransactionType.Transfer)
+            .Select(x => new DatedAmount(x.OccurredAtUtc, x.AmountMinor))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var localRows = rows.Select(x => new LocalDatedAmount(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(x.OccurredAtUtc, timeZone).DateTime), x.AmountMinor)).ToList();
+        var result = new List<YearlyComparisonItem>(years);
+
+        for (var year = firstYear; year <= today.Year; year++)
         {
-            var result = new List<DateTimeOffset>();
-            var current = new DateTimeOffset(from.Year, from.Month, from.Day, 0, 0, 0, from.Offset);
-            while (current < to)
+            long income = 0;
+            long expense = 0;
+            foreach (var row in localRows.Where(x => x.Date.Year == year))
             {
-                var next = current.AddDays(1);
-                result.Add(next <= to ? next : to);
-                current = next;
+                EnsureSupportedAmount(row.AmountMinor);
+                if (row.AmountMinor > 0) income = checked(income + row.AmountMinor);
+                else expense = checked(expense + ExpenseMagnitude(row.AmountMinor));
             }
+            result.Add(new YearlyComparisonItem(year, income, expense, checked(income - expense)));
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<RecurringObligationReportItem>> GetRecurringObligationsAsync(CancellationToken cancellationToken = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var rules = await db.RecurrenceRules.AsNoTracking()
+            .Where(x => x.Status != RecurrenceStatus.Archived)
+            .OrderBy(x => x.Status)
+            .ThenBy(x => x.NextDueOn)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = new List<RecurringObligationReportItem>(rules.Count);
+        foreach (var rule in rules)
+        {
+            DomainRules.ValidateRecurrenceRule(rule);
+            result.Add(new RecurringObligationReportItem(rule.Id, rule.Name, rule.TransactionType, rule.Status, rule.AmountMinor, rule.Currency, rule.NextDueOn, rule.EndsOn));
+        }
+        return result;
+    }
+
+    public async Task<IReadOnlyList<SavingsProgressReportItem>> GetSavingsProgressAsync(CancellationToken cancellationToken = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var goals = await db.SavingsGoals.AsNoTracking()
+            .Include(x => x.Contributions)
+            .OrderBy(x => x.TargetDate)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var result = new List<SavingsProgressReportItem>(goals.Count);
+
+        foreach (var goal in goals)
+        {
+            DomainRules.ValidateSavingsGoal(goal);
+            long current = goal.StartingMinor;
+            foreach (var contribution in goal.Contributions.OrderBy(x => x.OccurredAtUtc).ThenBy(x => x.CreatedAtUtc).ThenBy(x => x.Id))
+            {
+                DomainRules.ValidateGoalContribution(contribution);
+                current = checked(current + contribution.AmountMinor);
+                if (current < 0) throw new InvalidDataException("Savings goal history falls below zero.");
+            }
+            var progress = Math.Clamp((double)current / goal.TargetMinor, 0d, 1d);
+            result.Add(new SavingsProgressReportItem(goal.Id, goal.Name, goal.TargetMinor, current, goal.Currency, progress, goal.TargetDate, current >= goal.TargetMinor));
+        }
+        return result;
+    }
+
+    private static IReadOnlyList<BalanceBoundary> BuildBalanceBoundaries(DateTimeOffset from, DateTimeOffset to, TimeZoneInfo timeZone)
+    {
+        var localFrom = TimeZoneInfo.ConvertTime(from, timeZone);
+        var localLastInstant = TimeZoneInfo.ConvertTime(to.AddTicks(-1), timeZone);
+        var fromDate = DateOnly.FromDateTime(localFrom.DateTime);
+        var throughDate = DateOnly.FromDateTime(localLastInstant.DateTime);
+        var inclusiveDays = throughDate.DayNumber - fromDate.DayNumber + 1;
+        var result = new List<BalanceBoundary>();
+
+        if (inclusiveDays <= 31)
+        {
+            for (var date = fromDate; date <= throughDate; date = date.AddDays(1))
+                result.Add(new BalanceBoundary(date, LocalDateRange.ToUtc(date, date, timeZone).ToExclusiveUtc));
             return result;
         }
 
-        var monthly = new List<DateTimeOffset>();
-        var monthBoundary = new DateTimeOffset(from.Year, from.Month, 1, 0, 0, 0, from.Offset).AddMonths(1);
-        while (monthBoundary < to)
+        var cursor = new DateOnly(fromDate.Year, fromDate.Month, 1);
+        while (cursor <= throughDate)
         {
-            monthly.Add(monthBoundary);
-            monthBoundary = monthBoundary.AddMonths(1);
+            var monthEnd = new DateOnly(cursor.Year, cursor.Month, DateTime.DaysInMonth(cursor.Year, cursor.Month));
+            var boundaryDate = monthEnd > throughDate ? throughDate : monthEnd;
+            if (boundaryDate >= fromDate)
+                result.Add(new BalanceBoundary(boundaryDate, LocalDateRange.ToUtc(boundaryDate, boundaryDate, timeZone).ToExclusiveUtc));
+            cursor = cursor.AddMonths(1);
         }
-        monthly.Add(to);
-        return monthly;
+        return result;
     }
 
     private static HashSet<Guid> DescendantsIncludingSelf(IReadOnlyCollection<CategoryNode> categories, Guid rootId)
@@ -264,27 +349,6 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
             }
         }
         return result;
-    }
-
-    private static (DateOnly Start, DateOnly End, long Planned) ResolveBudgetPeriod(Budget budget, DateOnly date)
-    {
-        var explicitPeriod = budget.Periods.FirstOrDefault(x => x.StartsOn <= date && x.EndsOn >= date);
-        if (explicitPeriod is not null)
-            return (explicitPeriod.StartsOn, explicitPeriod.EndsOn, checked(explicitPeriod.PlannedMinor + (budget.RolloverEnabled ? explicitPeriod.RolloverMinor : 0)));
-        return budget.Cadence switch
-        {
-            BudgetCadence.Weekly => ResolveWeek(date, budget.LimitMinor),
-            BudgetCadence.Monthly => (new DateOnly(date.Year, date.Month, 1), new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)), budget.LimitMinor),
-            BudgetCadence.Custom => (date, date, budget.LimitMinor),
-            _ => throw new InvalidDataException("Budget cadence is unsupported.")
-        };
-    }
-
-    private static (DateOnly Start, DateOnly End, long Planned) ResolveWeek(DateOnly date, long planned)
-    {
-        var offset = ((int)date.DayOfWeek + 6) % 7;
-        var start = date.AddDays(-offset);
-        return (start, start.AddDays(6), planned);
     }
 
     private static long SumChecked(IEnumerable<long> values)
@@ -334,4 +398,6 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
     private sealed record CategoryNode(Guid Id, Guid? ParentId);
     private sealed record MerchantAmount(string? Merchant, long AmountMinor);
     private sealed record DatedAmount(DateTimeOffset OccurredAtUtc, long AmountMinor);
+    private sealed record LocalDatedAmount(DateOnly Date, long AmountMinor);
+    private sealed record BalanceBoundary(DateOnly Through, DateTimeOffset ToExclusiveUtc);
 }
