@@ -118,8 +118,7 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
         foreach (var budget in budgets)
         {
             DomainRules.ValidateBudget(budget);
-            var resolved = BudgetPeriodPolicy.Resolve(budget, periodDate);
-            if (!resolved.IsActive) continue;
+            if (!BudgetPeriodPolicy.TryResolve(budget, periodDate, out var resolved)) continue;
             var utcRange = LocalDateRange.ToUtc(resolved.StartsOn, resolved.EndsOn, TimeZoneInfo.Local);
             var transactions = await db.Transactions.AsNoTracking()
                 .Include(x => x.Splits)
@@ -158,9 +157,9 @@ public sealed class AdvancedReportService(IDbContextFactory<FinoraDbContext> fac
             result.Add(new BudgetPerformanceItem(
                 budget.Id,
                 budget.Name,
-                resolved.EffectivePlannedMinor,
+                resolved.PlannedMinor,
                 actual,
-                checked(resolved.EffectivePlannedMinor - actual),
+                checked(resolved.PlannedMinor - actual),
                 budget.Currency));
         }
         return result;
