@@ -16,8 +16,22 @@
     <None Include="..\..\src\Finora.App\Pages\ReportsPage.xaml" Link="Contracts\ReportsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\ReportsViewModel.cs" Link="Contracts\ReportsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Controls\ReportBarChartView.cs" Link="Contracts\ReportBarChartView.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Converters\PrivacyMoneyConverter.cs" Link="Contracts\PrivacyMoneyConverter.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\AccountsPage.xaml" Link="Contracts\AccountsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\AccountDetailPage.xaml" Link="Contracts\AccountDetailPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\AccountDetailViewModel.cs" Link="Contracts\AccountDetailViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\TransactionsPage.xaml" Link="Contracts\TransactionsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\TransactionsViewModel.cs" Link="Contracts\TransactionsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\TransactionDetailPage.xaml" Link="Contracts\TransactionDetailPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\TransactionDetailViewModel.cs" Link="Contracts\TransactionDetailViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\TransactionToolsPage.xaml" Link="Contracts\TransactionToolsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\TransactionToolsViewModel.cs" Link="Contracts\TransactionToolsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\BudgetsPage.xaml" Link="Contracts\BudgetsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\SavingsPage.xaml" Link="Contracts\SavingsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\SavingsViewModel.cs" Link="Contracts\SavingsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\RecurringPage.xaml" Link="Contracts\RecurringPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\ReconciliationPage.xaml" Link="Contracts\ReconciliationPage.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\ReconciliationViewModel.cs" Link="Contracts\ReconciliationViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\OnboardingPage.xaml" Link="Contracts\OnboardingPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\OnboardingPage.Links.cs" Link="Contracts\OnboardingPage.Links.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.xaml" Link="Contracts\SettingsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
