@@ -346,10 +346,13 @@ About uses packaged `AppInfo` version/build metadata and exposes:
 - **Made by the Sanskar**;
 - .NET MAUI / C# / XAML / SQLite / MVVM technology summary;
 - repository and creator GitHub profile;
+- optional Buy Me a Coffee project-support link;
 - business/security and support contacts;
 - Apache-2.0 license/notices;
 - Privacy and Terms;
 - Contributing, Security and Support guides.
+
+The Buy Me a Coffee link opens `https://buymeacoffee.com/sanskarIN` as an optional external contribution page. It does not unlock Finora features, create premium entitlement, change support priority, or replace store/server-backed licensing. Packaged releases must verify the target store's current policy for external contribution/payment links.
 
 ### Temporary share artifacts
 
@@ -371,17 +374,24 @@ tests/
   Finora.UiTests/
 
 docs/
+  accessibility/
   architecture/
-  branding/
+  development/
+  features/
+  operations/
+  platforms/
   privacy/
   releases/
   security/
   setup/
+  testing/
 
 build/
   scripts/
 ```
 
+Documentation hub: [`docs/README.md`](docs/README.md)  
+Next steps: [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md)  
 Architecture details: [`docs/architecture/OVERVIEW.md`](docs/architecture/OVERVIEW.md)  
 Database schema: [`docs/architecture/DATABASE_SCHEMA.md`](docs/architecture/DATABASE_SCHEMA.md)  
 Engineering decisions: [`DECISIONS.md`](DECISIONS.md)
@@ -394,7 +404,7 @@ Dependency-free structural check:
 python build/scripts/verify_structure.py
 ```
 
-The structural verifier checks repository/XML/XAML/project wiring, version/schema drift, floating-point monetary fields, raw minor-unit user-facing labels, selected Android privacy/backup rules, masked secret fields, complete-reset handler wiring, biometric provider-text redaction, and raw exception-alert regressions.
+The structural verifier checks repository/documentation structure and local links, product/support identity, XML/XAML/project wiring, version/schema drift, floating-point monetary fields, raw minor-unit user-facing labels, selected Android privacy/backup rules, masked secret fields, complete-reset handler wiring, biometric provider-text redaction, and raw exception-alert regressions.
 
 Full compiler/test verification requires a compatible .NET 10/MAUI environment and platform SDK/workloads described in [`docs/setup/BUILD.md`](docs/setup/BUILD.md).
 
@@ -419,6 +429,14 @@ See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for distinction between implemented
 
 No claim is made that Finora is bug-free.
 
+## Next steps
+
+The prioritized execution roadmap is [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md).
+
+The strongest next milestone is a reproducible Finora 0.2.0 release candidate with evidence for structural verification, dependency/workload restore, automated tests, all native builds, schema migration, backup/restore and interruption recovery, finance-data integrity, privacy mode, currency/date correctness, notifications, app lock/biometrics, accessibility, complete local data deletion, packaging/signing, and store-policy review.
+
+Large later-version features such as remote accounts, cloud sync, collaboration, secure commercial entitlement, automatic FX, or telemetry should not displace unresolved P0 correctness/release blockers.
+
 ## Testing
 
 See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Current automated/source-contract areas include money/currency, domain/persistence metadata, linked transfers, split/category behavior, recurrence payment/rule lifecycle, account/reconciliation dependencies, custom budget periods, Dashboard periods, local-date UTC conversion, complete report matrix, future-date comparison exclusion, currency-aware import/reporting, encrypted backup graph validation, crash-safe restore recovery, schema migration, expanded integrity diagnostics, privacy-safe amount surfaces, signed chart baseline, transaction sorting/incremental display, adaptive navigation, reset safety, onboarding/About controls, and platform privacy source contracts.
@@ -433,6 +451,8 @@ Do not attach real finance databases, receipts, PINs, backup passwords, or other
 ## Local premium/demo state
 
 The local premium flag is a development/demo capability only. It is **not** tamper-proof commercial entitlement validation. A future paid build would require store/server-backed entitlement design.
+
+Buy Me a Coffee is also **not** an entitlement mechanism. Supporting the project externally must remain separate from app feature access and licensing state.
 
 ## Later-version boundaries
 
@@ -452,6 +472,7 @@ These require new architecture, privacy, security, retention, and migration deci
 
 - Repository: https://github.com/sanskarIN/Finora
 - Creator/open-source profile: https://www.github.com/sanskarIN
+- Support development: https://buymeacoffee.com/sanskarIN
 - Business/security: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
 - Attribution: **Made by the Sanskar**
