@@ -4,6 +4,18 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Added — 2026-08-12 project support and next-step roadmap
+
+- Added canonical `AppConstants.BuyMeACoffeeUrl` for `https://buymeacoffee.com/sanskarIN`.
+- Added an accessible **Support development · Buy Me a Coffee** action to Settings/About using the shared canonical URL and system launcher.
+- Buy Me a Coffee failures use generic user-facing text and the privacy-safe logger rather than raw platform/browser errors.
+- Added UI source-contract coverage for the About button, handler, shared URL usage, and privacy-safe failure event.
+- Added `docs/NEXT_STEPS.md` with a risk-prioritized P0–P3 roadmap covering native release blockers, release-candidate/store completion, quality/product polish, and later-version architecture.
+- Added explicit product/store boundary: Buy Me a Coffee is optional project support only and does not unlock features, create premium entitlement, change support priority, or replace store/server-backed commercial licensing.
+- Updated README, documentation hub, documentation coverage matrix, Settings reference, support guide, store metadata template, and project status with the canonical support link and roadmap.
+- Extended structural preflight to require `docs/NEXT_STEPS.md` and verify the canonical Buy Me a Coffee URL, About action, shared constant usage, and no-feature-unlock wording.
+- The preferred next milestone is now a reproducible Finora 0.2.0 release candidate backed by actual build/test/migration/backup/native/privacy/accessibility/store evidence before major new feature expansion.
+
 ### Documentation — 2026-08-11 complete project documentation pass
 
 - Added `docs/README.md` as the complete documentation index and `docs/DOCUMENTATION_STATUS.md` as the documentation coverage/update-policy matrix.
