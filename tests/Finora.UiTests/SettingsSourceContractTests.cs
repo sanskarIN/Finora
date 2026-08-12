@@ -22,6 +22,7 @@ public sealed class SettingsSourceContractTests
             "Delete all local finance data",
             "Made by the Sanskar",
             ".NET MAUI · C# · XAML · SQLite · MVVM",
+            "Support development · Buy Me a Coffee",
             "sanskarin@outlook.in",
             "supportramsandesh@gmail.com",
             "Apache-2.0",
@@ -35,6 +36,7 @@ public sealed class SettingsSourceContractTests
         Assert.Contains("Clicked=\"OnDeleteAllFinanceDataClicked\"", xaml, StringComparison.Ordinal);
         Assert.DoesNotContain("Clicked=\"OnDeleteAllClicked\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Clicked=\"OnOnboardingClicked\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("Clicked=\"OnBuyMeACoffeeClicked\"", xaml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -68,6 +70,8 @@ public sealed class SettingsSourceContractTests
         Assert.Contains("Type DELETE", reset, StringComparison.Ordinal);
         Assert.Contains("ClearPinAsync", security, StringComparison.Ordinal);
         Assert.Contains("Settings.PinRemovalFailed", security, StringComparison.Ordinal);
+        Assert.Contains("AppConstants.BuyMeACoffeeUrl", about, StringComparison.Ordinal);
+        Assert.Contains("Settings.BuyMeACoffeeOpenFailed", about, StringComparison.Ordinal);
         Assert.Contains("CONTRIBUTING.md", about, StringComparison.Ordinal);
         Assert.Contains("SECURITY.md", about, StringComparison.Ordinal);
         Assert.Contains("SUPPORT.md", about, StringComparison.Ordinal);
