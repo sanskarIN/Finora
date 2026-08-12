@@ -9,6 +9,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Public project overview | `README.md` | Current |
 | Documentation index | `docs/README.md` | Current |
 | Documentation completeness | `docs/DOCUMENTATION_STATUS.md` | Current |
+| Prioritized next steps | `docs/NEXT_STEPS.md` | Current |
 | End-user workflows | `docs/USER_GUIDE.md` | Current |
 | Architecture overview | `docs/architecture/OVERVIEW.md` | Current |
 | Database/schema | `docs/architecture/DATABASE_SCHEMA.md` | Current |
@@ -67,6 +68,14 @@ Do not document later-version features as if implemented. Current explicit later
 - automatic exchange-rate conversion;
 - default analytics/advertising telemetry.
 
+## Project support-link rule
+
+The canonical optional external support link is:
+
+https://buymeacoffee.com/sanskarIN
+
+Documentation and UI must not describe that link as premium entitlement, subscription, feature unlock, required support payment, or secure licensing. Store-facing docs must keep a release gate to review the target store's current external contribution/payment-link policy before packaging/submission.
+
 ## Documentation build/preflight rule
 
 `build/scripts/verify_structure.py` treats the core documentation tree as required repository structure and validates repository-relative Markdown file links without network access.
@@ -94,6 +103,17 @@ The release decision must still retain real evidence for:
 - accessibility;
 - signing;
 - store declarations.
+
+## Next-step priority rule
+
+`docs/NEXT_STEPS.md` is the current execution roadmap. The preferred order is:
+
+1. P0 financial correctness, build/test, migration, backup/recovery, privacy, native and accessibility validation;
+2. P1 release-candidate packaging/store/security/license evidence;
+3. P2 quality/performance/localization/product polish;
+4. P3 later-version cloud/account/collaboration/entitlement/FX/telemetry architecture.
+
+Do not prioritize cosmetic expansion above an unresolved P0 data-corruption, migration, backup, privacy, or native-build failure.
 
 ## Update policy
 
@@ -145,6 +165,17 @@ Update:
 - native validation matrix;
 - localization resources and tests/source contracts as applicable.
 
+### New external support/payment link
+
+Update:
+
+- shared product identity constant;
+- About/UI source contract;
+- README/docs index/support docs;
+- Settings reference;
+- store metadata/release gates;
+- current target-store policy review.
+
 ### New later-version network feature
 
 Before implementation, update architecture/privacy/security/data-retention/migration/product-boundary decisions. Do not silently add it under existing local-first documentation.
@@ -152,6 +183,8 @@ Before implementation, update architecture/privacy/security/data-retention/migra
 ## Contacts
 
 - Repository: https://github.com/sanskarIN/Finora
+- Creator: https://www.github.com/sanskarIN
+- Optional project support: https://buymeacoffee.com/sanskarIN
 - Business/security: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
 - Attribution: Made by the Sanskar
