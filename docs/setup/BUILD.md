@@ -2,7 +2,8 @@
 
 Finora is a multi-project .NET MAUI solution. The current source targets .NET 10 TFMs for Android, iOS, Mac Catalyst, and Windows. Use a .NET/MAUI toolchain that supports the target frameworks declared in `src/Finora.App/Finora.App.csproj`.
 
-Complete documentation index: [`docs/README.md`](../README.md)
+Complete documentation index: [`docs/README.md`](../README.md)  
+Prioritized next steps: [`docs/NEXT_STEPS.md`](../NEXT_STEPS.md)
 
 ## Required development tools
 
@@ -39,8 +40,10 @@ python build/scripts/verify_structure.py
 The current preflight checks:
 
 - required repository/legal/community files;
-- the complete required documentation tree;
+- the complete required documentation tree, including `docs/NEXT_STEPS.md`;
 - repository-relative Markdown file links;
+- canonical product/support identity including `https://buymeacoffee.com/sanskarIN`;
+- Settings/About Buy Me a Coffee handler/shared-constant wiring and the no-feature-unlock boundary;
 - XML/XAML/RESX/project parsing;
 - project/solution references;
 - empty files;
@@ -57,7 +60,7 @@ The current preflight checks:
 - raw exception-message alert regressions;
 - Android local-data privacy/backup rules.
 
-The Markdown check validates repository-relative file targets only. It does not make network requests and does not attempt to prove external URLs or section anchors are reachable.
+The Markdown check validates repository-relative file targets only. It does not make network requests and does not attempt to prove external URLs or section anchors are reachable. Likewise, the preflight verifies the configured Buy Me a Coffee URL string but does not verify that the external service is reachable or allowed by a target app store.
 
 Structural preflight does **not** compile C#, restore NuGet packages, execute analyzers, run tests, build native targets, sign packages, or validate devices/stores.
 
@@ -200,11 +203,14 @@ A source file existing in the repository is not proof that a platform feature wo
 Use:
 
 - [`docs/README.md`](../README.md)
+- [`docs/NEXT_STEPS.md`](../NEXT_STEPS.md)
 - [`docs/testing/TESTING_GUIDE.md`](../testing/TESTING_GUIDE.md)
 - [`docs/TEST_PLAN.md`](../TEST_PLAN.md)
 - [`docs/releases/RELEASE_CHECKLIST.md`](../releases/RELEASE_CHECKLIST.md)
 - [`docs/releases/STORE_READINESS.md`](../releases/STORE_READINESS.md)
 - [`docs/releases/STORE_METADATA_TEMPLATE.md`](../releases/STORE_METADATA_TEMPLATE.md)
 - [`docs/security/THREAT_MODEL.md`](../security/THREAT_MODEL.md)
+
+If the packaged build contains the external Buy Me a Coffee support link, verify the target store's current external contribution/payment-link policy before submission. The link must never be treated as Finora feature entitlement or secure commercial licensing.
 
 Never commit API keys, signing secrets, backup passwords, PINs, certificates, private keys, real finance databases, or real receipt images.
