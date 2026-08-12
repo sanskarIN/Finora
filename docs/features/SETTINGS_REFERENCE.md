@@ -173,6 +173,7 @@ Current About/Settings links expose:
 - technology summary;
 - repository;
 - creator profile;
+- optional Buy Me a Coffee development-support page: https://buymeacoffee.com/sanskarIN;
 - business/security contact;
 - support contact;
 - Privacy;
@@ -181,6 +182,12 @@ Current About/Settings links expose:
 - Contributing;
 - Security;
 - Support guide.
+
+The Buy Me a Coffee action opens the external page through the system launcher. Failure uses generic user-facing text and privacy-safe logging.
+
+Buy Me a Coffee is not a Finora setting, entitlement, subscription, premium flag, or finance feature. Supporting the project does not unlock app functionality, alter support priority, or replace store/server-backed purchase validation.
+
+Because mobile/desktop store policies around external contribution/payment links can change, each packaged release must verify whether the target store permits this link in the intended distribution context.
 
 ## Backup/restore controls
 
@@ -215,3 +222,7 @@ Do not migrate finance records into Preferences/SecureStorage to avoid schema de
 Complete finance reset intentionally preserves application-operability preferences according to its current contract.
 
 OS uninstall/reset behavior can remove app-private data/preferences/secure storage depending on platform behavior. Users should save a verified external encrypted backup before destructive device/app operations if data preservation matters.
+
+## Related roadmap
+
+See `docs/NEXT_STEPS.md` for the prioritized release-validation, store-readiness, quality, and later-version execution plan.
