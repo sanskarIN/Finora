@@ -8,6 +8,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 
 - [Project README](../README.md) — product overview, current capabilities, privacy boundary, build entry points, contacts, and release status.
 - [Documentation Status](DOCUMENTATION_STATUS.md) — coverage/completeness matrix and documentation update policy.
+- [Next Steps](NEXT_STEPS.md) — prioritized P0–P3 execution roadmap from native release blockers through later-version architecture.
 - [User Guide](USER_GUIDE.md) — complete end-user workflow guide.
 - [Architecture Overview](architecture/OVERVIEW.md) — solution layering and major design decisions.
 - [Database Schema](architecture/DATABASE_SCHEMA.md) — current schema 2 model and migration notes.
@@ -90,9 +91,12 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - Attribution: **Made by the Sanskar**
 - Repository: https://github.com/sanskarIN/Finora
 - Creator profile: https://www.github.com/sanskarIN
+- Support development: https://buymeacoffee.com/sanskarIN
 - Business/security contact: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
 - License: Apache-2.0
+
+The Buy Me a Coffee link is an optional external support/contribution link. It does not unlock Finora features, create premium entitlement, change support priority, or replace store/server-backed commercial licensing. Before a packaged store release, verify whether the target store permits that external support link in the app for the intended region and distribution model.
 
 ## Current release boundary
 
