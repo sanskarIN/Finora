@@ -26,9 +26,11 @@ PLACEHOLDER_PATTERNS = [
 HANDLER_PATTERN = re.compile(r"(?:Clicked|Tapped|CheckedChanged|SelectionChanged|TextChanged|Completed|Unfocused|Focused|Toggled)\s*=\s*\"([A-Za-z_][A-Za-z0-9_]*)\"")
 CLASS_PATTERN = re.compile(r'x:Class\s*=\s*"([A-Za-z_][A-Za-z0-9_.]*)"')
 MONEY_WORDS = r"(?:Amount|Balance|Limit|Target|Starting|Contribution|Paid|Price|Cost|Income|Expense|Budget|Net|Minor)"
+BUY_ME_A_COFFEE_URL = "https://buymeacoffee.com/sanskarIN"
 DOCUMENTATION_PATHS = [
     "docs/README.md",
     "docs/DOCUMENTATION_STATUS.md",
+    "docs/NEXT_STEPS.md",
     "docs/USER_GUIDE.md",
     "docs/TEST_PLAN.md",
     "docs/accessibility/ACCESSIBILITY_AND_LOCALIZATION.md",
@@ -121,7 +123,6 @@ def check_markdown_links(paths: list[Path], errors: list[str]) -> None:
                 continue
             if raw_target.startswith("<") and raw_target.endswith(">"):
                 raw_target = raw_target[1:-1].strip()
-            # Markdown permits an optional title after a whitespace-separated target.
             target = raw_target.split(maxsplit=1)[0]
             lowered = target.lower()
             if lowered.startswith(("http://", "https://", "mailto:", "tel:", "data:")) or target.startswith("#"):
@@ -283,6 +284,36 @@ def check_schema_consistency(errors: list[str]) -> None:
         errors.append(f"docs/architecture/DATABASE_SCHEMA.md: schema version {version} is not documented")
 
 
+def check_product_identity(errors: list[str]) -> None:
+    constants = ROOT / "src/Finora.Shared/AppConstants.cs"
+    settings_xaml = ROOT / "src/Finora.App/Pages/SettingsPage.xaml"
+    about = ROOT / "src/Finora.App/Pages/SettingsPage.About.cs"
+    docs_index = ROOT / "docs/README.md"
+    roadmap = ROOT / "docs/NEXT_STEPS.md"
+
+    if constants.exists():
+        text = read(constants)
+        expected = f'BuyMeACoffeeUrl = "{BUY_ME_A_COFFEE_URL}"'
+        if expected not in text:
+            errors.append(f"{rel(constants)}: canonical Buy Me a Coffee URL is missing or changed")
+
+    if settings_xaml.exists():
+        text = read(settings_xaml)
+        if 'Clicked="OnBuyMeACoffeeClicked"' not in text or "Buy Me a Coffee" not in text:
+            errors.append(f"{rel(settings_xaml)}: About must expose the Buy Me a Coffee support action")
+        if "does not unlock Finora features" not in text:
+            errors.append(f"{rel(settings_xaml)}: Buy Me a Coffee must remain explicitly separate from feature entitlement")
+
+    if about.exists():
+        text = read(about)
+        if "AppConstants.BuyMeACoffeeUrl" not in text:
+            errors.append(f"{rel(about)}: Buy Me a Coffee action must use the shared canonical URL")
+
+    for path in (docs_index, roadmap):
+        if path.exists() and BUY_ME_A_COFFEE_URL not in read(path):
+            errors.append(f"{rel(path)}: canonical Buy Me a Coffee URL is not documented")
+
+
 def check_money_representation(errors: list[str]) -> None:
     domain_root = ROOT / "src/Finora.Domain"
     if domain_root.exists():
@@ -369,6 +400,7 @@ def main() -> int:
     check_solution_projects(errors)
     check_version_consistency(errors)
     check_schema_consistency(errors)
+    check_product_identity(errors)
     check_money_representation(errors)
     check_privacy_configuration(errors)
 
@@ -379,7 +411,7 @@ def main() -> int:
         return 1
 
     print(f"Finora structural preflight passed: {len(paths)} text/source files checked.")
-    print("Validated required documentation/repository files and local Markdown links, XML/XAML, project wiring, event handlers, version/schema drift, money representation/display, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
+    print("Validated required documentation/repository files and local Markdown links, product/support identity, XML/XAML, project wiring, event handlers, version/schema drift, money representation/display, masked secrets, reset wiring, biometric redaction, and Android privacy/backup rules.")
     print("This is not a compiler, analyzer, test runner, emulator, simulator, signing, or store-validation substitute.")
     return 0
 
