@@ -1,6 +1,6 @@
 # Finora Store Metadata Template
 
-This file is a release-preparation template. Store character limits, required declarations, screenshots, rating forms, privacy forms, and policy wording must be verified in each current store console before submission.
+This file is a release-preparation template. Store character limits, required declarations, screenshots, rating forms, privacy forms, payment/external-link policies, and policy wording must be verified in each current store console before submission.
 
 ## Canonical product identity
 
@@ -11,9 +11,26 @@ This file is a release-preparation template. Store character limits, required de
 - Current build: 2
 - Repository: https://github.com/sanskarIN/Finora
 - Creator profile: https://www.github.com/sanskarIN
+- Optional project support: https://buymeacoffee.com/sanskarIN
 - Business/security contact: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
 - License: Apache-2.0
+
+## Buy Me a Coffee boundary
+
+The current source exposes `https://buymeacoffee.com/sanskarIN` as an optional external project-support link in About.
+
+It must not be described as:
+
+- an in-app purchase;
+- a subscription;
+- premium entitlement;
+- a feature unlock;
+- a requirement for support;
+- a guarantee of faster support;
+- a secure license token.
+
+Before every store submission, verify the target store's current rules for external contribution/payment links and the intended region/distribution model. If the store requires the link to be removed or altered in the packaged app, follow the current store rules without misrepresenting Finora's entitlement model.
 
 ## Short description draft
 
@@ -125,7 +142,8 @@ Prepare:
 - package/version code alignment;
 - release notes;
 - backup/device-transfer behavior validation;
-- no unexpected SDK data collection from dependencies.
+- no unexpected SDK data collection from dependencies;
+- current policy review for the optional Buy Me a Coffee external support link.
 
 ## Apple App Store checklist
 
@@ -141,7 +159,8 @@ Prepare:
 - notification behavior/declarations;
 - signed/provisioned archive;
 - export/compliance/crypto declarations as applicable to current rules;
-- review notes explaining local-first encrypted backup if helpful.
+- review notes explaining local-first encrypted backup if helpful;
+- current policy review for the optional external Buy Me a Coffee support link.
 
 ## Mac distribution checklist
 
@@ -153,7 +172,8 @@ Depending on distribution channel verify:
 - privacy/support links;
 - screenshots;
 - LocalAuthentication/UserNotifications behavior;
-- file/share behavior.
+- file/share behavior;
+- external support-link policy for the chosen channel.
 
 ## Windows store/package checklist
 
@@ -168,7 +188,8 @@ Prepare:
 - Windows Hello/toast behavior;
 - capabilities/permissions;
 - package upgrade test;
-- accessibility notes where required.
+- accessibility notes where required;
+- external support-link policy for the chosen distribution channel.
 
 ## Release notes template
 
@@ -187,15 +208,23 @@ Never write release notes implying a native/platform behavior was tested unless 
 
 Finora is local-first and does not require a Finora account. Core finance records are stored locally in app-private storage. Encrypted backup/export actions are initiated by the user. Optional biometric unlock is used only when the user enables it and a local PIN fallback remains available. Transaction location is manually entered only; the app does not request background location for this feature.
 
+If the Buy Me a Coffee link remains in the submitted build, describe it only if the store requires clarification: it is an optional external project-support link and does not unlock app functionality or represent an in-app purchase/premium entitlement.
+
 Adjust this note to the exact final binary/permissions before submission.
 
 ## Contact/footer
 
 - Repository: https://github.com/sanskarIN/Finora
+- Creator profile: https://www.github.com/sanskarIN
+- Optional project support: https://buymeacoffee.com/sanskarIN
 - Support: `supportramsandesh@gmail.com`
 - Business/security: `sanskarin@outlook.in`
 - Attribution: Made by the Sanskar
 
+## Roadmap reference
+
+See `docs/NEXT_STEPS.md` for the prioritized release-blocker, release-candidate, quality, and later-version roadmap. Store publication should follow the P0/P1 evidence gates before P2/P3 expansion.
+
 ## Final warning
 
-This is a documentation template, not current store-policy advice. Store policies, SDK requirements, privacy forms, fees, signing rules, screenshot dimensions, and declaration wording can change. Verify the live store consoles/toolchain before each submission.
+This is a documentation template, not current store-policy advice. Store policies, SDK requirements, privacy forms, fees, signing rules, external contribution/payment link rules, screenshot dimensions, and declaration wording can change. Verify the live store consoles/toolchain before each submission.
