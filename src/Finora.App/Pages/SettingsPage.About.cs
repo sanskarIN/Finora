@@ -2,6 +2,21 @@ namespace Finora.App;
 
 public partial class SettingsPage
 {
+    private async void OnBuyMeACoffeeClicked(object? sender, EventArgs e)
+    {
+        const string title = "Buy Me a Coffee";
+        try
+        {
+            var opened = await Launcher.Default.OpenAsync(new Uri(Finora.Shared.AppConstants.BuyMeACoffeeUrl));
+            if (!opened) await DisplayAlertAsync(title, "The support page could not be opened with the available browser or system handler.", "OK");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Settings.BuyMeACoffeeOpenFailed");
+            await DisplayAlertAsync(title, "The support page could not be opened right now.", "OK");
+        }
+    }
+
     private async void OnContributingClicked(object? sender, EventArgs e)
         => await OpenProjectDocumentAsync("CONTRIBUTING.md", "Contributing guide");
 
