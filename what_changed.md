@@ -1,6 +1,6 @@
 # What Changed — Finora
 
-Last continuation: **2026-08-11**  
+Last continuation: **2026-08-12**  
 Repository: https://github.com/sanskarIN/Finora  
 Current branch: **main**  
 Current source line: **Finora 0.2.0 (build 2)**  
@@ -2852,3 +2852,534 @@ The documentation does not erase or weaken the previously documented financial, 
 `what_changed.md` remains the cumulative detailed project ledger.
 
 No repository content should be changed after this final ledger commit in this continuation; subsequent activity should begin a new continuation and update the ledger last again.
+
+---
+
+## 85. Buy Me a Coffee and next-steps continuation — 2026-08-12
+
+This continuation began from final documentation head:
+
+`63dbb9e13fcfcd80bd1d75515bcd69012d9090a2`
+
+Commit message:
+
+`docs(status): finalize complete Finora project documentation ledger`
+
+The continuation had two explicit goals:
+
+1. add the canonical Buy Me a Coffee link `https://buymeacoffee.com/sanskarIN` to Finora's project identity and appropriate public/in-app documentation surfaces;
+2. create a concrete, prioritized next-step execution roadmap instead of leaving future work as a vague feature list.
+
+Before this final ledger write, `main` was **18 focused commits ahead** of that starting head.
+
+The final ledger write is the nineteenth continuation commit.
+
+---
+
+## 86. Canonical Buy Me a Coffee source identity added
+
+`src/Finora.Shared/AppConstants.cs` now contains:
+
+`BuyMeACoffeeUrl = "https://buymeacoffee.com/sanskarIN"`
+
+The shared constant is the source-level canonical URL for the project's optional external support page.
+
+It sits alongside the existing canonical product identity values:
+
+- product name;
+- repository URL;
+- creator profile URL;
+- business/security email;
+- support email;
+- watermark/attribution.
+
+The support URL is not stored in finance data, preferences, database records, encrypted backups, or premium entitlement state.
+
+---
+
+## 87. Settings/About Buy Me a Coffee action added
+
+`src/Finora.App/Pages/SettingsPage.About.cs` now includes `OnBuyMeACoffeeClicked`.
+
+Behavior:
+
+- obtains the URL from `Finora.Shared.AppConstants.BuyMeACoffeeUrl`;
+- opens the page using the system `Launcher`;
+- if the system cannot open it, shows generic user-facing text;
+- if an exception occurs, routes only a privacy-safe event through `IPrivacyLogger` using `Settings.BuyMeACoffeeOpenFailed`;
+- does not expose raw browser/platform exception text to the user.
+
+`src/Finora.App/Pages/SettingsPage.xaml` now exposes an accessible About button:
+
+**Support development · Buy Me a Coffee**
+
+The About card also explicitly states:
+
+- support is optional;
+- it does not unlock Finora features;
+- it does not replace store entitlement validation.
+
+This separation is intentional because Finora's current local premium flag is development/demo state, not secure commercial entitlement.
+
+---
+
+## 88. Buy Me a Coffee UI source-contract coverage added
+
+`tests/Finora.UiTests/SettingsSourceContractTests.cs` now guards:
+
+- visible Buy Me a Coffee About text;
+- the `OnBuyMeACoffeeClicked` XAML handler;
+- use of `AppConstants.BuyMeACoffeeUrl` in the About partial;
+- privacy-safe failure event `Settings.BuyMeACoffeeOpenFailed`.
+
+The existing Settings source contract remains responsible for the rest of the About/security/reset identity surface.
+
+As with all UI-contract tests in this repository, source presence is not represented as a native-device execution pass in this environment.
+
+---
+
+## 89. Prioritized next-step roadmap added
+
+New file:
+
+`docs/NEXT_STEPS.md`
+
+The roadmap is intentionally ordered by release/data risk rather than novelty.
+
+### P0 — Release blockers
+
+P0 contains the work that should be completed before representing Finora 0.2.0 as store-ready, including:
+
+- structural preflight;
+- exact SDK/workload/dependency restore;
+- Release unit/integration/UI-contract tests;
+- Android/Windows/iOS/Mac Catalyst builds;
+- compiler/analyzer/XAML warning/error resolution;
+- migration validation;
+- encrypted backup/restore plus interruption recovery;
+- data-integrity validation;
+- privacy-mode screen-by-screen validation;
+- 0/2/3/4-decimal currency precision QA where supported;
+- multiple time-zone and DST local-calendar validation;
+- native notification lifecycle validation;
+- PIN/biometric fallback validation;
+- receipt/filesystem confinement validation;
+- accessibility validation;
+- complete local finance-data deletion validation.
+
+### P1 — Release-candidate completion
+
+P1 covers release packaging/evidence after P0 correctness is proven:
+
+- signed artifacts outside source control;
+- final package IDs/publisher/provisioning;
+- synthetic screenshots/store assets;
+- final privacy/data-safety declarations;
+- target-store review of the Buy Me a Coffee external support link;
+- canonical public contact-link review;
+- exact dependency-license/vulnerability review;
+- release-candidate tagging only after evidence exists;
+- release notes and known limitations.
+
+### P2 — Quality and product polish
+
+P2 includes improvements that should follow a proven release candidate rather than displacing correctness work:
+
+- true database-level transaction paging if benchmarks justify it;
+- large-dataset performance benchmarks;
+- fuller localization, including Hindi completion work;
+- native UI automation;
+- continuing accessibility improvements;
+- richer privacy-safe import diagnostics;
+- expanded export configuration;
+- backup usability improvements without password weakening;
+- richer deterministic sample datasets;
+- contributor workflow improvements.
+
+### P3 — Later-version architecture
+
+P3 records intentionally non-current product areas that require new architecture/privacy/security/migration decisions:
+
+- remote Finora accounts;
+- cloud synchronization;
+- shared/collaborative finance spaces;
+- server/store-backed commercial entitlement;
+- explicit foreign-exchange workflow;
+- optional remote exchange-rate lookup;
+- analytics/crash telemetry decisions.
+
+The roadmap explicitly preserves the local-first boundary and forbids silently inventing FX rates or turning Buy Me a Coffee into hidden entitlement state.
+
+---
+
+## 90. Recommended next milestone defined
+
+The roadmap defines the strongest next milestone as:
+
+> **A fully reproducible Finora 0.2.0 release candidate that restores, builds, tests, migrates, backs up/restores, protects private finance displays, passes native platform validation, and has evidence for every applicable release checklist item.**
+
+This means the recommended next action is not simply “add more features.”
+
+The project should first establish evidence for:
+
+1. structural verification;
+2. dependency/workload restore;
+3. compiler/XAML/analyzer correctness;
+4. all automated test suites;
+5. schema migration;
+6. backup/restore and crash recovery;
+7. privacy/security/integrity;
+8. currency/local-date correctness;
+9. notifications/app lock/biometrics;
+10. accessibility;
+11. complete data deletion;
+12. native packaging/signing;
+13. store-policy and dependency/license review.
+
+Only after the P0/P1 milestone is satisfied should P2/P3 work become the primary focus.
+
+---
+
+## 91. Public documentation updated for project support and roadmap
+
+The following public/support documentation now includes the canonical Buy Me a Coffee URL and/or roadmap where relevant:
+
+- `README.md`;
+- `SUPPORT.md`;
+- `docs/README.md`;
+- `docs/DOCUMENTATION_STATUS.md`;
+- `docs/USER_GUIDE.md`;
+- `docs/features/SETTINGS_REFERENCE.md`;
+- `docs/releases/STORE_METADATA_TEMPLATE.md`;
+- `docs/releases/RELEASE_CHECKLIST.md`;
+- `docs/releases/STORE_READINESS.md`;
+- `docs/setup/BUILD.md`;
+- `PROJECT_STATUS.md`;
+- `CHANGELOG.md`;
+- `what_changed.md`.
+
+The public README now includes:
+
+- Buy Me a Coffee in About/current contacts;
+- the explicit entitlement separation;
+- a dedicated Next Steps section;
+- a link to `docs/NEXT_STEPS.md`;
+- the recommended release-candidate milestone.
+
+The documentation hub now treats `docs/NEXT_STEPS.md` as a Start Here document.
+
+The documentation status matrix now tracks the roadmap as a current required area.
+
+---
+
+## 92. Support documentation boundary strengthened
+
+`SUPPORT.md` now lists:
+
+- user support email;
+- business/security email;
+- repository;
+- creator profile;
+- optional Buy Me a Coffee project-support URL.
+
+It explicitly states that a contribution:
+
+- does not unlock features;
+- does not create premium entitlement;
+- does not guarantee or accelerate support;
+- does not change security-reporting priority;
+- does not create a service-level agreement.
+
+This preserves support access independently from project contributions.
+
+---
+
+## 93. Settings reference aligned
+
+`docs/features/SETTINGS_REFERENCE.md` now documents the About support action and its implementation boundary.
+
+It records that:
+
+- Buy Me a Coffee is opened through the system launcher;
+- open failures use generic user-facing text/privacy-safe logging;
+- it is not a Finora setting;
+- it is not an entitlement/subscription/premium flag;
+- it does not change support priority;
+- current target-store policy must be reviewed before keeping the link in a packaged store build.
+
+The Settings reference now also links to `docs/NEXT_STEPS.md`.
+
+---
+
+## 94. Store metadata and external-link policy gates added
+
+`docs/releases/STORE_METADATA_TEMPLATE.md` now includes Buy Me a Coffee in canonical project identity and adds a dedicated external-support boundary.
+
+The template explicitly prohibits describing Buy Me a Coffee as:
+
+- an in-app purchase;
+- subscription;
+- premium entitlement;
+- feature unlock;
+- required support payment;
+- guaranteed faster support;
+- secure license token.
+
+Android, Apple, Mac and Windows store-preparation sections now require live policy review when the link is included in the target distribution.
+
+The static template is still not represented as current store-policy advice; final store-console rules must be verified at submission time.
+
+---
+
+## 95. Release checklist and store-readiness gates expanded
+
+`docs/releases/RELEASE_CHECKLIST.md` now requires evidence that:
+
+- the canonical URL is `https://buymeacoffee.com/sanskarIN`;
+- the About action uses the shared URL;
+- open failures remain privacy-safe;
+- Buy Me a Coffee is not represented as entitlement/subscription/feature unlock/support-priority purchase;
+- the current target-store external contribution/payment-link policy has been reviewed before retaining it in the packaged build;
+- unresolved P0 items in `docs/NEXT_STEPS.md` close or block release.
+
+`docs/releases/STORE_READINESS.md` now includes the same concept in common/platform/store-evidence gates.
+
+Platform sections specifically require policy review for:
+
+- Google Play distribution;
+- Microsoft Store/package distribution where applicable;
+- Apple App Store distribution;
+- Mac Catalyst distribution channel.
+
+No store policy is marked passed merely because the documentation contains the link.
+
+---
+
+## 96. Structural preflight now protects roadmap and support identity
+
+`build/scripts/verify_structure.py` now:
+
+- requires `docs/NEXT_STEPS.md` as part of the core documentation tree;
+- defines the expected canonical `BUY_ME_A_COFFEE_URL`;
+- validates `AppConstants.BuyMeACoffeeUrl` contains that exact URL;
+- validates Settings/About still exposes `OnBuyMeACoffeeClicked` and Buy Me a Coffee text;
+- validates Settings keeps explicit “does not unlock Finora features” wording;
+- validates `SettingsPage.About.cs` uses the shared `AppConstants.BuyMeACoffeeUrl`;
+- validates the docs index and roadmap retain the canonical external URL;
+- continues all previous documentation-link, XAML, project, version/schema, money/privacy, secret-entry, reset, biometric, and Android backup/privacy checks.
+
+The preflight does **not** perform a network request to Buy Me a Coffee and does not claim that the external page or store policy is currently valid/reachable.
+
+---
+
+## 97. Build guide aligned again
+
+`docs/setup/BUILD.md` now documents that structural preflight also checks:
+
+- the roadmap exists;
+- the canonical Buy Me a Coffee source identity;
+- Settings/About shared-constant/handler wiring;
+- the no-feature-unlock boundary.
+
+It also links `docs/NEXT_STEPS.md` in release preparation and requires store-policy review if the external support link is packaged.
+
+The build guide continues to distinguish static structural verification from compiler/test/native/store evidence.
+
+---
+
+## 98. Project status and changelog aligned
+
+`PROJECT_STATUS.md` now has a 2026-08-12 source-review date and records:
+
+- Buy Me a Coffee About source and UI-contract coverage;
+- the entitlement/support-priority boundary;
+- store-policy validation as still external;
+- the P0–P3 roadmap;
+- the recommended release-candidate milestone;
+- the support-link policy review as an explicit release gate.
+
+`CHANGELOG.md` now records the support-link/roadmap continuation under Unreleased.
+
+---
+
+## 99. Exact pre-ledger changed-file inventory — 2026-08-12
+
+Compared with continuation base:
+
+`63dbb9e13fcfcd80bd1d75515bcd69012d9090a2`
+
+pre-ledger `main` was **18 commits ahead** and changed the following files:
+
+### Source
+
+- `src/Finora.Shared/AppConstants.cs`;
+- `src/Finora.App/Pages/SettingsPage.About.cs`;
+- `src/Finora.App/Pages/SettingsPage.xaml`.
+
+### Tests
+
+- `tests/Finora.UiTests/SettingsSourceContractTests.cs`.
+
+### Build/preflight
+
+- `build/scripts/verify_structure.py`.
+
+### New roadmap
+
+- `docs/NEXT_STEPS.md`.
+
+### Public/support/project docs
+
+- `README.md`;
+- `SUPPORT.md`;
+- `PROJECT_STATUS.md`;
+- `CHANGELOG.md`.
+
+### Documentation system
+
+- `docs/README.md`;
+- `docs/DOCUMENTATION_STATUS.md`;
+- `docs/USER_GUIDE.md`;
+- `docs/features/SETTINGS_REFERENCE.md`;
+- `docs/setup/BUILD.md`.
+
+### Release/store docs
+
+- `docs/releases/RELEASE_CHECKLIST.md`;
+- `docs/releases/STORE_METADATA_TEMPLATE.md`;
+- `docs/releases/STORE_READINESS.md`.
+
+The final `what_changed.md` update is intentionally the final content commit after this inventory.
+
+---
+
+## 100. Focused commit trail — 2026-08-12
+
+The pre-ledger continuation commit trail includes:
+
+- `feat(identity): add Buy Me a Coffee project support link`
+- `feat(settings): add Buy Me a Coffee support action`
+- `feat(settings): expose Buy Me a Coffee in About`
+- `test(ui): guard Buy Me a Coffee About support link`
+- `docs(roadmap): add prioritized Finora next steps`
+- `docs(index): link Buy Me a Coffee and next-steps roadmap`
+- `docs(settings): document Buy Me a Coffee support boundary`
+- `docs(support): add optional Buy Me a Coffee support link`
+- `docs(store): add Buy Me a Coffee policy boundary and roadmap`
+- `docs(status): track roadmap and Buy Me a Coffee coverage`
+- `ci(preflight): require roadmap and Buy Me a Coffee identity`
+- `docs(readme): add Buy Me a Coffee and prioritized next steps`
+- `docs(status): add roadmap milestone and Buy Me a Coffee boundary`
+- `docs(changelog): record Buy Me a Coffee and next-step roadmap`
+- `docs(user): add Buy Me a Coffee and next-step guidance`
+- `docs(release): gate Buy Me a Coffee and next-step release blockers`
+- `docs(store): gate external support link and P0 roadmap evidence`
+- `docs(build): include roadmap and support-link preflight checks`
+- final ledger commit updating this file.
+
+The Git history remains the authoritative exact ordered commit record.
+
+---
+
+## 101. Buy Me a Coffee is deliberately not a Finora entitlement system
+
+The repository now consistently treats Buy Me a Coffee as an optional external project-support destination.
+
+It is **not**:
+
+- a Finora account;
+- a login mechanism;
+- a subscription;
+- an in-app purchase implementation;
+- a premium entitlement token;
+- a server-backed license;
+- a replacement for store purchase APIs;
+- a guarantee of support priority or response time;
+- a finance-data/payment feature inside Finora.
+
+A future commercial/premium model remains a separate later-version architecture problem requiring store/server-backed entitlement decisions.
+
+If a future distribution channel prohibits or constrains external contribution links, the packaged UI must follow that channel's current rules without changing the documented entitlement truth.
+
+---
+
+## 102. Current external-policy validation boundary
+
+This continuation did not perform a live current-policy determination for Google Play, Apple App Store, Microsoft Store, Mac distribution channels, or Buy Me a Coffee service availability.
+
+The repository therefore does not claim:
+
+- that every store currently permits the external support link;
+- that the external page is guaranteed reachable in every region;
+- that a contribution can be processed from every platform/region;
+- that static documentation supersedes current store-console rules.
+
+The release checklist, store readiness, store metadata template, roadmap, README, Settings reference, user guide, and support docs all require live store-policy review before public packaged submission when the link is included.
+
+---
+
+## 103. Validation status after this continuation
+
+The same evidence rules remain in force.
+
+This connector-only continuation changed source/tests/docs on `main`, but no local .NET/MAUI toolchain was available in the execution environment.
+
+Therefore no claim is made here that:
+
+- structural preflight actually executed on a complete checkout;
+- `dotnet restore` succeeded;
+- unit/integration/UI-contract tests executed successfully;
+- Android/Windows/iOS/Mac Catalyst builds succeeded;
+- native Launcher opening of Buy Me a Coffee was device-tested;
+- native accessibility was tested;
+- store external-link policy was approved;
+- signing/package/store submission succeeded.
+
+Those are precisely the next P0/P1 evidence tasks documented in `docs/NEXT_STEPS.md`.
+
+---
+
+## 104. Final current project direction
+
+The current project direction is now explicit:
+
+### Maintain current local-first core
+
+Preserve:
+
+- finance correctness;
+- signed integer minor-unit money;
+- explicit currency scope;
+- no invented FX;
+- local calendar correctness;
+- schema/migration safety;
+- crash-safe encrypted backup/restore;
+- privacy-safe diagnostics;
+- complete local finance-data deletion;
+- optional local app lock;
+- explicit user-controlled import/export/backup;
+- no mandatory login/cloud dependency.
+
+### Complete release evidence before large expansion
+
+Prioritize P0/P1 from `docs/NEXT_STEPS.md`.
+
+### Treat project support separately from product entitlement
+
+Canonical optional support destination:
+
+https://buymeacoffee.com/sanskarIN
+
+This remains separate from Finora finance data, functionality, and licensing.
+
+### Defer architecture-heavy features until their design is approved
+
+Remote accounts, cloud sync, collaboration, secure commercial entitlement, explicit FX/network rates, and telemetry remain P3/later-version decisions.
+
+`docs/NEXT_STEPS.md` is now the primary roadmap for the next workstream.
+
+`docs/README.md` remains the documentation hub.
+
+`docs/DOCUMENTATION_STATUS.md` remains the documentation coverage/update-policy matrix.
+
+`what_changed.md` remains the cumulative detailed project ledger and is intentionally the final content write of this continuation.
