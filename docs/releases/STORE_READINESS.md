@@ -2,10 +2,12 @@
 
 This document separates source completeness from platform/store validation. A check is not considered complete until it is executed on the appropriate supported toolchain/device.
 
+The current execution order is defined in `docs/NEXT_STEPS.md`. P0 release blockers and P1 release-candidate requirements must be resolved before store-ready status.
+
 ## Common release gates
 
 - [ ] `python build/scripts/verify_structure.py` passes.
-- [ ] Structural preflight reports no raw minor-unit user-facing money, unmasked Settings secrets, complete-reset wiring drift, biometric provider-text regression, Android backup-rule drift, raw exception alerts, malformed XAML/project wiring, or version/schema inconsistency.
+- [ ] Structural preflight reports no raw minor-unit user-facing money, unmasked Settings secrets, complete-reset wiring drift, biometric provider-text regression, Android backup-rule drift, raw exception alerts, malformed XAML/project wiring, version/schema inconsistency, missing roadmap, or Buy Me a Coffee identity/entitlement-boundary drift.
 - [ ] `dotnet workload restore` succeeds on supported build hosts.
 - [ ] NuGet restore completes without unresolved vulnerabilities or license surprises.
 - [ ] Release formatting review is complete according to repository build guidance; formatting is not substituted for compiler/test evidence.
@@ -63,6 +65,7 @@ This document separates source completeness from platform/store validation. A ch
 - [ ] Privacy mode masks passive money on all finance surfaces and suppresses quantitative report charts.
 - [ ] Transaction sort and 50-row Load more behavior works with touch/TalkBack.
 - [ ] Onboarding Privacy/Terms and Settings revisit/About/reset controls are reachable with TalkBack.
+- [ ] If Buy Me a Coffee remains in the packaged Android build, current Google Play policy for external contribution/payment links has been reviewed for the intended region/distribution model.
 - [ ] Upgrade from previous released schema is tested using copy of synthetic v1 data.
 - [ ] Play Console data-safety answers match local-first/no-analytics/no-account/no-automatic-backup behavior.
 
@@ -82,6 +85,7 @@ This document separates source completeness from platform/store validation. A ch
 - [ ] Privacy mode masks passive money and hides quantitative report charts.
 - [ ] Local-calendar filters/reports are smoke-tested under a non-UTC Windows time zone and, where practical, a DST transition.
 - [ ] File picker/share/export/backup/restore and attachment opening are tested under packaged permissions.
+- [ ] If Buy Me a Coffee remains in a Microsoft Store packaged build, current external support/payment-link policy has been reviewed.
 - [ ] Package upgrade preserves/migrates database and app-private receipt files.
 - [ ] Narrator/high-contrast/large-text behavior is verified for new Dashboard/Reports/Settings/transaction controls.
 
@@ -105,6 +109,7 @@ This document separates source completeness from platform/store validation. A ch
 - [ ] Transaction sort/load-more behavior is usable with VoiceOver.
 - [ ] Onboarding Privacy/Terms and Settings About/reset controls are reachable with VoiceOver.
 - [ ] Dynamic Type, VoiceOver, reduced motion, dark mode, and orientation/layout behavior are tested.
+- [ ] If Buy Me a Coffee remains in the App Store build, current App Store policy for external contribution/payment links has been reviewed before submission.
 - [ ] App Store privacy declarations match local-first behavior and actual platform permissions.
 
 ## Mac Catalyst
@@ -121,16 +126,20 @@ This document separates source completeness from platform/store validation. A ch
 - [ ] Signed charts preserve negative direction and textual equivalents.
 - [ ] Privacy mode masks passive monetary values and hides quantitative chart geometry.
 - [ ] Accessibility is verified with VoiceOver and keyboard focus.
+- [ ] External Buy Me a Coffee support-link policy is reviewed for the chosen Mac distribution channel.
 
-## Store copy and assets
+## Store copy, external support links and assets
 
 - [ ] Product name: Finora.
 - [ ] Attribution: “Made by the Sanskar”.
 - [ ] Repository: https://github.com/sanskarIN/Finora
 - [ ] Creator profile: https://www.github.com/sanskarIN
+- [ ] Optional project support: https://buymeacoffee.com/sanskarIN
 - [ ] Business/security contact: sanskarin@outlook.in
 - [ ] Support: supportramsandesh@gmail.com
-- [ ] App About screen exposes repository/profile, business/support contacts, Apache-2.0/notices, privacy/terms, contributing/security/support guides.
+- [ ] App About screen exposes repository/profile, optional Buy Me a Coffee support, business/support contacts, Apache-2.0/notices, privacy/terms, contributing/security/support guides.
+- [ ] Buy Me a Coffee is not described as an in-app purchase, subscription, premium entitlement, feature unlock, support-priority purchase, or secure license state.
+- [ ] Current target-store external contribution/payment-link policy has been reviewed before retaining the link in a packaged store build.
 - [ ] Store screenshots contain synthetic data only.
 - [ ] Store screenshots do not expose real monetary values through a passive surface while privacy mode is represented as active.
 - [ ] Store listing does not claim cloud sync, tamper-proof local premium licensing, guaranteed financial outcomes, automatic exchange-rate conversion, or bug-free operation.
@@ -156,8 +165,11 @@ For each release candidate retain:
 - biometric/notification/capture tests;
 - screen-reader/keyboard/large-text accessibility notes;
 - signing/package/store-console validation records;
+- current target-store external Buy Me a Coffee link-policy review if the link is packaged;
 - dependency/license/security review.
 
 ## Release decision
 
 A release is ready only when every applicable checkbox is backed by an actual build/test/device/store result. Source presence alone is not proof of platform behavior, and an empty classic GitHub commit-status response is not a substitute for check-run evidence.
+
+Every unresolved P0 item in `docs/NEXT_STEPS.md` should either be closed with evidence or explicitly block the release decision.
