@@ -415,6 +415,12 @@ Settings currently cover areas such as:
 - About/legal/repository/support links;
 - hidden developer tools.
 
+About includes an optional **Support development · Buy Me a Coffee** action that opens:
+
+https://buymeacoffee.com/sanskarIN
+
+This external support link does not unlock Finora features, create premium entitlement, change support priority, or replace store/server-backed commercial licensing. Availability in a packaged store build is subject to the target store's current external contribution/payment-link policy.
+
 Local premium is a development/demo flag, not tamper-proof commercial entitlement.
 
 ## 23. Developer tools
@@ -441,9 +447,26 @@ For technical setup/runtime issues, see [Troubleshooting](setup/TROUBLESHOOTING.
 
 Support: `supportramsandesh@gmail.com`  
 Business/security: `sanskarin@outlook.in`  
-Repository: https://github.com/sanskarIN/Finora
+Repository: https://github.com/sanskarIN/Finora  
+Creator/open-source profile: https://www.github.com/sanskarIN  
+Optional project support: https://buymeacoffee.com/sanskarIN
 
-## 27. Important current limitations
+A Buy Me a Coffee contribution is optional and does not create a support service level or guaranteed response time.
+
+## 27. Next steps and current milestone
+
+The prioritized project roadmap is [Next Steps](NEXT_STEPS.md).
+
+Its current order is:
+
+1. P0 release blockers: structural verification, exact restore/build/tests, migrations, backup/recovery, integrity, privacy, currency/date correctness, notifications, app lock/biometrics, attachment confinement, accessibility, and complete data deletion;
+2. P1 release-candidate completion: signing/package identities, synthetic store assets, privacy/data-safety declarations, Buy Me a Coffee store-policy review, dependency/license/security review, release evidence, tags and release notes;
+3. P2 quality/product polish: true database paging if needed, performance benchmarks, localization completion, native UI automation, accessibility improvements, richer import/export/backup UX;
+4. P3 later-version architecture: remote accounts, cloud sync, collaboration, secure commercial entitlement, explicit FX, optional network rates, and telemetry decisions.
+
+The recommended next milestone is a reproducible Finora 0.2.0 release candidate with actual compiler/test/native/security/privacy/store evidence rather than simply adding more features.
+
+## 28. Important current limitations
 
 The current release does not claim:
 
