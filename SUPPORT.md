@@ -4,7 +4,8 @@
 
 1. Read `docs/setup/TROUBLESHOOTING.md`.
 2. Check `PROJECT_STATUS.md` for current source/platform validation status.
-3. For build/test issues, run the dependency-free preflight first:
+3. Check `docs/NEXT_STEPS.md` for the prioritized release-validation and development roadmap.
+4. For build/test issues, run the dependency-free preflight first:
 
 ```bash
 python build/scripts/verify_structure.py
@@ -17,6 +18,10 @@ If the issue is a suspected security vulnerability, private-data exposure, app-l
 - User support: `supportramsandesh@gmail.com`
 - Business/project/security contact: `sanskarin@outlook.in`
 - Repository: https://github.com/sanskarIN/Finora
+- Creator/open-source profile: https://www.github.com/sanskarIN
+- Optional project support: https://buymeacoffee.com/sanskarIN
+
+Buy Me a Coffee is an optional external contribution link. A contribution does not unlock Finora features, create premium entitlement, guarantee or accelerate support, or change security/reporting priority. Product support and security reporting remain available through the contacts and repository guidance above without a contribution.
 
 ## Protect your privacy when requesting support
 
@@ -76,6 +81,8 @@ If the integrity checker reports a problem:
 
 Use the GitHub feature-request template. Explain the user outcome and affected area without including private finance data. Current product boundaries remain local-first: cloud synchronization, remote accounts, collaboration, and server-backed commercial entitlement are later-version concerns unless explicitly approved and designed.
 
+The prioritized current roadmap is maintained in `docs/NEXT_STEPS.md`. Feature requests can still propose other work, but release-blocking financial correctness, migration, backup/recovery, privacy, native validation, and accessibility issues should be prioritized over cosmetic expansion.
+
 ## Response expectations
 
-This open-source repository does not guarantee a response time or commercial service level. Support guidance is provided on a best-effort basis. Always keep independent backups of important local financial records before uninstalling, resetting app data, testing migrations, or using development builds.
+This open-source repository does not guarantee a response time or commercial service level. Support guidance is provided on a best-effort basis. Buy Me a Coffee contributions do not create a service-level agreement or guaranteed response time. Always keep independent backups of important local financial records before uninstalling, resetting app data, testing migrations, or using development builds.
