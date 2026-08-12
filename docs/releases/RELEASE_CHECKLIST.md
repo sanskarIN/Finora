@@ -2,12 +2,15 @@
 
 Use this checklist for every candidate. Do not mark a box complete from source inspection alone when it requires a compiler, platform SDK, emulator/simulator, physical device, signing service, or store console.
 
+The prioritized execution order is maintained in `docs/NEXT_STEPS.md`. Resolve P0 release blockers and P1 release-candidate requirements before treating P2/P3 expansion as release-critical.
+
 ## Source and repository
 
 - [ ] Release commit is on the intended branch/tag.
 - [ ] Working tree used for release contains no uncommitted/generated private files.
 - [ ] `python build/scripts/verify_structure.py` passes.
-- [ ] Structural preflight rejects malformed XML/XAML/project wiring, raw minor-unit display labels, unmasked Settings secret fields, raw exception alerts, complete-reset handler drift, Android backup-rule drift, and raw Android biometric-provider text.
+- [ ] Structural preflight rejects malformed XML/XAML/project wiring, raw minor-unit display labels, unmasked Settings secret fields, raw exception alerts, complete-reset handler drift, Android backup-rule drift, raw Android biometric-provider text, missing roadmap documentation, and Buy Me a Coffee identity/entitlement-boundary drift.
+- [ ] `docs/NEXT_STEPS.md` reflects the current release blockers, release-candidate work, quality backlog, and later-version boundaries.
 - [ ] CodeQL/dependency-review findings have been reviewed.
 - [ ] Dependabot/security alerts have been reviewed.
 - [ ] No API keys, keystores, certificates, passwords, PINs, backup passwords, private keys, real financial databases, or real receipt files are present.
@@ -214,6 +217,9 @@ Use this checklist for every candidate. Do not mark a box complete from source i
 - [ ] About displays “Made by the Sanskar”.
 - [ ] About technology summary includes .NET MAUI, C#, XAML, SQLite and MVVM.
 - [ ] Repository and creator profile links work.
+- [ ] Buy Me a Coffee button opens the shared canonical `https://buymeacoffee.com/sanskarIN` URL through the system launcher.
+- [ ] Buy Me a Coffee open failure produces generic privacy-safe UI text/logging.
+- [ ] Buy Me a Coffee is described as optional project support only, not feature unlock, premium entitlement, subscription, or support-priority purchase.
 - [ ] Business/security and support contacts are correct.
 - [ ] Apache-2.0/license/notices links are correct.
 - [ ] Privacy and Terms links work.
@@ -251,7 +257,7 @@ Use this checklist for every candidate. Do not mark a box complete from source i
 - [ ] Recurring lifecycle controls have understandable labels/descriptions/state.
 - [ ] Transaction sort/filter/Load more controls are keyboard/screen-reader operable.
 - [ ] Onboarding Privacy/Terms controls are reachable.
-- [ ] Settings About and destructive controls have understandable focus/labels.
+- [ ] Settings About, Buy Me a Coffee, and destructive controls have understandable focus/labels.
 - [ ] Keyboard navigation/focus on desktop.
 - [ ] Reduced motion.
 - [ ] Sufficient contrast.
@@ -318,7 +324,7 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 - [ ] Local-calendar/report behavior verified in at least one non-UTC and one DST-observing test zone.
 - [ ] Upgrade/migration tested.
 
-## Store metadata
+## Store metadata and external support links
 
 - [ ] Version/build number matches source and packaged `AppInfo` shown in About.
 - [ ] Product name is Finora.
@@ -326,6 +332,9 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 - [ ] Business/security email is `sanskarin@outlook.in`.
 - [ ] Support email is `supportramsandesh@gmail.com`.
 - [ ] Repository/profile links are correct.
+- [ ] Canonical Buy Me a Coffee URL is `https://buymeacoffee.com/sanskarIN` everywhere it is exposed.
+- [ ] Current target-store policy has been reviewed for external contribution/payment links before retaining Buy Me a Coffee in the packaged build.
+- [ ] Store copy does not describe Buy Me a Coffee as in-app purchase, subscription, premium entitlement, feature unlock, guaranteed support, or secure licensing.
 - [ ] Store screenshots use synthetic data only.
 - [ ] Store screenshots do not accidentally defeat privacy mode with another passive amount surface.
 - [ ] Store copy does not promise returns, financial advice, cloud sync, automatic exchange rates, bug-free operation, or tamper-proof local premium licensing.
@@ -334,6 +343,7 @@ Use `docs/releases/STORE_READINESS.md` for full platform matrices.
 ## Release decision
 
 - [ ] All applicable gates above have evidence.
+- [ ] Every unresolved P0 item from `docs/NEXT_STEPS.md` is closed or explicitly blocks release.
 - [ ] Known limitations are recorded in `PROJECT_STATUS.md` and release notes.
 - [ ] No unresolved issue can cause silent financial corruption, mixed-currency misreporting, local-date misclassification, misleading signed chart direction, unsafe restore, privacy leakage, app-lock bypass, or incorrect migration.
 - [ ] Release tag/artifacts are created only after candidate passes required gates.
