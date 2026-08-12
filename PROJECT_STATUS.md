@@ -1,6 +1,6 @@
 # Finora Project Status
 
-Last source review: **2026-08-11**
+Last source review: **2026-08-12**
 
 Current source line: **Finora 0.2.0 (build 2)**  
 Current database schema: **2**  
@@ -205,6 +205,12 @@ Source presence is not the same as native release validation.
 
 🧪 About version/build comes from packaged `AppInfo`; attribution, technology summary, repository/profile, business/support contacts, Apache-2.0, notices, privacy/terms, contributing, security and support guide links are exposed.
 
+🧪 About now exposes the canonical optional Buy Me a Coffee support link through `AppConstants.BuyMeACoffeeUrl`; the action uses the system launcher and generic privacy-safe failure handling.
+
+✅ Buy Me a Coffee is explicitly separated from Finora feature entitlement, premium state, and support priority in UI/docs.
+
+⚠️ Final packaged-store policy compatibility for an external contribution/payment link must be checked against each target store's current rules before submission.
+
 ## Diagnostics and integrity
 
 🧪 Privacy logger ignores arbitrary caller properties and logs event/type tokens only; exception messages/stacks are not serialized.
@@ -225,7 +231,7 @@ Source presence is not the same as native release validation.
 
 ✅ Android 12+ `data_extraction_rules.xml` excludes same domains from cloud backup and device transfer.
 
-✅ Structural preflight requires/wires these resources and guards masked secret fields, complete-reset wiring, biometric provider-text redaction, raw exception-alert regressions, and raw minor-unit display labels.
+✅ Structural preflight requires/wires these resources and guards masked secret fields, complete-reset wiring, biometric provider-text redaction, raw exception-alert regressions, raw minor-unit display labels, the roadmap, and canonical Buy Me a Coffee identity/entitlement boundary.
 
 ⚠️ Final merged-manifest/package behavior and device backup/transfer behavior still require Android build/device evidence.
 
@@ -237,13 +243,15 @@ Source presence is not the same as native release validation.
 
 ✅ Settings, lock, onboarding, Dashboard period, reports, transaction history/tools and finance pages include additional heading/semantic descriptions.
 
-✅ Accessibility/localization documentation now defines chart/text equivalence, privacy-safe screen-reader behavior, keyboard/focus/native test expectations, runtime locale/currency separation, current English-first/localization-ready state, and the initial Hindi resource boundary.
+✅ Accessibility/localization documentation defines chart/text equivalence, privacy-safe screen-reader behavior, keyboard/focus/native test expectations, runtime locale/currency separation, current English-first/localization-ready state, and the initial Hindi resource boundary.
 
 ⚠️ TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast testing still requires native validation.
 
 ## Documentation
 
-✅ A complete documentation hub now exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
+✅ A complete documentation hub exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
+
+✅ A prioritized execution roadmap now exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
 
 ✅ End-user documentation covers onboarding through destructive reset, backup/restore, platform limitations, privacy, reports, import/export, notifications, Settings, and support.
 
@@ -259,7 +267,9 @@ Source presence is not the same as native release validation.
 
 ✅ Release documentation covers release checklist, store readiness, versioning/migrations/backup compatibility, store metadata preparation, changelog, and project status.
 
-✅ Dependency-free structural preflight now treats every core documentation reference as required and validates repository-relative Markdown file links without network access.
+✅ Buy Me a Coffee is documented consistently in the docs hub, Settings reference, support guide, store metadata, roadmap, README and shared source identity.
+
+✅ Dependency-free structural preflight treats every core documentation reference as required and validates repository-relative Markdown file links without network access.
 
 ⚠️ External URLs, Markdown anchors, live store policy requirements, and native behavior described by platform docs still require external/current validation.
 
@@ -267,9 +277,17 @@ Source presence is not the same as native release validation.
 
 ✅ Structural verifier, staged CI workflow, Dependabot, CodeQL, dependency review, CODEOWNERS, issue/PR templates and release/security documentation are present.
 
-✅ Structural preflight guards required documentation, local Markdown file links, Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
+✅ Structural preflight guards required documentation, local Markdown file links, product/support identity, Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
 
 ⚠️ CI/check-run success must be confirmed from actual GitHub Actions evidence. An empty classic combined-status response is not a passing result.
+
+## Current next milestone
+
+The preferred next milestone is defined in `docs/NEXT_STEPS.md`:
+
+> A reproducible Finora 0.2.0 release candidate with actual evidence for structural verification, dependency/workload restore, automated tests, all native builds, schema migration, backup/restore and interruption recovery, integrity, privacy, currency/date correctness, notifications, app lock/biometrics, accessibility, complete local data deletion, packaging/signing, dependency/security review, and store-policy validation.
+
+P0/P1 release evidence should be completed before major P2/P3 feature expansion.
 
 ## Native/release validation still required
 
@@ -292,8 +310,10 @@ Before store-ready status, execute and retain evidence for:
 13. receipt symlink/reparse tests where platform permits;
 14. privacy-mode passive display/chart tests on native UI;
 15. Dashboard period/transaction paging/sort/accessibility smoke tests;
-16. signing/package/store validation;
-17. final privacy/data-safety/store metadata review.
+16. complete finance-data deletion validation;
+17. signing/package/store validation;
+18. current external Buy Me a Coffee contribution-link policy review for each target store;
+19. final privacy/data-safety/store metadata review.
 
 ## Intentionally later-version scope
 
