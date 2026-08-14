@@ -8,7 +8,7 @@
       <Label Text="Recurring items" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
       <Label Text="Recurring rules prepare due occurrences. Money is recorded only when you mark an occurrence paid or partially paid." />
       <Button Text="Prepare due occurrences now" Command="{Binding ProcessNowCommand}" />
-      <Label Text="{Binding ProcessingResult}" SemanticProperties.LiveSetting="Polite" />
+      <Label Text="{Binding ProcessingResult}" />
 
       <Label Text="Rules" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
       <Picker Title="Choose recurring rule"
@@ -117,7 +117,7 @@
       <Label Text="Reminder lead time (minutes)" />
       <Entry Keyboard="Numeric" Text="{Binding ReminderMinutesBefore}" />
       <Button Text="Save recurring item" Command="{Binding AddCommand}" />
-      <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+      <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
     </VerticalStackLayout>
   </ScrollView>
 </ContentPage>
