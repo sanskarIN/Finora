@@ -446,6 +446,7 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
                 throw new InvalidOperationException("A subcategory budget must target a child category.");
         }
 
+        await using var scope = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
         var existing = await db.Budgets.SingleOrDefaultAsync(x => x.Id == budget.Id, cancellationToken).ConfigureAwait(false);
         if (existing is null)
         {
@@ -462,6 +463,7 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
             }
         }
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await scope.CommitAsync(cancellationToken).ConfigureAwait(false);
         return budget.Id;
     }
 
