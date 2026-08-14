@@ -75,7 +75,11 @@ public sealed class RecurringStateTransitionTests : IAsyncLifetime
     public async Task ArchivedAccount_BlocksRecurringPaymentGeneration()
     {
         var occurrence = await PrepareOccurrenceAsync();
-        await _store.ArchiveAccountAsync(_account.Id);
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            await db.Accounts.Where(x => x.Id == _account.Id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.State, AccountState.Archived));
+        }
         var workflow = new RecurringWorkflowService(_factory);
 
         var result = await workflow.MarkPaidAsync(occurrence.Id);
