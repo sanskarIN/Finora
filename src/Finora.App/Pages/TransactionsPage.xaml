@@ -39,11 +39,11 @@
     <Button Text="Save transaction" Command="{Binding AddCommand}" />
 
     <Label Text="History" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <Label Text="{Binding HistoryStatus}" FontSize="12" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding HistoryStatus}" FontSize="12" />
     <CollectionView ItemsSource="{Binding Transactions}" SelectionMode="Single" SelectionChanged="OnTransactionSelected" EmptyView="No matching transactions." HeightRequest="460">
       <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding Note}" FontSize="12" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /><Label Text="Tap to edit, split, tag, attach receipts, or inspect revision history." FontSize="11" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Type}" HorizontalTextAlignment="End" /><Label HorizontalTextAlignment="End"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
     <Button Text="Load more transactions" Command="{Binding LoadMoreCommand}" IsVisible="{Binding HasMore}" SemanticProperties.Description="Load the next 50 matching transactions" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
