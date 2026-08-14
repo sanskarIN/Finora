@@ -34,7 +34,10 @@ public partial class TransactionDetailPage : ContentPage
             if (!result.IsSuccess) await DisplayAlertAsync("Attachment not added", result.Error ?? "The attachment could not be stored.", "OK");
             await ViewModel.ReloadAsync();
         }
-        catch (Exception ex) { await DisplayAlertAsync("Attachment failed", ex.Message, "OK"); }
+        catch (Exception)
+        {
+            await DisplayAlertAsync("Attachment failed", "Finora could not read or store the selected attachment. Verify that the file is accessible and try again.", "OK");
+        }
     }
 
     private async void OnOpenAttachmentClicked(object? sender, EventArgs e)
