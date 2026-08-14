@@ -52,9 +52,9 @@ public sealed class BackupGraphValidationTests : IAsyncLifetime
             AmountMinor = -1_000,
             Currency = "INR",
             AccountId = account.Id,
-            OccurredAtUtc = DateTimeOffset.UtcNow,
-            Splits = [new TransactionSplit { AmountMinor = -1_000 }]
+            OccurredAtUtc = DateTimeOffset.UtcNow
         };
+        transaction.Splits = [new TransactionSplit { TransactionId = transaction.Id, AmountMinor = -1_000 }];
         await _store.SaveTransactionAsync(transaction);
         await using (var db = await _factory.CreateDbContextAsync())
         {
