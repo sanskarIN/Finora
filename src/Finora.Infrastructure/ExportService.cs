@@ -54,10 +54,13 @@ public sealed class ExportService(IDbContextFactory<FinoraDbContext> factory) : 
     public async Task<IReadOnlyList<CsvImportRow>> PreviewCsvAsync(Stream csvStream, CancellationToken cancellationToken = default)
     {
         using var reader = new StreamReader(csvStream, Encoding.UTF8, true, 4096, true); var result = new List<CsvImportRow>(); var row = 0;
-        while (!reader.EndOfStream && result.Count < 500)
+        while (result.Count < 500)
         {
-            cancellationToken.ThrowIfCancellationRequested(); var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false); row++;
-            if (row == 1 && line?.Contains("Date", StringComparison.OrdinalIgnoreCase) == true) continue; if (string.IsNullOrWhiteSpace(line)) continue;
+            cancellationToken.ThrowIfCancellationRequested();
+            var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            if (line is null) break;
+            row++;
+            if (row == 1 && line.Contains("Date", StringComparison.OrdinalIgnoreCase)) continue; if (string.IsNullOrWhiteSpace(line)) continue;
             var cells = ParseCsvLine(line); var dateIndex = cells.Count >= 14 ? 1 : 0; var typeIndex = cells.Count >= 14 ? 2 : 1; var amountIndex = cells.Count >= 14 ? 3 : 2; var accountIndex = cells.Count >= 14 ? 5 : 4; var categoryIndex = cells.Count >= 14 ? 6 : 5; var merchantIndex = cells.Count >= 14 ? 7 : 6; var noteIndex = cells.Count >= 14 ? 8 : 7;
             var valid = cells.Count > accountIndex && DateTimeOffset.TryParse(Cell(cells, dateIndex), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out _) && long.TryParse(Cell(cells, amountIndex), NumberStyles.Integer, CultureInfo.InvariantCulture, out _);
             result.Add(new CsvImportRow(row, Cell(cells, dateIndex), Cell(cells, amountIndex), Cell(cells, typeIndex), Cell(cells, accountIndex), Cell(cells, categoryIndex), Cell(cells, merchantIndex), Cell(cells, noteIndex), valid, valid ? null : "Invalid date or amount."));
