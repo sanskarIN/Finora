@@ -50,20 +50,7 @@ public sealed class AttachmentPathSafetyTests : IAsyncLifetime
     {
         var transaction = await CreateTransactionAsync();
         var attachmentId = Guid.NewGuid();
-        await using (var db = await _factory.CreateDbContextAsync())
-        {
-            db.Attachments.Add(new Attachment
-            {
-                Id = attachmentId,
-                TransactionId = transaction.Id,
-                RelativePath = "attachments/../outside.txt",
-                OriginalFileName = "receipt.txt",
-                ContentType = "application/pdf",
-                SizeBytes = 4,
-                Sha256 = SHA256.HashData([1, 2, 3, 4])
-            });
-            await db.SaveChangesAsync();
-        }
+        await SeedThenCorruptPathAsync(transaction.Id, attachmentId, "attachments/../outside.txt", "application/pdf");
 
         var service = new AttachmentService(_factory, _root);
         var local = await service.GetLocalPathAsync(attachmentId);
@@ -80,20 +67,11 @@ public sealed class AttachmentPathSafetyTests : IAsyncLifetime
 
         var transaction = await CreateTransactionAsync();
         var attachmentId = Guid.NewGuid();
-        await using (var db = await _factory.CreateDbContextAsync())
-        {
-            db.Attachments.Add(new Attachment
-            {
-                Id = attachmentId,
-                TransactionId = transaction.Id,
-                RelativePath = $"ATTACHMENTS/{transaction.Id:N}/{attachmentId:N}.png",
-                OriginalFileName = "receipt.png",
-                ContentType = "image/png",
-                SizeBytes = 4,
-                Sha256 = SHA256.HashData([1, 2, 3, 4])
-            });
-            await db.SaveChangesAsync();
-        }
+        await SeedThenCorruptPathAsync(
+            transaction.Id,
+            attachmentId,
+            $"ATTACHMENTS/{transaction.Id:N}/{attachmentId:N}.png",
+            "image/png");
 
         var local = await new AttachmentService(_factory, _root).GetLocalPathAsync(attachmentId);
         Assert.False(local.IsSuccess);
@@ -147,6 +125,24 @@ public sealed class AttachmentPathSafetyTests : IAsyncLifetime
 
         await Assert.ThrowsAsync<InvalidDataException>(() =>
             new BackupService(_factory, _root).CreateEncryptedBackupAsync("correct-horse"));
+    }
+
+    private async Task SeedThenCorruptPathAsync(Guid transactionId, Guid attachmentId, string unsafePath, string contentType)
+    {
+        await using var db = await _factory.CreateDbContextAsync();
+        db.Attachments.Add(new Attachment
+        {
+            Id = attachmentId,
+            TransactionId = transactionId,
+            RelativePath = $"attachments/{transactionId:N}/{attachmentId:N}.png",
+            OriginalFileName = "receipt.png",
+            ContentType = contentType,
+            SizeBytes = 4,
+            Sha256 = SHA256.HashData([1, 2, 3, 4])
+        });
+        await db.SaveChangesAsync();
+        await db.Attachments.Where(x => x.Id == attachmentId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.RelativePath, unsafePath));
     }
 
     private async Task<FinanceTransaction> CreateTransactionAsync()
