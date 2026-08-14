@@ -2,7 +2,7 @@ using Finora.Application;
 
 namespace Finora.Infrastructure;
 
-public sealed class PrivacyLogger(string directory) : IPrivacyLogger
+public sealed class PrivacyLogger(string directory) : IPrivacyLogger, IDisposable
 {
     private const long MaximumLogBytes = 512 * 1024;
     private const string CurrentFileName = "finora-diagnostic.log";
@@ -11,6 +11,7 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
     private readonly string _path = Path.Combine(Path.GetFullPath(directory), CurrentFileName);
     private readonly string _previousPath = Path.Combine(Path.GetFullPath(directory), PreviousFileName);
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private bool _disposed;
 
     public void Information(string eventName, IReadOnlyDictionary<string, object?>? properties = null)
     {
@@ -40,6 +41,14 @@ public sealed class PrivacyLogger(string directory) : IPrivacyLogger
         {
             _gate.Release();
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _gate.Dispose();
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 
     private async Task WriteAsync(string level, string eventToken)
