@@ -53,7 +53,10 @@ public sealed class SettingsViewModel : ViewModelBase
     public ObservableCollection<AccountSummary> Accounts { get; } = [];
     public IReadOnlyList<ThemePreference> Themes { get; } = Enum.GetValues<ThemePreference>();
     public IReadOnlyList<TransactionType> TransactionTypes { get; } = [TransactionType.Expense, TransactionType.Income, TransactionType.Refund, TransactionType.Adjustment];
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "XAML binds AppVersion through the SettingsViewModel instance and receives change notifications from that instance.")]
     public string AppVersion => $"Finora {AppInfo.Current.VersionString} ({AppInfo.Current.BuildString})";
+
     public bool PrivacyMode { get => _privacyMode; set { if (SetProperty(ref _privacyMode, value)) _settings.PrivacyMode = value; } }
     public bool HideAmounts { get => _hideAmounts; set { if (SetProperty(ref _hideAmounts, value)) _settings.HideAmountsOnLaunch = value; } }
     public bool ReducedMotion { get => _reducedMotion; set { if (SetProperty(ref _reducedMotion, value)) _settings.ReducedMotion = value; } }
