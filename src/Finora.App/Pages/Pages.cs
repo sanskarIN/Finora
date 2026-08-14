@@ -56,7 +56,7 @@ public partial class SavingsPage : ContentPage
 public partial class RecurringPage : ContentPage
 {
     private RecurringViewModel ViewModel => (RecurringViewModel)BindingContext;
-    public RecurringPage() { InitializeComponent(); BindingContext = new RecurringViewModel(ServiceHelper.Get<IFinanceStore>(), ServiceHelper.Get<IRecurringWorkflowService>(), ServiceHelper.Get<ILocalNotificationService>(), ServiceHelper.Get<IAppSettingsService>()); }
+    public RecurringPage() { InitializeComponent(); BindingContext = new RecurringViewModel(ServiceHelper.Get<IFinanceStore>(), ServiceHelper.Get<IRecurringWorkflowService>(), ServiceHelper.Get<IAppSettingsService>(), ServiceHelper.Get<ReminderCoordinator>()); }
     protected override void OnAppearing() { base.OnAppearing(); _ = ViewModel.LoadAsync(); }
 }
 
