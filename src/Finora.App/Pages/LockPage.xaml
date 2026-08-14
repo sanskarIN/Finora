@@ -3,11 +3,11 @@
   <Grid Padding="28">
     <VerticalStackLayout VerticalOptions="Center" Spacing="18" MaximumWidthRequest="460">
       <Label Text="Finora is locked" Style="{StaticResource Title}" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
-      <Label Text="{Binding Status}" HorizontalTextAlignment="Center" SemanticProperties.LiveSetting="Polite" SemanticProperties.Description="Finora lock status" />
+      <Label Text="{Binding Status}" HorizontalTextAlignment="Center" SemanticProperties.Description="Finora lock status" />
       <Button Text="Unlock with biometrics / Windows Hello" Command="{Binding BiometricCommand}" IsVisible="{Binding CanUseBiometrics}" SemanticProperties.Description="Unlock Finora using an available biometric or Windows Hello method. PIN remains available as fallback." />
       <Entry Placeholder="PIN" IsPassword="True" Keyboard="Numeric" MaxLength="12" Text="{Binding Pin}" ReturnType="Done" SemanticProperties.Description="Enter your 4 to 12 digit Finora PIN. The PIN is masked." />
       <Button Text="Unlock with PIN" Command="{Binding UnlockCommand}" SemanticProperties.Description="Verify the entered Finora PIN and unlock the app" />
-      <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+      <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
     </VerticalStackLayout>
   </Grid>
 </ContentPage>
