@@ -17,16 +17,34 @@ public partial class TransactionToolsPage : ContentPage
     {
         var ids = ViewModel.Transactions.Where(x => x.IsSelected).Select(x => x.Id).ToArray();
         if (ids.Length == 0) { await DisplayAlertAsync("Nothing selected", "Select one or more transactions first.", "OK"); return; }
-        try { var csv = await _export.ExportTransactionsCsvAsync(ids); var path = Path.Combine(FileSystem.CacheDirectory, $"Finora-selected-{DateTime.Now:yyyyMMdd-HHmmss}.csv"); await File.WriteAllTextAsync(path, csv); await Share.Default.RequestAsync(new ShareFileRequest("Export selected Finora transactions", new ShareFile(path))); }
-        catch (Exception ex) { await DisplayAlertAsync("Export failed", ex.Message, "OK"); }
+        try
+        {
+            var csv = await _export.ExportTransactionsCsvAsync(ids);
+            var path = Path.Combine(FileSystem.CacheDirectory, $"Finora-selected-{DateTime.Now:yyyyMMdd-HHmmss}.csv");
+            await File.WriteAllTextAsync(path, csv);
+            await Share.Default.RequestAsync(new ShareFileRequest("Export selected Finora transactions", new ShareFile(path)));
+        }
+        catch (Exception)
+        {
+            await DisplayAlertAsync("Export failed", "Finora could not create or share the selected CSV export. Check available storage and try again.", "OK");
+        }
     }
 
     private async void OnExportSelectedPdfClicked(object? sender, EventArgs e)
     {
         var ids = ViewModel.Transactions.Where(x => x.IsSelected).Select(x => x.Id).ToArray();
         if (ids.Length == 0) { await DisplayAlertAsync("Nothing selected", "Select one or more transactions first.", "OK"); return; }
-        try { var pdf = await _export.ExportTransactionsPdfAsync(ids); var path = Path.Combine(FileSystem.CacheDirectory, $"Finora-selected-{DateTime.Now:yyyyMMdd-HHmmss}.pdf"); await File.WriteAllBytesAsync(path, pdf); await Share.Default.RequestAsync(new ShareFileRequest("Export selected Finora transactions", new ShareFile(path))); }
-        catch (Exception ex) { await DisplayAlertAsync("Export failed", ex.Message, "OK"); }
+        try
+        {
+            var pdf = await _export.ExportTransactionsPdfAsync(ids);
+            var path = Path.Combine(FileSystem.CacheDirectory, $"Finora-selected-{DateTime.Now:yyyyMMdd-HHmmss}.pdf");
+            await File.WriteAllBytesAsync(path, pdf);
+            await Share.Default.RequestAsync(new ShareFileRequest("Export selected Finora transactions", new ShareFile(path)));
+        }
+        catch (Exception)
+        {
+            await DisplayAlertAsync("Export failed", "Finora could not create or share the selected PDF export. Check available storage and try again.", "OK");
+        }
     }
 
     private async void OnDuplicateSelected(object? sender, SelectionChangedEventArgs e)
