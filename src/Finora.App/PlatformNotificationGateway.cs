@@ -1,5 +1,5 @@
 using Finora.Application;
-using Finora.Shared;
+using FinoraResult = Finora.Shared.Result;
 
 #if ANDROID
 using Android.App;
@@ -57,31 +57,31 @@ public sealed class PlatformNotificationGateway : IPlatformNotificationGateway
 #endif
     }
 
-    public Task<Result> ScheduleAsync(LocalReminder reminder, CancellationToken cancellationToken = default)
+    public Task<FinoraResult> ScheduleAsync(LocalReminder reminder, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (reminder.TriggerAtUtc <= DateTimeOffset.UtcNow) return Task.FromResult(Result.Failure("Reminder time is in the past."));
+        if (reminder.TriggerAtUtc <= DateTimeOffset.UtcNow) return Task.FromResult(FinoraResult.Failure("Reminder time is in the past."));
 #if ANDROID
         try
         {
             var context = Android.App.Application.Context; EnsureAndroidChannel(context);
             var intent = new Intent(context, typeof(FinoraReminderReceiver)); intent.SetAction($"in.sanskar.finora.REMINDER.{reminder.Id:N}"); intent.PutExtra("id", reminder.Id.ToString("N")); intent.PutExtra("title", reminder.Title); intent.PutExtra("body", reminder.Body);
             var pending = PendingIntent.GetBroadcast(context, RequestCode(reminder.Id), intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable); var alarm = (AlarmManager?)context.GetSystemService(Context.AlarmService);
-            if (alarm is null || pending is null) return Task.FromResult(Result.Failure("Android alarm service is unavailable."));
-            alarm.SetAndAllowWhileIdle(AlarmType.RtcWakeup, reminder.TriggerAtUtc.ToUnixTimeMilliseconds(), pending); return Task.FromResult(Result.Success());
+            if (alarm is null || pending is null) return Task.FromResult(FinoraResult.Failure("Android alarm service is unavailable."));
+            alarm.SetAndAllowWhileIdle(AlarmType.RtcWakeup, reminder.TriggerAtUtc.ToUnixTimeMilliseconds(), pending); return Task.FromResult(FinoraResult.Success());
         }
-        catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException) { return Task.FromResult(Result.Failure("Android could not schedule the local reminder.")); }
+        catch (Exception ex) when (ex is Java.Lang.Exception or InvalidOperationException) { return Task.FromResult(FinoraResult.Failure("Android could not schedule the local reminder.")); }
 #elif IOS || MACCATALYST
         return ScheduleAppleAsync(reminder, cancellationToken);
 #elif WINDOWS
         try
         {
             var xml = new XmlDocument(); xml.LoadXml($"<toast><visual><binding template=\"ToastGeneric\"><text>{EscapeXml(reminder.Title)}</text><text>{EscapeXml(reminder.Body)}</text></binding></visual></toast>");
-            var scheduled = new ScheduledToastNotification(xml, reminder.TriggerAtUtc) { Id = reminder.Id.ToString("N") }; ToastNotificationManager.CreateToastNotifier().AddToSchedule(scheduled); return Task.FromResult(Result.Success());
+            var scheduled = new ScheduledToastNotification(xml, reminder.TriggerAtUtc) { Id = reminder.Id.ToString("N") }; ToastNotificationManager.CreateToastNotifier().AddToSchedule(scheduled); return Task.FromResult(FinoraResult.Success());
         }
-        catch (Exception) { return Task.FromResult(Result.Failure("Windows could not schedule the local reminder. Packaged app identity may be required.")); }
+        catch (Exception) { return Task.FromResult(FinoraResult.Failure("Windows could not schedule the local reminder. Packaged app identity may be required.")); }
 #else
-        return Task.FromResult(Result.Failure("Local notifications are unsupported on this platform."));
+        return Task.FromResult(FinoraResult.Failure("Local notifications are unsupported on this platform."));
 #endif
     }
 
@@ -119,14 +119,14 @@ public sealed class PlatformNotificationGateway : IPlatformNotificationGateway
         public override (string androidPermission, bool isRuntime)[] RequiredPermissions => Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu ? [(Android.Manifest.Permission.PostNotifications, true)] : [];
     }
 #elif IOS || MACCATALYST
-    private static async Task<Result> ScheduleAppleAsync(LocalReminder reminder, CancellationToken cancellationToken)
+    private static async Task<FinoraResult> ScheduleAppleAsync(LocalReminder reminder, CancellationToken cancellationToken)
     {
         try
         {
             var seconds = Math.Max(1, (reminder.TriggerAtUtc - DateTimeOffset.UtcNow).TotalSeconds); var content = new UNMutableNotificationContent { Title = reminder.Title, Body = reminder.Body, Sound = UNNotificationSound.Default }; var trigger = UNTimeIntervalNotificationTrigger.CreateTrigger(seconds, false); var request = UNNotificationRequest.FromIdentifier(reminder.Id.ToString("N"), content, trigger);
-            await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request).ConfigureAwait(false); cancellationToken.ThrowIfCancellationRequested(); return Result.Success();
+            await UNUserNotificationCenter.Current.AddNotificationRequestAsync(request).ConfigureAwait(false); cancellationToken.ThrowIfCancellationRequested(); return FinoraResult.Success();
         }
-        catch (Exception) { return Result.Failure("Apple notification scheduling failed."); }
+        catch (Exception) { return FinoraResult.Failure("Apple notification scheduling failed."); }
     }
 #elif WINDOWS
     private static string EscapeXml(string value) => value.Replace("&", "&amp;", StringComparison.Ordinal).Replace("<", "&lt;", StringComparison.Ordinal).Replace(">", "&gt;", StringComparison.Ordinal).Replace("\"", "&quot;", StringComparison.Ordinal).Replace("'", "&apos;", StringComparison.Ordinal);
