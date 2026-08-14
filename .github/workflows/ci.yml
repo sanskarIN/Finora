@@ -80,12 +80,10 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
         run: dotnet workload install maui
-      - name: Restore MAUI app
-        run: dotnet restore src/Finora.App/Finora.App.csproj
       - name: Build Windows with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0
       - name: Build Android with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android --no-restore
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android
 
   maui-apple:
     name: MAUI iOS + Mac Catalyst
@@ -101,9 +99,7 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
         run: dotnet workload install maui
-      - name: Restore MAUI app
-        run: dotnet restore src/Finora.App/Finora.App.csproj
       - name: Build iOS with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --no-restore
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios
       - name: Build Mac Catalyst with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --no-restore
+        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst
