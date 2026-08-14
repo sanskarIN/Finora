@@ -15,7 +15,7 @@
     <Button Text="Reconcile this account" Clicked="OnReconcileClicked" />
     <Label Text="Account transactions" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
     <CollectionView x:Name="AccountTransactions" ItemsSource="{Binding Transactions}" SelectionMode="Single" SelectionChanged="OnTransactionSelected" EmptyView="No transactions." HeightRequest="360"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" /></VerticalStackLayout><Label Grid.Column="1"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-    <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding Status}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
