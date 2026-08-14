@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <!-- Internal validation/report helpers intentionally accept collection abstractions where concrete type coupling adds no correctness value. -->
-    <NoWarn>$(NoWarn);CA1859</NoWarn>
+    <!--
+      CA1859: internal validation/report helpers intentionally accept collection abstractions.
+      CA1822: migration runner remains instance-shaped for composition/DI consistency.
+      CA1304/CA1311/CA1862: category/tag duplicate predicates are translated by EF Core into SQLite SQL;
+      replacing them with StringComparison overloads would not be safely translatable by the provider.
+    -->
+    <NoWarn>$(NoWarn);CA1859;CA1822;CA1304;CA1311;CA1862</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Finora.Application\Finora.Application.csproj" />
