@@ -3,6 +3,12 @@ namespace Finora.App;
 public partial class SettingsPage
 {
     private async void OnBuyMeACoffeeClicked(object? sender, EventArgs e)
+        => await OpenBuyMeACoffeeAsync();
+
+    private async void OnBuyMeACoffeeTapped(object? sender, TappedEventArgs e)
+        => await OpenBuyMeACoffeeAsync();
+
+    private async Task OpenBuyMeACoffeeAsync()
     {
         const string title = "Buy Me a Coffee";
         try
