@@ -25,7 +25,7 @@ public sealed class DomainRulesTests
     public void TransactionSplits_MustEqualTransactionAmount()
     {
         var transaction = NewTransaction(TransactionType.Expense, -1_000);
-        transaction.Splits = [new TransactionSplit { AmountMinor = -900 }];
+        transaction.Splits = [new TransactionSplit { TransactionId = transaction.Id, AmountMinor = -900 }];
 
         Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateTransaction(transaction));
     }
@@ -53,8 +53,8 @@ public sealed class DomainRulesTests
         var transaction = NewTransaction(TransactionType.Expense, -1_000);
         transaction.Splits =
         [
-            new TransactionSplit { AmountMinor = -1_100 },
-            new TransactionSplit { AmountMinor = 100 }
+            new TransactionSplit { TransactionId = transaction.Id, AmountMinor = -1_100 },
+            new TransactionSplit { TransactionId = transaction.Id, AmountMinor = 100 }
         ];
 
         Assert.Throws<InvalidOperationException>(() => DomainRules.ValidateTransaction(transaction));
