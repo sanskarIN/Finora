@@ -15,11 +15,11 @@ public sealed record SavingsProgressReportItem(Guid GoalId, string Name, long Ta
 
 public interface IAdvancedReportService
 {
-    Task<ReportSeries> GetCategorySpendingAsync(DateTimeOffset from, DateTimeOffset through, string currency, CancellationToken cancellationToken = default);
-    Task<ReportSeries> GetIncomeExpenseAsync(DateTimeOffset from, DateTimeOffset through, string currency, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<AccountBalanceSeries>> GetAccountBalanceTrendsAsync(DateTimeOffset from, DateTimeOffset through, CancellationToken cancellationToken = default);
+    Task<ReportSeries> GetCategorySpendingAsync(DateTimeOffset from, DateTimeOffset to, string currency, CancellationToken cancellationToken = default);
+    Task<ReportSeries> GetIncomeExpenseAsync(DateTimeOffset from, DateTimeOffset to, string currency, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AccountBalanceSeries>> GetAccountBalanceTrendsAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<BudgetPerformanceItem>> GetBudgetPerformanceAsync(DateOnly periodDate, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<MerchantReportItem>> GetMerchantReportAsync(DateTimeOffset from, DateTimeOffset through, string currency, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<MerchantReportItem>> GetMerchantReportAsync(DateTimeOffset from, DateTimeOffset to, string currency, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<MonthlyComparisonItem>> GetMonthlyComparisonAsync(int months, string currency, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<YearlyComparisonItem>> GetYearlyComparisonAsync(int years, string currency, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<RecurringObligationReportItem>> GetRecurringObligationsAsync(CancellationToken cancellationToken = default);
