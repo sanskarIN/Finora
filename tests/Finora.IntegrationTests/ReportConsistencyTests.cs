@@ -45,13 +45,13 @@ public sealed class ReportConsistencyTests : IAsyncLifetime
             Currency = "INR",
             AccountId = _account.Id,
             CategoryId = food.Id,
-            OccurredAtUtc = Utc(_periodDate),
-            Splits =
-            [
-                new TransactionSplit { CategoryId = food.Id, AmountMinor = -700 },
-                new TransactionSplit { CategoryId = transport.Id, AmountMinor = -300 }
-            ]
+            OccurredAtUtc = Utc(_periodDate)
         };
+        transaction.Splits =
+        [
+            new TransactionSplit { TransactionId = transaction.Id, CategoryId = food.Id, AmountMinor = -700 },
+            new TransactionSplit { TransactionId = transaction.Id, CategoryId = transport.Id, AmountMinor = -300 }
+        ];
         await _store.SaveTransactionAsync(transaction);
         var reports = new AdvancedReportService(_factory);
 
@@ -79,13 +79,13 @@ public sealed class ReportConsistencyTests : IAsyncLifetime
             AmountMinor = -1_000,
             Currency = "INR",
             AccountId = _account.Id,
-            OccurredAtUtc = Utc(_periodDate),
-            Splits =
-            [
-                new TransactionSplit { CategoryId = grandchild.Id, AmountMinor = -700 },
-                new TransactionSplit { CategoryId = other.Id, AmountMinor = -300 }
-            ]
+            OccurredAtUtc = Utc(_periodDate)
         };
+        transaction.Splits =
+        [
+            new TransactionSplit { TransactionId = transaction.Id, CategoryId = grandchild.Id, AmountMinor = -700 },
+            new TransactionSplit { TransactionId = transaction.Id, CategoryId = other.Id, AmountMinor = -300 }
+        ];
         await _store.SaveTransactionAsync(transaction);
         var budget = new Budget
         {
