@@ -32,9 +32,9 @@ public sealed class CategoryMutationSafetyTests : IAsyncLifetime
     [Fact]
     public async Task ArchiveCategory_RejectsRootReplacementForSubcategoryBudget()
     {
-        var root = (await _service.SaveCategoryAsync(null, "Root", "folder", null)).Value!.Value;
-        var source = (await _service.SaveCategoryAsync(null, "Source child", "tag", root)).Value!.Value;
-        var replacementRoot = (await _service.SaveCategoryAsync(null, "Replacement root", "folder", null)).Value!.Value;
+        var root = (await _service.SaveCategoryAsync(null, "Root", "folder", null)).Value!;
+        var source = (await _service.SaveCategoryAsync(null, "Source child", "tag", root)).Value!;
+        var replacementRoot = (await _service.SaveCategoryAsync(null, "Replacement root", "folder", null)).Value!;
         var budget = new Budget
         {
             Name = "Child budget",
@@ -58,9 +58,9 @@ public sealed class CategoryMutationSafetyTests : IAsyncLifetime
     [Fact]
     public async Task MergeCategory_RejectsRootTargetForSubcategoryBudget()
     {
-        var root = (await _service.SaveCategoryAsync(null, "Root", "folder", null)).Value!.Value;
-        var source = (await _service.SaveCategoryAsync(null, "Source child", "tag", root)).Value!.Value;
-        var targetRoot = (await _service.SaveCategoryAsync(null, "Target root", "folder", null)).Value!.Value;
+        var root = (await _service.SaveCategoryAsync(null, "Root", "folder", null)).Value!;
+        var source = (await _service.SaveCategoryAsync(null, "Source child", "tag", root)).Value!;
+        var targetRoot = (await _service.SaveCategoryAsync(null, "Target root", "folder", null)).Value!;
         var budget = new Budget
         {
             Name = "Child budget",
@@ -99,7 +99,7 @@ public sealed class CategoryMutationSafetyTests : IAsyncLifetime
             OccurredAtUtc = DateTimeOffset.UtcNow
         };
         await _store.SaveTransactionAsync(transaction);
-        var tagId = (await _service.SaveTagAsync(null, "Test", null)).Value!.Value;
+        var tagId = (await _service.SaveTagAsync(null, "Test", null)).Value!;
         await using (var db = await _factory.CreateDbContextAsync())
         {
             db.TransactionTags.Add(new TransactionTag { TransactionId = transaction.Id, TagId = tagId });
