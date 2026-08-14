@@ -1,3 +1,4 @@
+using System.Globalization;
 using Finora.Infrastructure;
 using Finora.Shared;
 using Microsoft.Data.Sqlite;
@@ -32,7 +33,7 @@ public sealed class DatabaseMigrationTests
             await using var db = await factory.CreateDbContextAsync();
             await new DatabaseMigrationRunner().MigrateAsync(db);
             var version = await db.AppSettings.SingleAsync(x => x.Key == "schema.version");
-            Assert.Equal(AppConstants.DatabaseSchemaVersion.ToString(), version.Value);
+            Assert.Equal(AppConstants.DatabaseSchemaVersion.ToString(CultureInfo.InvariantCulture), version.Value);
             var columns = await db.Database.SqlQueryRaw<string>("SELECT name AS Value FROM pragma_table_info('Attachments')").ToListAsync();
             Assert.Contains("OriginalFileName", columns);
         }
