@@ -49,7 +49,7 @@ public partial class TransactionToolsPage : ContentPage
 
     private async void OnDuplicateSelected(object? sender, SelectionChangedEventArgs e)
     {
-        if (e.CurrentSelection.FirstOrDefault() is not DuplicateTransactionCandidate item) return;
+        if (e.CurrentSelection.Count == 0 || e.CurrentSelection[0] is not DuplicateTransactionCandidate item) return;
         DuplicateList.SelectedItem = null;
         await Shell.Current.GoToAsync($"{nameof(TransactionDetailPage)}?transactionId={item.TransactionId}");
     }
