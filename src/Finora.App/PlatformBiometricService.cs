@@ -1,5 +1,5 @@
 using Finora.Application;
-using Finora.Shared;
+using FinoraResult = Finora.Shared.Result;
 
 #if ANDROID
 using Android.App;
@@ -36,13 +36,13 @@ public sealed class PlatformBiometricService : IBiometricService
 #endif
     }
 
-    public async Task<Result> AuthenticateAsync(string reason, CancellationToken cancellationToken = default)
+    public async Task<FinoraResult> AuthenticateAsync(string reason, CancellationToken cancellationToken = default)
     {
         reason = string.IsNullOrWhiteSpace(reason) ? "Confirm your identity to unlock Finora." : reason.Trim();
 #if ANDROID
-        if (Build.VERSION.SdkInt < BuildVersionCodes.P) return Result.Failure("Biometric unlock requires Android 9 or later on this build.");
-        var activity = Platform.CurrentActivity; if (activity is null) return Result.Failure("Biometric authentication is unavailable right now.");
-        var tcs = new TaskCompletionSource<Result>(TaskCreationOptions.RunContinuationsAsynchronously);
+        if (Build.VERSION.SdkInt < BuildVersionCodes.P) return FinoraResult.Failure("Biometric unlock requires Android 9 or later on this build.");
+        var activity = Platform.CurrentActivity; if (activity is null) return FinoraResult.Failure("Biometric authentication is unavailable right now.");
+        var tcs = new TaskCompletionSource<FinoraResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var signal = new CancellationSignal(); using var registration = cancellationToken.Register(signal.Cancel);
         var callback = new AndroidAuthenticationCallback(tcs); var negative = new AndroidNegativeButtonListener(tcs);
         try
@@ -50,42 +50,42 @@ public sealed class PlatformBiometricService : IBiometricService
             var prompt = new BiometricPrompt.Builder(activity).SetTitle("Unlock Finora").SetSubtitle(reason).SetNegativeButton("Use PIN", activity.MainExecutor, negative).Build();
             prompt.Authenticate(signal, activity.MainExecutor, callback); return await tcs.Task.ConfigureAwait(false);
         }
-        catch (Exception) { return Result.Failure("Biometric authentication is unavailable on this device."); }
+        catch (Exception) { return FinoraResult.Failure("Biometric authentication is unavailable on this device."); }
 #elif IOS || MACCATALYST
         using var context = new LAContext();
-        if (!context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, out _)) return Result.Failure("Biometric authentication is not enrolled or available.");
+        if (!context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, out _)) return FinoraResult.Failure("Biometric authentication is not enrolled or available.");
         try
         {
             var evaluation = await context.EvaluatePolicyAsync(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, reason).ConfigureAwait(false);
             cancellationToken.ThrowIfCancellationRequested();
-            return evaluation.Item1 ? Result.Success() : Result.Failure("Biometric authentication was not completed.");
+            return evaluation.Item1 ? FinoraResult.Success() : FinoraResult.Failure("Biometric authentication was not completed.");
         }
-        catch (Exception) { return Result.Failure("Biometric authentication was not completed."); }
+        catch (Exception) { return FinoraResult.Failure("Biometric authentication was not completed."); }
 #elif WINDOWS
         try
         {
-            var availability = await UserConsentVerifier.CheckAvailabilityAsync(); if (availability != UserConsentVerifierAvailability.Available) return Result.Failure("Windows Hello is not available or configured.");
-            var result = await UserConsentVerifier.RequestVerificationAsync(reason); cancellationToken.ThrowIfCancellationRequested(); return result == UserConsentVerificationResult.Verified ? Result.Success() : Result.Failure("Windows Hello verification was not completed.");
+            var availability = await UserConsentVerifier.CheckAvailabilityAsync(); if (availability != UserConsentVerifierAvailability.Available) return FinoraResult.Failure("Windows Hello is not available or configured.");
+            var result = await UserConsentVerifier.RequestVerificationAsync(reason); cancellationToken.ThrowIfCancellationRequested(); return result == UserConsentVerificationResult.Verified ? FinoraResult.Success() : FinoraResult.Failure("Windows Hello verification was not completed.");
         }
-        catch (Exception) { return Result.Failure("Windows Hello verification is unavailable."); }
+        catch (Exception) { return FinoraResult.Failure("Windows Hello verification is unavailable."); }
 #else
-        await Task.CompletedTask; return Result.Failure("Biometric unlock is unsupported on this platform.");
+        await Task.CompletedTask; return FinoraResult.Failure("Biometric unlock is unsupported on this platform.");
 #endif
     }
 
 #if ANDROID
-    private sealed class AndroidAuthenticationCallback(TaskCompletionSource<Result> tcs) : BiometricPrompt.AuthenticationCallback
+    private sealed class AndroidAuthenticationCallback(TaskCompletionSource<FinoraResult> tcs) : BiometricPrompt.AuthenticationCallback
     {
-        private readonly TaskCompletionSource<Result> _tcs = tcs;
-        public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult? result) => _tcs.TrySetResult(Result.Success());
+        private readonly TaskCompletionSource<FinoraResult> _tcs = tcs;
+        public override void OnAuthenticationSucceeded(BiometricPrompt.AuthenticationResult? result) => _tcs.TrySetResult(FinoraResult.Success());
         public override void OnAuthenticationError([Android.Runtime.GeneratedEnum] BiometricErrorCode errorCode, Java.Lang.ICharSequence? errString)
-            => _tcs.TrySetResult(Result.Failure("Biometric authentication was not completed. Use the Finora PIN if needed."));
+            => _tcs.TrySetResult(FinoraResult.Failure("Biometric authentication was not completed. Use the Finora PIN if needed."));
         public override void OnAuthenticationFailed() { }
     }
-    private sealed class AndroidNegativeButtonListener(TaskCompletionSource<Result> tcs) : Java.Lang.Object, IDialogInterfaceOnClickListener
+    private sealed class AndroidNegativeButtonListener(TaskCompletionSource<FinoraResult> tcs) : Java.Lang.Object, IDialogInterfaceOnClickListener
     {
-        private readonly TaskCompletionSource<Result> _tcs = tcs;
-        public void OnClick(IDialogInterface? dialog, int which) => _tcs.TrySetResult(Result.Failure("Use the Finora PIN instead."));
+        private readonly TaskCompletionSource<FinoraResult> _tcs = tcs;
+        public void OnClick(IDialogInterface? dialog, int which) => _tcs.TrySetResult(FinoraResult.Failure("Use the Finora PIN instead."));
     }
 #elif WINDOWS
     private static async Task<BiometricAvailability> GetWindowsAvailabilityAsync(CancellationToken cancellationToken)
