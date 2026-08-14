@@ -106,7 +106,7 @@ public sealed class ReminderCoordinator(ILocalNotificationService notifications,
         await CancelStaleByPrefixAsync("recurrence:", activeKeys, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task CancelStaleByPrefixAsync(string prefix, IReadOnlySet<string> activeKeys, CancellationToken cancellationToken)
+    private async Task CancelStaleByPrefixAsync(string prefix, HashSet<string> activeKeys, CancellationToken cancellationToken)
     {
         var scheduled = await _notifications.GetScheduledAsync(cancellationToken).ConfigureAwait(false);
         foreach (var reminder in scheduled)
