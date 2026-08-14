@@ -7,7 +7,7 @@ public sealed class DatabaseMigrationRunner
 {
     public async Task MigrateAsync(FinoraDbContext db, CancellationToken cancellationToken = default)
     {
-        var versionSetting = await db.AppSettings.SingleOrDefaultAsync(x => x.Key == "schema.version", cancellationToken).ConfigureAwait(false);
+        var versionSetting = await db.AppSettings.AsNoTracking().SingleOrDefaultAsync(x => x.Key == "schema.version", cancellationToken).ConfigureAwait(false);
         if (versionSetting is null) throw new InvalidOperationException("The existing Finora database does not contain schema version metadata.");
         if (!int.TryParse(versionSetting.Value, out var currentVersion)) throw new InvalidDataException("The Finora database schema version is invalid.");
         if (currentVersion > AppConstants.DatabaseSchemaVersion) throw new InvalidOperationException("This Finora build cannot open a database created by a newer schema.");
@@ -25,9 +25,13 @@ public sealed class DatabaseMigrationRunner
                     throw new InvalidOperationException($"No database migration is registered for schema {currentVersion} to {nextVersion}.");
             }
 
-            versionSetting.Value = nextVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            versionSetting.UpdatedAtUtc = DateTimeOffset.UtcNow;
-            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            var nextVersionText = nextVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var updated = await db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE \"AppSettings\" SET \"Value\" = {nextVersionText}, \"UpdatedAtUtc\" = CURRENT_TIMESTAMP WHERE \"Key\" = 'schema.version'",
+                cancellationToken).ConfigureAwait(false);
+            if (updated != 1)
+                throw new InvalidDataException("Finora could not update schema version metadata atomically.");
+
             await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
             currentVersion = nextVersion;
         }
