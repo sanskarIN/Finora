@@ -120,16 +120,17 @@ public sealed class AsyncCommand : ICommand
     public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter) => !_running && (_canExecute?.Invoke() ?? true);
+
     public async void Execute(object? parameter)
     {
         if (!CanExecute(parameter)) return;
-        _running = true;
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         try
         {
+            _running = true;
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
             await _execute();
         }
-        catch (Exception exception) when (!IsFatal(exception))
+        catch (Exception exception) when (exception is not OutOfMemoryException and not StackOverflowException and not AccessViolationException)
         {
             UnexpectedFailureHandler?.Invoke(exception);
         }
@@ -139,7 +140,4 @@ public sealed class AsyncCommand : ICommand
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
-
-    private static bool IsFatal(Exception exception)
-        => exception is OutOfMemoryException or StackOverflowException or AccessViolationException;
 }
