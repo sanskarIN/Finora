@@ -10,7 +10,7 @@ public partial class SettingsPage
     {
         var confirmation = await DisplayPromptAsync(
             "Reset to synthetic sample data",
-            "This developer action permanently deletes all current local finance data, then creates a deterministic synthetic demo dataset. App preferences and PIN settings remain. Type RESET SAMPLE to continue.",
+            "This developer action permanently deletes all current local finance data, then creates a deterministic synthetic demo dataset. App preferences and app-lock settings remain. Type RESET SAMPLE to continue.",
             "Reset",
             "Cancel");
 
