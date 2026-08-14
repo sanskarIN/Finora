@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Finora.Domain\Finora.Domain.csproj" />
     <ProjectReference Include="..\Finora.Infrastructure\Finora.Infrastructure.csproj" />
     <ProjectReference Include="..\Finora.Shared\Finora.Shared.csproj" />
+    <PackageReference Include="Microsoft.Maui.Controls" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
