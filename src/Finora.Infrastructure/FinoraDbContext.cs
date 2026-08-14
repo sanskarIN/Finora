@@ -1,11 +1,20 @@
 using Finora.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Finora.Infrastructure;
 
 public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) : DbContext(options)
 {
+    private static readonly ValueConverter<DateTimeOffset, DateTime> DateTimeOffsetConverter = new(
+        value => value.UtcDateTime,
+        value => new DateTimeOffset(DateTime.SpecifyKind(value, DateTimeKind.Utc)));
+
+    private static readonly ValueConverter<DateTimeOffset?, DateTime?> NullableDateTimeOffsetConverter = new(
+        value => value.HasValue ? value.Value.UtcDateTime : null,
+        value => value.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc)) : null);
+
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<FinanceTransaction> Transactions => Set<FinanceTransaction>();
     public DbSet<TransactionSplit> TransactionSplits => Set<TransactionSplit>();
@@ -87,6 +96,19 @@ public sealed class FinoraDbContext(DbContextOptions<FinoraDbContext> options) :
         modelBuilder.Entity<AuditEntry>().Property(x => x.EntityType).HasMaxLength(80);
         modelBuilder.Entity<AuditEntry>().Property(x => x.Action).HasMaxLength(200);
         modelBuilder.Entity<BackupMetadata>().Property(x => x.BackupId).HasMaxLength(100);
+
+        ApplyUtcDateTimeConverters(modelBuilder);
+    }
+
+    private static void ApplyUtcDateTimeConverters(ModelBuilder modelBuilder)
+    {
+        foreach (var property in modelBuilder.Model.GetEntityTypes().SelectMany(entityType => entityType.GetProperties()))
+        {
+            if (property.ClrType == typeof(DateTimeOffset))
+                property.SetValueConverter(DateTimeOffsetConverter);
+            else if (property.ClrType == typeof(DateTimeOffset?))
+                property.SetValueConverter(NullableDateTimeOffsetConverter);
+        }
     }
 
     private void ValidateTrackedFinanceEntries()
