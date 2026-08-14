@@ -18,7 +18,7 @@ public sealed record RecurrenceOccurrenceInfo(
 public interface IRecurringWorkflowService
 {
     Task<IReadOnlyList<DateOnly>> PreviewNextOccurrencesAsync(Guid ruleId, int count, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<RecurrenceOccurrenceInfo>> GetOccurrencesAsync(DateOnly? from = null, DateOnly? to = null, bool includeCompleted = true, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<RecurrenceOccurrenceInfo>> GetOccurrencesAsync(DateOnly? from = null, DateOnly? through = null, bool includeCompleted = true, CancellationToken cancellationToken = default);
     Task<Result> PauseRuleAsync(Guid ruleId, CancellationToken cancellationToken = default);
     Task<Result> ResumeRuleAsync(Guid ruleId, CancellationToken cancellationToken = default);
     Task<Result> ArchiveRuleAsync(Guid ruleId, CancellationToken cancellationToken = default);
