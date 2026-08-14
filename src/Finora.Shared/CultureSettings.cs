@@ -9,9 +9,13 @@ public static class CultureSettings
         culture = CultureInfo.CurrentCulture;
         if (string.IsNullOrWhiteSpace(locale)) return false;
 
+        var requested = locale.Trim();
         try
         {
-            var resolved = CultureInfo.GetCultureInfo(locale.Trim());
+            var resolved = CultureInfo.GetCultureInfo(requested);
+            if (!string.Equals(resolved.Name, requested, StringComparison.OrdinalIgnoreCase))
+                return false;
+
             culture = (CultureInfo)resolved.Clone();
             return true;
         }
