@@ -37,6 +37,8 @@ public sealed class SettingsSourceContractTests
         Assert.DoesNotContain("Clicked=\"OnDeleteAllClicked\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Clicked=\"OnOnboardingClicked\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Clicked=\"OnBuyMeACoffeeClicked\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("Source=\"bmc_support.svg\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("Tapped=\"OnBuyMeACoffeeTapped\"", xaml, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -72,6 +74,8 @@ public sealed class SettingsSourceContractTests
         Assert.Contains("Settings.PinRemovalFailed", security, StringComparison.Ordinal);
         Assert.Contains("AppConstants.BuyMeACoffeeUrl", about, StringComparison.Ordinal);
         Assert.Contains("Settings.BuyMeACoffeeOpenFailed", about, StringComparison.Ordinal);
+        Assert.Contains("OnBuyMeACoffeeTapped", about, StringComparison.Ordinal);
+        Assert.Contains("OpenBuyMeACoffeeAsync", about, StringComparison.Ordinal);
         Assert.Contains("CONTRIBUTING.md", about, StringComparison.Ordinal);
         Assert.Contains("SECURITY.md", about, StringComparison.Ordinal);
         Assert.Contains("SUPPORT.md", about, StringComparison.Ordinal);
