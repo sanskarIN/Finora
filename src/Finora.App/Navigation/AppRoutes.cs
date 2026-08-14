@@ -11,7 +11,8 @@ public static class AppRoutes
     {
         get
         {
-            if (DeviceInfo.Idiom is DeviceIdiom.Desktop or DeviceIdiom.Tablet)
+            var idiom = DeviceInfo.Idiom;
+            if (idiom == DeviceIdiom.Desktop || idiom == DeviceIdiom.Tablet)
                 return true;
 
             var width = Shell.Current?.Width ?? Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Width ?? 0;
