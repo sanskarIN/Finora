@@ -94,6 +94,12 @@ public interface IAppLockService
 public interface IPrivacyLogger
 {
     void Information(string eventName, IReadOnlyDictionary<string, object?>? properties = null);
-    void LogError(Exception exception, string eventName);
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Naming",
+        "CA1716:Identifiers should not match keywords",
+        Justification = "Preserve the established privacy-logger contract without breaking existing implementations and callers.")]
+    void Error(Exception exception, string eventName);
+
     Task<string> ExportSanitizedLogAsync(CancellationToken cancellationToken = default);
 }
