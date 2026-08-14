@@ -4,11 +4,7 @@ namespace Finora.Domain;
 
 public readonly record struct Money(long MinorUnits, string Currency)
 {
-    public Money
-    {
-        DomainRules.ValidateCurrency(Currency);
-        Currency = Currency.Trim().ToUpperInvariant();
-    }
+    public string Currency { get; init; } = NormalizeCurrency(Currency);
 
     public int DecimalPlaces => CurrencyMinorUnits.GetDecimalPlaces(Currency);
 
@@ -31,6 +27,12 @@ public readonly record struct Money(long MinorUnits, string Currency)
     {
         var places = decimalPlaces ?? DecimalPlaces;
         return $"{Currency} {ToMajorUnits(places).ToString($"N{places}", culture ?? CultureInfo.CurrentCulture)}";
+    }
+
+    private static string NormalizeCurrency(string currency)
+    {
+        DomainRules.ValidateCurrency(currency);
+        return currency.Trim().ToUpperInvariant();
     }
 
     private static decimal Pow10(int exponent)
