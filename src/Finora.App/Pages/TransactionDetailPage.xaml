@@ -30,7 +30,7 @@
     <Label Text="Edit history" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
     <CollectionView ItemsSource="{Binding Revisions}" EmptyView="No prior revisions." HeightRequest="220"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding ChangeKind}" FontAttributes="Bold" /><Label Text="{Binding ChangedAtUtc, StringFormat='{0:g}'}" /><Label Text="{Binding Summary}" FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Delete / undo" Clicked="OnDeleteOrRestoreClicked" /><Button Grid.Column="1" Text="Refresh" Clicked="OnRefreshClicked" /></Grid>
-    <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding Status}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
