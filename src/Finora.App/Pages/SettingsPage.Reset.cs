@@ -10,7 +10,7 @@ public partial class SettingsPage
     {
         var confirmation = await DisplayPromptAsync(
             "Delete all local finance data",
-            "Type DELETE to permanently remove accounts, transactions, categories, tags, budgets, goals, recurring items, receipts, reconciliation history, reminder records, and other finance data from this app. App preferences and PIN settings are kept.",
+            "Type DELETE to permanently remove accounts, transactions, categories, tags, budgets, goals, recurring items, receipts, reconciliation history, reminder records, and other finance data from this app. App preferences and app-lock settings are kept.",
             "Delete",
             "Cancel");
 
@@ -27,7 +27,7 @@ public partial class SettingsPage
         var deleted = result.Value;
         await DisplayAlertAsync(
             "Local finance data deleted",
-            $"Deleted {deleted.Accounts} account(s), {deleted.Transactions} transaction(s), {deleted.Categories} category/categories, {deleted.Tags} tag(s), {deleted.Budgets} budget(s), {deleted.SavingsGoals} goal(s), {deleted.RecurrenceRules} recurring rule(s), and {deleted.Attachments} attachment record(s). Removed {orphanedFiles} orphaned receipt file(s). App preferences and PIN settings were kept.",
+            $"Deleted {deleted.Accounts} account(s), {deleted.Transactions} transaction(s), {deleted.Categories} category/categories, {deleted.Tags} tag(s), {deleted.Budgets} budget(s), {deleted.SavingsGoals} goal(s), {deleted.RecurrenceRules} recurring rule(s), and {deleted.Attachments} attachment record(s). Removed {orphanedFiles} orphaned receipt file(s). App preferences and app-lock settings were kept.",
             "OK");
 
         await LoadSurfaceAsync();
