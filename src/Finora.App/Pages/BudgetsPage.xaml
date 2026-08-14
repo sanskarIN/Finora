@@ -14,6 +14,6 @@
     <Label Text="Warning threshold (%)" /><Slider Minimum="1" Maximum="100" Value="{Binding WarningThreshold}" /><Label Text="{Binding WarningThreshold, StringFormat='{0}%'}" />
     <Button Text="Save budget" Command="{Binding AddCommand}" />
     <Label Text="Budget actuals include transaction splits and descendant categories. Rollover is calculated from explicit budget periods when present." FontSize="12" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
