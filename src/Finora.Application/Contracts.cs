@@ -18,7 +18,7 @@ public interface IFinanceStore
     Task<IReadOnlyList<AccountSummary>> GetAccountsAsync(CancellationToken cancellationToken = default);
     Task<Guid> SaveAccountAsync(Account account, CancellationToken cancellationToken = default);
     Task ArchiveAccountAsync(Guid accountId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TransactionListItem>> SearchTransactionsAsync(string? query = null, Guid? accountId = null, Guid? categoryId = null, DateTimeOffset? from = null, DateTimeOffset? through = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TransactionListItem>> SearchTransactionsAsync(string? query = null, Guid? accountId = null, Guid? categoryId = null, DateTimeOffset? from = null, DateTimeOffset? to = null, CancellationToken cancellationToken = default);
     Task<Guid> SaveTransactionAsync(FinanceTransaction transaction, CancellationToken cancellationToken = default);
     Task<(Guid SourceTransactionId, Guid DestinationTransactionId)> RecordTransferAsync(Guid sourceAccountId, Guid destinationAccountId, long amountMinor, DateTimeOffset occurredAtUtc, string? note, CancellationToken cancellationToken = default);
     Task SoftDeleteTransactionAsync(Guid transactionId, CancellationToken cancellationToken = default);
@@ -33,7 +33,7 @@ public interface IFinanceStore
     Task<IReadOnlyList<RecurrenceRule>> GetRecurrenceRulesAsync(CancellationToken cancellationToken = default);
     Task<Guid> SaveRecurrenceRuleAsync(RecurrenceRule rule, CancellationToken cancellationToken = default);
     Task<int> ProcessDueRecurrencesAsync(DateOnly throughDate, CancellationToken cancellationToken = default);
-    Task<DashboardSnapshot> GetDashboardAsync(DateOnly periodStart, DateOnly periodEnd, CancellationToken cancellationToken = default);
+    Task<DashboardSnapshot> GetDashboardAsync(DateOnly start, DateOnly end, CancellationToken cancellationToken = default);
     Task DeleteAllDataAsync(CancellationToken cancellationToken = default);
 }
 
