@@ -66,7 +66,7 @@ public sealed class AdvancedReportCoverageTests : IAsyncLifetime
         var rows = await new AdvancedReportService(_factory).GetRecurringObligationsAsync();
 
         Assert.Equal(2, rows.Count);
-        var rent = Assert.Single(rows.Where(x => x.RuleId == active.Id));
+        var rent = Assert.Single(rows, x => x.RuleId == active.Id);
         Assert.Equal(TransactionType.Expense, rent.Type);
         Assert.Equal(RecurrenceStatus.Active, rent.Status);
         Assert.Equal(25_000, rent.AmountMinor);
@@ -127,8 +127,8 @@ public sealed class AdvancedReportCoverageTests : IAsyncLifetime
         var rows = await new AdvancedReportService(_factory).GetYearlyComparisonAsync(2, "INR");
 
         Assert.Equal(2, rows.Count);
-        var previous = Assert.Single(rows.Where(x => x.Year == currentYear - 1));
-        var current = Assert.Single(rows.Where(x => x.Year == currentYear));
+        var previous = Assert.Single(rows, x => x.Year == currentYear - 1);
+        var current = Assert.Single(rows, x => x.Year == currentYear);
         Assert.Equal(4_000, previous.ExpenseMinor);
         Assert.Equal(-4_000, previous.NetMinor);
         Assert.Equal(10_000, current.IncomeMinor);
