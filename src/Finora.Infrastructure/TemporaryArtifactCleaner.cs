@@ -16,8 +16,7 @@ public sealed class TemporaryArtifactCleaner(string cacheRoot) : ITemporaryArtif
 
     public Task<int> CleanupStaleAsync(TimeSpan minimumAge, CancellationToken cancellationToken = default)
     {
-        if (minimumAge < TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(minimumAge));
+        ArgumentOutOfRangeException.ThrowIfLessThan(minimumAge, TimeSpan.Zero);
         if (!Directory.Exists(_cacheRoot)) return Task.FromResult(0);
 
         var cutoffUtc = DateTimeOffset.UtcNow - minimumAge;
