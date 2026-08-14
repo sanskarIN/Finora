@@ -17,6 +17,6 @@
     <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding TransferAmount}" SemanticProperties.Description="Transfer amount in major currency units" />
     <Entry Placeholder="Optional note" Text="{Binding TransferNote}" />
     <Button Text="Transfer" Command="{Binding TransferCommand}" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
