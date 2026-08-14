@@ -1,1 +1,31 @@
-using Finora.Domain;namespace Finora.Application;public static class TransactionFactory{public static FinanceTransaction Create(TransactionType type,long positiveAmountMinor,string currency,Guid accountId,DateTimeOffset occurredAtUtc,Guid? categoryId=null,string? merchant=null,string? note=null){if(positiveAmountMinor<=0)throw new ArgumentOutOfRangeException(nameof(positiveAmountMinor));var signed=type==TransactionType.Expense?-positiveAmountMinor:positiveAmountMinor;return new FinanceTransaction{Type=type,AmountMinor=signed,Currency=currency,AccountId=accountId,OccurredAtUtc=occurredAtUtc,CategoryId=categoryId,Merchant=merchant,Note=note};}}
+using Finora.Domain;
+
+namespace Finora.Application;
+
+public static class TransactionFactory
+{
+    public static FinanceTransaction Create(
+        TransactionType type,
+        long positiveAmountMinor,
+        string currency,
+        Guid accountId,
+        DateTimeOffset occurredAtUtc,
+        Guid? categoryId = null,
+        string? merchant = null,
+        string? note = null)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(positiveAmountMinor);
+        var signed = type == TransactionType.Expense ? -positiveAmountMinor : positiveAmountMinor;
+        return new FinanceTransaction
+        {
+            Type = type,
+            AmountMinor = signed,
+            Currency = currency,
+            AccountId = accountId,
+            OccurredAtUtc = occurredAtUtc,
+            CategoryId = categoryId,
+            Merchant = merchant,
+            Note = note
+        };
+    }
+}
