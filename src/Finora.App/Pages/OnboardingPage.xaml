@@ -11,6 +11,6 @@
     <Label Text="You can revisit onboarding from Settings. Location is never collected in the background; attachments, backups, and exports remain local unless you explicitly share them." />
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Privacy" Clicked="OnOnboardingPrivacyClicked" SemanticProperties.Description="Read Finora privacy information" /><Button Grid.Column="1" Text="Terms" Clicked="OnOnboardingTermsClicked" SemanticProperties.Description="Read Finora terms" /></Grid>
     <Button Text="Start using Finora" Command="{Binding FinishCommand}" SemanticProperties.Description="Save onboarding preferences and open the dashboard" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
