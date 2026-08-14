@@ -16,6 +16,6 @@ public interface ITransactionMaintenanceService
     Task<Result> UpdateTransactionAsync(TransactionEditRequest request, CancellationToken cancellationToken = default);
     Task<Result> UpdateTransferAsync(Guid transactionId, long amountMinor, DateTimeOffset occurredAtUtc, string? note, CancellationToken cancellationToken = default);
     Task<int> BulkCategorizeAsync(IReadOnlyCollection<Guid> transactionIds, Guid? categoryId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<DuplicateTransactionCandidate>> FindLikelyDuplicatesAsync(DateTimeOffset? from = null, DateTimeOffset? to = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DuplicateTransactionCandidate>> FindLikelyDuplicatesAsync(DateTimeOffset? from = null, DateTimeOffset? through = null, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TransactionRevisionInfo>> GetRevisionHistoryAsync(Guid transactionId, CancellationToken cancellationToken = default);
 }
