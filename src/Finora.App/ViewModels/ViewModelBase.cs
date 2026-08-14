@@ -84,7 +84,7 @@ public abstract class ViewModelBase : INotifyPropertyChanged
     private static bool ContainsTechnicalOrPathDetail(string message)
     {
         if (message.Contains('\n') || message.Contains('\r')) return true;
-        if (message.Contains(Path.DirectorySeparatorChar) || message.Contains(Path.AltDirectorySeparatorChar)) return true;
+        if (message.Contains('/') || message.Contains('\\')) return true;
 
         string[] markers =
         [
@@ -120,17 +120,16 @@ public sealed class AsyncCommand : ICommand
     public event EventHandler? CanExecuteChanged;
 
     public bool CanExecute(object? parameter) => !_running && (_canExecute?.Invoke() ?? true);
-
     public async void Execute(object? parameter)
     {
         if (!CanExecute(parameter)) return;
+        _running = true;
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         try
         {
-            _running = true;
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
             await _execute();
         }
-        catch (Exception exception) when (exception is not OutOfMemoryException and not StackOverflowException and not AccessViolationException)
+        catch (Exception exception) when (!IsFatal(exception))
         {
             UnexpectedFailureHandler?.Invoke(exception);
         }
@@ -140,4 +139,7 @@ public sealed class AsyncCommand : ICommand
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    private static bool IsFatal(Exception exception)
+        => exception is OutOfMemoryException or StackOverflowException or AccessViolationException;
 }
