@@ -19,7 +19,7 @@
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Create tag" Command="{Binding NewTagCommand}" /><Button Grid.Column="1" Text="Update selected" Command="{Binding UpdateTagCommand}" /></Grid>
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Archive tag" Command="{Binding ArchiveTagCommand}" /><Button Grid.Column="1" Text="Restore tag" Command="{Binding RestoreTagCommand}" /></Grid>
     <CollectionView ItemsSource="{Binding Tags}" EmptyView="No tags." HeightRequest="220"><CollectionView.ItemTemplate><DataTemplate><Grid Padding="10" ColumnDefinitions="*,Auto"><Label Text="{Binding Name}" /><Label Grid.Column="1" Text="{Binding TransactionCount, StringFormat='{0} transaction(s)'}" /></Grid></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-    <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Assertive" />
+    <Label Text="{Binding Status}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
