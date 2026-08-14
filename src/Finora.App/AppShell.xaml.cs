@@ -53,8 +53,8 @@ public partial class AppShell : Shell
         DesktopGoals.IsVisible = desktop;
         DesktopSettings.IsVisible = desktop;
         FlyoutBehavior = desktop
-            ? Microsoft.Maui.Controls.FlyoutBehavior.Flyout
-            : Microsoft.Maui.Controls.FlyoutBehavior.Disabled;
+            ? Microsoft.Maui.FlyoutBehavior.Flyout
+            : Microsoft.Maui.FlyoutBehavior.Disabled;
 
         if (!navigateEquivalentSection) return;
 
@@ -69,7 +69,8 @@ public partial class AppShell : Shell
 
     private bool ShouldUseDesktopNavigation()
     {
-        if (DeviceInfo.Idiom is DeviceIdiom.Desktop or DeviceIdiom.Tablet) return true;
+        var idiom = DeviceInfo.Idiom;
+        if (idiom == DeviceIdiom.Desktop || idiom == DeviceIdiom.Tablet) return true;
         return Width >= 900;
     }
 
