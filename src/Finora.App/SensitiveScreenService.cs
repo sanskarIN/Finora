@@ -5,8 +5,6 @@ using Finora.Shared;
 #if ANDROID
 using Android.Views;
 using Microsoft.Maui.ApplicationModel;
-#elif WINDOWS
-using Microsoft.UI.Xaml;
 #endif
 
 namespace Finora.App;
@@ -37,11 +35,18 @@ public sealed class SensitiveScreenService : ISensitiveScreenService
         try
         {
             var mauiWindow = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
-            if (mauiWindow?.Handler?.PlatformView is not Window platformWindow) return Task.FromResult(Result.Failure("The Windows app window is unavailable."));
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(platformWindow); var affinity = enabled ? WdaExcludeFromCapture : WdaNone;
-            return Task.FromResult(SetWindowDisplayAffinity(hwnd, affinity) ? Result.Success() : Result.Failure("Windows did not enable capture protection for this window."));
+            if (mauiWindow?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window platformWindow)
+                return Task.FromResult(Result.Failure("The Windows app window is unavailable."));
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(platformWindow);
+            var affinity = enabled ? WdaExcludeFromCapture : WdaNone;
+            return Task.FromResult(SetWindowDisplayAffinity(hwnd, affinity)
+                ? Result.Success()
+                : Result.Failure("Windows did not enable capture protection for this window."));
         }
-        catch (Exception) { return Task.FromResult(Result.Failure("Windows capture protection is unavailable in this app session.")); }
+        catch (Exception)
+        {
+            return Task.FromResult(Result.Failure("Windows capture protection is unavailable in this app session."));
+        }
 #else
         return Task.FromResult(Result.Failure("This platform does not provide a supported API that can reliably block screenshots. Finora will avoid claiming otherwise."));
 #endif
@@ -50,6 +55,7 @@ public sealed class SensitiveScreenService : ISensitiveScreenService
 #if WINDOWS
     private const uint WdaNone = 0x00000000;
     private const uint WdaExcludeFromCapture = 0x00000011;
+
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SetWindowDisplayAffinity(nint hWnd, uint dwAffinity);
