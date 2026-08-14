@@ -18,7 +18,7 @@ public sealed class PrivacyLoggerTests : IDisposable
     [Fact]
     public async Task Logger_NeverSerializesExceptionMessageOrCallerProperties()
     {
-        var logger = new PrivacyLogger(_root);
+        using var logger = new PrivacyLogger(_root);
         const string propertySecret = "merchant-secret-123";
         const string exceptionSecret = "C:\\private\\finance\\receipt.pdf";
 
@@ -45,7 +45,7 @@ public sealed class PrivacyLoggerTests : IDisposable
         var current = Path.Combine(_root, "finora-diagnostic.log");
         var previous = Path.Combine(_root, "finora-diagnostic.previous.log");
         await File.WriteAllTextAsync(current, new string('x', 512 * 1024));
-        var logger = new PrivacyLogger(_root);
+        using var logger = new PrivacyLogger(_root);
 
         logger.Information("RotationCheck");
 
@@ -70,7 +70,7 @@ public sealed class PrivacyLoggerTests : IDisposable
             return;
         }
 
-        var logger = new PrivacyLogger(_root);
+        using var logger = new PrivacyLogger(_root);
         logger.Information("MustNotFollowLink");
         await Task.Delay(100);
 
@@ -101,6 +101,6 @@ public sealed class PrivacyLoggerTests : IDisposable
             if (await predicate()) return;
             await Task.Delay(25);
         }
-        Assert.True(false, "Timed out waiting for asynchronous diagnostic write.");
+        Assert.Fail("Timed out waiting for asynchronous diagnostic write.");
     }
 }
