@@ -54,7 +54,12 @@ public sealed class PlatformBiometricService : IBiometricService
 #elif IOS || MACCATALYST
         using var context = new LAContext();
         if (!context.CanEvaluatePolicy(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, out _)) return Result.Failure("Biometric authentication is not enrolled or available.");
-        try { var success = await context.EvaluatePolicyAsync(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, reason).ConfigureAwait(false); cancellationToken.ThrowIfCancellationRequested(); return success ? Result.Success() : Result.Failure("Biometric authentication was not completed."); }
+        try
+        {
+            var evaluation = await context.EvaluatePolicyAsync(LAPolicy.DeviceOwnerAuthenticationWithBiometrics, reason).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            return evaluation.Item1 ? Result.Success() : Result.Failure("Biometric authentication was not completed.");
+        }
         catch (Exception) { return Result.Failure("Biometric authentication was not completed."); }
 #elif WINDOWS
         try
