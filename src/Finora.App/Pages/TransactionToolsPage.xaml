@@ -17,7 +17,7 @@
     <CollectionView x:Name="DuplicateList" ItemsSource="{Binding Duplicates}" SelectionMode="Single" SelectionChanged="OnDuplicateSelected" EmptyView="No likely duplicates found." HeightRequest="300">
       <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label><Label.Text><MultiBinding StringFormat="Amount: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label><Label Text="{Binding OccurredAtUtc, StringFormat='Date: {0:g}'}" /><Label Text="{Binding ConfidencePercent, StringFormat='Similarity confidence: {0}%'}" /><Label Text="Tap to review the first transaction. The possible duplicate ID is retained for comparison." FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
-    <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding Status}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
