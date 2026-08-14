@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE_EXTENSIONS = {".cs", ".xaml", ".xml", ".resx", ".csproj", ".props", ".targets", ".md", ".ps1", ".py", ".yml", ".yaml", ".json"}
 XML_EXTENSIONS = {".xaml", ".xml", ".resx", ".csproj", ".props", ".targets"}
 SKIP_PARTS = {".git", "bin", "obj", ".vs", ".idea", ".vscode"}
+PLACEHOLDER_SCAN_EXCLUSIONS = {"what_changed.md", "build/scripts/verify_structure.py"}
 PLACEHOLDER_PATTERNS = [
     re.compile(r"\bTODO\b", re.IGNORECASE),
     re.compile(r"\bFIXME\b", re.IGNORECASE),
@@ -111,7 +112,6 @@ def check_required_paths(errors: list[str]) -> None:
 
 
 def check_markdown_links(paths: list[Path], errors: list[str]) -> None:
-    """Validate repository-relative file links without attempting network or anchor checks."""
     link_pattern = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
     for path in paths:
         if path.suffix.lower() != ".md":
@@ -162,7 +162,7 @@ def check_empty(paths: list[Path], errors: list[str]) -> None:
 
 def check_placeholders(paths: list[Path], errors: list[str]) -> None:
     for path in paths:
-        if path.name == "what_changed.md":
+        if rel(path) in PLACEHOLDER_SCAN_EXCLUSIONS:
             continue
         try:
             text = read(path)
