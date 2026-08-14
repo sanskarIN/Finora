@@ -8,12 +8,12 @@
     <DatePicker Date="{Binding StatementDate}" />
     <Editor Placeholder="Optional reconciliation note" Text="{Binding Note}" AutoSize="TextChanges" />
     <Button Text="Preview reconciliation" Command="{Binding PreviewCommand}" />
-    <Border Style="{StaticResource Card}"><Label Text="{Binding PreviewText}" SemanticProperties.LiveSetting="Polite" /></Border>
+    <Border Style="{StaticResource Card}"><Label Text="{Binding PreviewText}" /></Border>
     <Grid ColumnDefinitions="*,Auto"><Label Text="Create explicit adjustment if needed" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding CreateAdjustment}" /></Grid>
     <Button Text="Complete reconciliation" Command="{Binding CompleteCommand}" />
     <Label Text="History" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
     <CollectionView ItemsSource="{Binding History}" EmptyView="No reconciliation history for this account." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding StatementDateUtc, StringFormat='Statement: {0:d}'}" FontAttributes="Bold" /><Label Text="{Binding Difference, StringFormat='Difference: {0}'}" /><Label Text="{Binding AdjustmentCreated, StringFormat='Adjustment created: {0}'}" /><Label Text="{Binding Note}" FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-    <Label Text="{Binding Status}" SemanticProperties.LiveSetting="Polite" />
-    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" SemanticProperties.LiveSetting="Polite" />
+    <Label Text="{Binding Status}" />
+    <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
