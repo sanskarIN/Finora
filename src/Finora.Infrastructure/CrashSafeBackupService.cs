@@ -7,7 +7,7 @@ namespace Finora.Infrastructure;
 
 public sealed class CrashSafeBackupService(
     IDbContextFactory<FinoraDbContext> factory,
-    string appDataRoot) : IBackupService
+    string appDataRoot) : IBackupService, IDisposable
 {
     private readonly IDbContextFactory<FinoraDbContext> _factory = factory;
     private readonly string _appDataRoot = Path.GetFullPath(appDataRoot);
@@ -15,6 +15,7 @@ public sealed class CrashSafeBackupService(
     private readonly RestoreRecoveryService _recovery = new(factory, appDataRoot);
     private readonly RestoreRecoveryJournal _journal = new(appDataRoot);
     private readonly SemaphoreSlim _operationGate = new(1, 1);
+    private bool _disposed;
     private string AttachmentRoot => Path.GetFullPath(Path.Combine(_appDataRoot, "attachments"));
 
     public async Task<byte[]> CreateEncryptedBackupAsync(string password, CancellationToken cancellationToken = default)
@@ -58,6 +59,14 @@ public sealed class CrashSafeBackupService(
         {
             _operationGate.Release();
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _operationGate.Dispose();
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 
     private async Task<Result> RestoreCoreAsync(Stream backupStream, string password, CancellationToken cancellationToken)
