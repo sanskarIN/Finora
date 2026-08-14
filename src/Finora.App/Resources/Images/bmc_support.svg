@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="180" viewBox="0 0 720 180" role="img" aria-labelledby="title desc">
+  <title id="title">Support Finora on Buy Me a Coffee</title>
+  <desc id="desc">A Finora-branded support mark combining a coffee cup with an upward finance progress line.</desc>
+  <rect x="4" y="4" width="712" height="172" rx="36" fill="#102A43"/>
+  <circle cx="96" cy="90" r="62" fill="#1F6F78"/>
+  <path d="M58 72h72v45c0 17-14 31-31 31H89c-17 0-31-14-31-31V72z" fill="#F5F9FC"/>
+  <path d="M130 84h12c18 0 32 14 32 32s-14 32-32 32h-10" fill="none" stroke="#F5F9FC" stroke-width="12" stroke-linecap="round"/>
+  <path d="M76 61c-11-13 11-18 1-32M103 61c-11-13 11-18 1-32" fill="none" stroke="#F4B942" stroke-width="7" stroke-linecap="round"/>
+  <path d="M208 116l44-35 44 19 54-54" fill="none" stroke="#F4B942" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M329 46h21v21" fill="none" stroke="#F4B942" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="208" cy="116" r="6" fill="#F4B942"/>
+  <circle cx="252" cy="81" r="6" fill="#F4B942"/>
+  <circle cx="296" cy="100" r="6" fill="#F4B942"/>
+  <text x="390" y="80" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#F5F9FC">SUPPORT FINORA</text>
+  <text x="390" y="124" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="600" fill="#F4B942">BUY ME A COFFEE</text>
+</svg>
