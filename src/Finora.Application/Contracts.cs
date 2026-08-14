@@ -18,7 +18,7 @@ public interface IFinanceStore
     Task<IReadOnlyList<AccountSummary>> GetAccountsAsync(CancellationToken cancellationToken = default);
     Task<Guid> SaveAccountAsync(Account account, CancellationToken cancellationToken = default);
     Task ArchiveAccountAsync(Guid accountId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TransactionListItem>> SearchTransactionsAsync(string? query = null, Guid? accountId = null, Guid? categoryId = null, DateTimeOffset? from = null, DateTimeOffset? to = null, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TransactionListItem>> SearchTransactionsAsync(string? query = null, Guid? accountId = null, Guid? categoryId = null, DateTimeOffset? from = null, DateTimeOffset? through = null, CancellationToken cancellationToken = default);
     Task<Guid> SaveTransactionAsync(FinanceTransaction transaction, CancellationToken cancellationToken = default);
     Task<(Guid SourceTransactionId, Guid DestinationTransactionId)> RecordTransferAsync(Guid sourceAccountId, Guid destinationAccountId, long amountMinor, DateTimeOffset occurredAtUtc, string? note, CancellationToken cancellationToken = default);
     Task SoftDeleteTransactionAsync(Guid transactionId, CancellationToken cancellationToken = default);
@@ -94,6 +94,6 @@ public interface IAppLockService
 public interface IPrivacyLogger
 {
     void Information(string eventName, IReadOnlyDictionary<string, object?>? properties = null);
-    void Error(Exception exception, string eventName);
+    void LogError(Exception exception, string eventName);
     Task<string> ExportSanitizedLogAsync(CancellationToken cancellationToken = default);
 }
