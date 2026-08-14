@@ -15,7 +15,12 @@ public static class AppRoutes
             if (idiom == DeviceIdiom.Desktop || idiom == DeviceIdiom.Tablet)
                 return true;
 
-            var width = Shell.Current?.Width ?? Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault()?.Width ?? 0;
+            var width = Shell.Current?.Width;
+            if (width is null or <= 0)
+            {
+                var windows = Microsoft.Maui.Controls.Application.Current?.Windows;
+                width = windows is { Count: > 0 } ? windows[0].Width : 0;
+            }
             return width >= 900;
         }
     }
