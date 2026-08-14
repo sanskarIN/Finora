@@ -8,6 +8,7 @@ namespace Finora.IntegrationTests;
 
 public sealed class RestoreRecoveryTests : IAsyncLifetime
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
     private readonly string _root = Path.Combine(Path.GetTempPath(), $"finora-recovery-{Guid.NewGuid():N}");
     private FinanceStoreTests.TestFactory _factory = null!;
 
@@ -102,7 +103,7 @@ public sealed class RestoreRecoveryTests : IAsyncLifetime
         var store = new FinanceStore(_factory, new DatabaseInitializer(_factory));
         var account = new Account { Name = "Synthetic cash", Type = AccountType.Cash, Currency = "INR" };
         await store.SaveAccountAsync(account);
-        var service = new CrashSafeBackupService(_factory, _root);
+        using var service = new CrashSafeBackupService(_factory, _root);
         var bytes = await service.CreateEncryptedBackupAsync("synthetic-password-123");
 
         await using var stream = new MemoryStream(bytes);
@@ -137,7 +138,7 @@ public sealed class RestoreRecoveryTests : IAsyncLifetime
             rollbackCopyReady = rollbackReady,
             markerMeansPending = true,
             createdAtUtc = DateTimeOffset.UtcNow
-        }, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        }, SerializerOptions);
         await File.WriteAllBytesAsync(Path.Combine(_root, "finora-restore-recovery.json"), payload);
     }
 }
