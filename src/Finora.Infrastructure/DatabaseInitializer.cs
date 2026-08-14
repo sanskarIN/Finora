@@ -32,6 +32,47 @@ public sealed class DatabaseInitializer(IDbContextFactory<FinoraDbContext> facto
             db.Categories.AddRange(names.Select((name, index) => new Category { Name = name, SortOrder = index, IsSystem = true, Icon = name.ToLowerInvariant() }));
         }
 
+        await RepairDerivedGoalStateAsync(db, cancellationToken).ConfigureAwait(false);
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task RepairDerivedGoalStateAsync(FinoraDbContext db, CancellationToken cancellationToken)
+    {
+        var goals = await db.SavingsGoals
+            .Include(goal => goal.Contributions)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var goal in goals)
+        {
+            try
+            {
+                DomainRules.ValidateSavingsGoal(goal);
+                var current = goal.StartingMinor;
+                var historyValid = true;
+                foreach (var contribution in goal.Contributions
+                             .OrderBy(item => item.OccurredAtUtc)
+                             .ThenBy(item => item.CreatedAtUtc))
+                {
+                    DomainRules.ValidateGoalContribution(contribution);
+                    current = checked(current + contribution.AmountMinor);
+                    if (current < 0)
+                    {
+                        historyValid = false;
+                        break;
+                    }
+                }
+
+                if (!historyValid) continue;
+                var completed = current >= goal.TargetMinor;
+                if (goal.IsCompleted == completed) continue;
+                goal.IsCompleted = completed;
+                goal.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            }
+            catch (Exception exception) when (exception is ArgumentException or InvalidOperationException or OverflowException)
+            {
+                // Corrupt financial history belongs to the integrity checker; startup must not mask it.
+            }
+        }
     }
 }
