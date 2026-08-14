@@ -1,1 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="..\Finora.Domain\Finora.Domain.csproj"/><ProjectReference Include="..\Finora.Shared\Finora.Shared.csproj"/></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- Public range APIs intentionally use the concise conventional endpoint name `to`; implementations already share this contract. -->
+    <NoWarn>$(NoWarn);CA1716</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Finora.Domain\Finora.Domain.csproj" />
+    <ProjectReference Include="..\Finora.Shared\Finora.Shared.csproj" />
+  </ItemGroup>
+</Project>
