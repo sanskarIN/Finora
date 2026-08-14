@@ -7,6 +7,7 @@ namespace Finora.App;
 
 public sealed class SavingsViewModel : ViewModelBase
 {
+    private static readonly int[] MilestonePercents = [25, 50, 75, 100];
     private readonly IFinanceStore _store;
     private readonly IAppSettingsService _settings;
     private string _name = string.Empty;
@@ -77,7 +78,7 @@ public sealed class SavingsViewModel : ViewModelBase
     private void UpdatePlanningText()
     {
         if (SelectedGoal is null) { Forecast = "Select a goal to see its forecast."; Milestones = string.Empty; return; }
-        var goal = SelectedGoal; var percent = (int)Math.Round(goal.Progress * 100, MidpointRounding.AwayFromZero); var achieved = new[] { 25, 50, 75, 100 }.Where(x => percent >= x).ToArray(); var next = new[] { 25, 50, 75, 100 }.FirstOrDefault(x => percent < x);
+        var goal = SelectedGoal; var percent = (int)Math.Round(goal.Progress * 100, MidpointRounding.AwayFromZero); var achieved = MilestonePercents.Where(x => percent >= x).ToArray(); var next = MilestonePercents.FirstOrDefault(x => percent < x);
         Milestones = achieved.Length == 0 ? $"Next milestone: {next}%." : next == 0 ? "Milestones achieved: 25%, 50%, 75%, 100%." : $"Achieved: {string.Join(", ", achieved.Select(x => $"{x}%"))}. Next: {next}%.";
         if (goal.TargetDate is null || goal.CurrentMinor >= goal.TargetMinor) { Forecast = goal.CurrentMinor >= goal.TargetMinor ? "Target reached." : "Add a target date to calculate a contribution forecast."; return; }
         var days = Math.Max(1, goal.TargetDate.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber); var remaining = checked(goal.TargetMinor - goal.CurrentMinor); var months = Math.Max(1m, days / 30.4375m); var monthly = (long)Math.Ceiling(remaining / months);
