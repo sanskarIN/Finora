@@ -11,7 +11,7 @@ public sealed class TransactionsViewModel : ViewModelBase
     private const int PageSize = 50;
     private readonly IFinanceStore _store;
     private readonly IAppSettingsService _settings;
-    private IReadOnlyList<TransactionListItem> _allMatches = [];
+    private TransactionListItem[] _allMatches = [];
     private string _searchText = string.Empty;
     private TransactionType _type;
     private AccountSummary? _selectedAccount;
@@ -70,8 +70,8 @@ public sealed class TransactionsViewModel : ViewModelBase
     public DateTime FilterFromDate { get => _filterFromDate; set => SetProperty(ref _filterFromDate, value); }
     public DateTime FilterToDate { get => _filterToDate; set => SetProperty(ref _filterToDate, value); }
     public string SortOrder { get => _sortOrder; set => SetProperty(ref _sortOrder, value); }
-    public bool HasMore => Transactions.Count < _allMatches.Count;
-    public string HistoryStatus => _allMatches.Count == 0 ? "No matching transactions." : $"Showing {Transactions.Count} of {_allMatches.Count} matching transaction(s).";
+    public bool HasMore => Transactions.Count < _allMatches.Length;
+    public string HistoryStatus => _allMatches.Length == 0 ? "No matching transactions." : $"Showing {Transactions.Count} of {_allMatches.Length} matching transaction(s).";
     public System.Windows.Input.ICommand RefreshCommand { get; }
     public System.Windows.Input.ICommand SearchCommand { get; }
     public System.Windows.Input.ICommand AddCommand { get; }
