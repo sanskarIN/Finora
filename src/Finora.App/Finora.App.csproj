@@ -5,6 +5,7 @@
     <RootNamespace>Finora.App</RootNamespace>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationTitle>Finora</ApplicationTitle>
     <ApplicationId>in.sanskar.finora</ApplicationId>
     <ApplicationDisplayVersion>0.2.0</ApplicationDisplayVersion>
