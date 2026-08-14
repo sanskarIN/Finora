@@ -66,17 +66,21 @@ public sealed class IntegrityRegressionTests : IAsyncLifetime
     {
         var transaction = TransactionFactory.Create(TransactionType.Expense, 500, "INR", _account.Id, DateTimeOffset.UtcNow);
         await _store.SaveTransactionAsync(transaction);
+        var attachmentId = Guid.NewGuid();
         await using (var db = await _factory.CreateDbContextAsync())
         {
             db.Attachments.Add(new Attachment
             {
+                Id = attachmentId,
                 TransactionId = transaction.Id,
-                RelativePath = "finora.db",
+                RelativePath = $"attachments/{transaction.Id:N}/{attachmentId:N}.pdf",
                 OriginalFileName = "synthetic.pdf",
                 ContentType = "application/pdf",
-                SizeBytes = 0
+                SizeBytes = 1
             });
             await db.SaveChangesAsync();
+            await db.Attachments.Where(x => x.Id == attachmentId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.RelativePath, "finora.db"));
         }
 
         var report = await new DataIntegrityService(_factory, _root).CheckAsync();
