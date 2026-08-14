@@ -11,7 +11,7 @@ public partial class DashboardPage : ContentPage
     private async void OnAccountsClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(AccountsPage));
     private async void OnReportsClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(ReportsPage));
     private async void OnRecurringClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(RecurringPage));
-    private async void OnRecentTransactionSelected(object? sender, SelectionChangedEventArgs e) { if (e.CurrentSelection.FirstOrDefault() is not DashboardTransactionItem item) return; RecentList.SelectedItem = null; await Shell.Current.GoToAsync($"{nameof(TransactionDetailPage)}?transactionId={item.Id}"); }
+    private async void OnRecentTransactionSelected(object? sender, SelectionChangedEventArgs e) { if (e.CurrentSelection.Count == 0 || e.CurrentSelection[0] is not DashboardTransactionItem item) return; RecentList.SelectedItem = null; await Shell.Current.GoToAsync($"{nameof(TransactionDetailPage)}?transactionId={item.Id}"); }
 }
 
 public partial class AccountsPage : ContentPage
@@ -19,7 +19,7 @@ public partial class AccountsPage : ContentPage
     private AccountsViewModel ViewModel => (AccountsViewModel)BindingContext;
     public AccountsPage() { InitializeComponent(); BindingContext = new AccountsViewModel(ServiceHelper.Get<IFinanceStore>(), ServiceHelper.Get<IAppSettingsService>()); }
     protected override void OnAppearing() { base.OnAppearing(); _ = ViewModel.LoadAsync(); }
-    private async void OnAccountSelected(object? sender, SelectionChangedEventArgs e) { if (e.CurrentSelection.FirstOrDefault() is not AccountSummary item) return; AccountList.SelectedItem = null; await Shell.Current.GoToAsync($"{nameof(AccountDetailPage)}?accountId={item.Id}"); }
+    private async void OnAccountSelected(object? sender, SelectionChangedEventArgs e) { if (e.CurrentSelection.Count == 0 || e.CurrentSelection[0] is not AccountSummary item) return; AccountList.SelectedItem = null; await Shell.Current.GoToAsync($"{nameof(AccountDetailPage)}?accountId={item.Id}"); }
     private async void OnReconcileClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(ReconciliationPage));
     private async void OnAccountCategoriesClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(CategoriesTagsPage));
 }
@@ -29,7 +29,7 @@ public partial class TransactionsPage : ContentPage
     private TransactionsViewModel ViewModel => (TransactionsViewModel)BindingContext;
     public TransactionsPage() { InitializeComponent(); BindingContext = new TransactionsViewModel(ServiceHelper.Get<IFinanceStore>(), ServiceHelper.Get<IAppSettingsService>()); }
     protected override void OnAppearing() { base.OnAppearing(); _ = ViewModel.LoadAsync(); }
-    private async void OnTransactionSelected(object? sender, SelectionChangedEventArgs e) { if (e.CurrentSelection.FirstOrDefault() is not TransactionListItem item) return; if (sender is CollectionView list) list.SelectedItem = null; await Shell.Current.GoToAsync($"{nameof(TransactionDetailPage)}?transactionId={item.Id}"); }
+    private async void OnTransactionSelected(object? sender, SelectionChangedEventArgs e) { if (e.CurrentSelection.Count == 0 || e.CurrentSelection[0] is not TransactionListItem item) return; if (sender is CollectionView list) list.SelectedItem = null; await Shell.Current.GoToAsync($"{nameof(TransactionDetailPage)}?transactionId={item.Id}"); }
     private async void OnImportClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(ImportPage));
     private async void OnToolsClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(TransactionToolsPage));
     private async void OnCategoriesClicked(object? sender, EventArgs e) => await Shell.Current.GoToAsync(nameof(CategoriesTagsPage));
