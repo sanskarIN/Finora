@@ -111,8 +111,9 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public static void ApplyTheme(ThemePreference theme)
     {
-        if (Application.Current is null) return;
-        Application.Current.UserAppTheme = theme switch
+        var application = Microsoft.Maui.Controls.Application.Current;
+        if (application is null) return;
+        application.UserAppTheme = theme switch
         {
             ThemePreference.Light => AppTheme.Light,
             ThemePreference.Dark => AppTheme.Dark,
@@ -122,8 +123,9 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public static void ApplyLargerInterface(bool enabled)
     {
-        if (Application.Current?.Resources is null) return;
-        Application.Current.Resources["FinoraBodyFontSize"] = enabled ? 18d : 14d;
-        Application.Current.Resources["FinoraControlHeight"] = enabled ? 56d : 48d;
+        var resources = Microsoft.Maui.Controls.Application.Current?.Resources;
+        if (resources is null) return;
+        resources["FinoraBodyFontSize"] = enabled ? 18d : 14d;
+        resources["FinoraControlHeight"] = enabled ? 56d : 48d;
     }
 }
