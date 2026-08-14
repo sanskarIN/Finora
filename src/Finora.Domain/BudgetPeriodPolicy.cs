@@ -14,7 +14,10 @@ public static class BudgetPeriodPolicy
         if (explicitPeriod is not null)
         {
             var rollover = budget.RolloverEnabled ? explicitPeriod.RolloverMinor : 0L;
-            window = new BudgetWindow(explicitPeriod.StartsOn, explicitPeriod.EndsOn, checked(explicitPeriod.PlannedMinor + rollover));
+            var effectivePlan = checked(explicitPeriod.PlannedMinor + rollover);
+            if (effectivePlan <= 0)
+                throw new InvalidDataException("Budget rollover must leave a positive effective plan.");
+            window = new BudgetWindow(explicitPeriod.StartsOn, explicitPeriod.EndsOn, effectivePlan);
             return true;
         }
 
