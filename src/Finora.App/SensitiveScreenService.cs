@@ -34,7 +34,8 @@ public sealed class SensitiveScreenService : ISensitiveScreenService
 #elif WINDOWS
         try
         {
-            var mauiWindow = Microsoft.Maui.Controls.Application.Current?.Windows.FirstOrDefault();
+            var windows = Microsoft.Maui.Controls.Application.Current?.Windows;
+            var mauiWindow = windows is { Count: > 0 } ? windows[0] : null;
             if (mauiWindow?.Handler?.PlatformView is not Microsoft.UI.Xaml.Window platformWindow)
                 return Task.FromResult(Result.Failure("The Windows app window is unavailable."));
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(platformWindow);
