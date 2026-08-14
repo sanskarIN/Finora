@@ -18,5 +18,5 @@ public interface ICategoryTagService
     Task<Result<Guid>> SaveTagAsync(Guid? id, string name, string? colorLabel, CancellationToken cancellationToken = default);
     Task<Result> ArchiveTagAsync(Guid tagId, CancellationToken cancellationToken = default);
     Task<Result> RestoreTagAsync(Guid tagId, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<TagSpendSummary>> GetTagReportAsync(DateTimeOffset from, DateTimeOffset through, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TagSpendSummary>> GetTagReportAsync(DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default);
 }
