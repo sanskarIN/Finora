@@ -105,6 +105,7 @@ public sealed class ViewModelBaseTests
         var release = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var entered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var completed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var restored = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var executions = 0;
         var command = new AsyncCommand(async () =>
         {
@@ -113,6 +114,10 @@ public sealed class ViewModelBaseTests
             await release.Task;
             completed.TrySetResult(true);
         });
+        command.CanExecuteChanged += (_, _) =>
+        {
+            if (command.CanExecute(null)) restored.TrySetResult(true);
+        };
 
         command.Execute(null);
         await entered.Task;
@@ -121,7 +126,7 @@ public sealed class ViewModelBaseTests
         command.Execute(null);
         release.TrySetResult(true);
         await completed.Task;
-        await Task.Yield();
+        await restored.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
         Assert.Equal(1, executions);
         Assert.True(command.CanExecute(null));
