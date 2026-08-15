@@ -88,4 +88,84 @@ public sealed class FinanceDataResetTests : IAsyncLifetime
         Assert.Empty(await verify.BackupMetadata.ToListAsync());
         Assert.Equal("2", (await verify.AppSettings.SingleAsync(x => x.Key == "schema.version")).Value);
     }
+
+    [Fact]
+    public async Task CompleteResetWorkflow_RemovesReceipt_AndLeavesHealthyReusableDatabase()
+    {
+        var account = new Account { Name = "Reset cash", Type = AccountType.Cash, Currency = "INR" };
+        await _store.SaveAccountAsync(account);
+        var transaction = TransactionFactory.Create(
+            TransactionType.Expense,
+            2_500,
+            "INR",
+            account.Id,
+            DateTimeOffset.UtcNow,
+            merchant: "Synthetic reset merchant");
+        await _store.SaveTransactionAsync(transaction);
+
+        var attachments = new AttachmentService(_factory, _root);
+        AttachmentInfo attachment;
+        await using (var receipt = new MemoryStream(Encoding.UTF8.GetBytes("%PDF-1.4 synthetic reset receipt")))
+        {
+            var added = await attachments.AddAttachmentAsync(
+                transaction.Id,
+                receipt,
+                "reset-receipt.pdf",
+                "application/pdf");
+            Assert.True(added.IsSuccess, added.Error);
+            attachment = Assert.IsType<AttachmentInfo>(added.Value);
+        }
+
+        var receiptPath = await attachments.GetLocalPathAsync(attachment.Id);
+        Assert.True(receiptPath.IsSuccess, receiptPath.Error);
+        Assert.NotNull(receiptPath.Value);
+        Assert.True(File.Exists(receiptPath.Value));
+
+        var reset = await new FinanceDataResetService(_factory).DeleteAllFinanceDataAsync();
+        Assert.True(reset.IsSuccess, reset.Error);
+        Assert.NotNull(reset.Value);
+        Assert.Equal(1, reset.Value!.Attachments);
+
+        var removedOrphans = await attachments.CleanupOrphanedFilesAsync();
+        Assert.Equal(1, removedOrphans);
+        Assert.False(File.Exists(receiptPath.Value));
+        Assert.Equal(0, await attachments.GetStorageUsageBytesAsync());
+
+        await new DatabaseInitializer(_factory).InitializeAsync();
+
+        var freshAccount = new Account
+        {
+            Name = "Fresh cash after reset",
+            Type = AccountType.Cash,
+            Currency = "INR"
+        };
+        var saveAccount = await _store.SaveAccountAsync(freshAccount);
+        Assert.True(saveAccount.IsSuccess, saveAccount.Error);
+
+        var freshTransaction = TransactionFactory.Create(
+            TransactionType.Income,
+            10_000,
+            "INR",
+            freshAccount.Id,
+            DateTimeOffset.UtcNow,
+            merchant: "Synthetic post-reset income");
+        var saveTransaction = await _store.SaveTransactionAsync(freshTransaction);
+        Assert.True(saveTransaction.IsSuccess, saveTransaction.Error);
+
+        await using (var verify = await _factory.CreateDbContextAsync())
+        {
+            Assert.Equal(1, await verify.Accounts.CountAsync());
+            Assert.Equal(1, await verify.Transactions.CountAsync());
+            Assert.Empty(await verify.Attachments.ToListAsync());
+            Assert.Equal("2", (await verify.AppSettings.SingleAsync(x => x.Key == "schema.version")).Value);
+        }
+
+        var integrity = await new DataIntegrityService(_factory, _root).CheckAsync();
+        Assert.True(integrity.IsHealthy, integrity.ToSanitizedText());
+        Assert.True(integrity.DatabaseIntegrityPassed);
+        Assert.True(integrity.ForeignKeysPassed);
+        Assert.Equal(1, integrity.AccountsChecked);
+        Assert.Equal(1, integrity.TransactionsChecked);
+        Assert.Equal(0, integrity.AttachmentsChecked);
+    }
 }
