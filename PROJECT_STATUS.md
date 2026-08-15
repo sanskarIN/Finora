@@ -18,14 +18,14 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ## Verified automated validation — 2026-08-15
 
-✅ Strict source-build candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7` passed Finora CI run `31872362394` and CodeQL run `31872362398`.
+✅ Current release-hardening source candidate `f80b29d44a225a6d745529519e6c59cadbc152a8` passed Finora CI run `31875164890` and CodeQL run `31875164864`.
 
 ✅ Structural preflight passed.
 
-✅ Exact automated test result: **241/241 passed, 0 failed**:
+✅ Exact automated test result: **273/273 passed, 0 failed**:
 
 - Unit: 97/97;
-- Integration: 109/109;
+- Integration: 141/141;
 - UI-contract: 35/35.
 
 ✅ Independent Release source builds passed for:
@@ -35,13 +35,19 @@ Source presence is not the same as native release validation. Current commit-spe
 - iOS `net10.0-ios` on a GitHub macOS runner;
 - Mac Catalyst `net10.0-maccatalyst` on a GitHub macOS runner.
 
-✅ CodeQL analysis completed successfully on the same strict candidate.
+✅ CodeQL analysis completed successfully on the same candidate.
 
-✅ `XC0022`, `XC0023`, and `XC0025` are promoted to errors in the app project; the successful native builds therefore provide compiler evidence that the migrated compiled-binding contracts do not retain those warning classes on the tested targets.
+✅ The current candidate includes the earlier strict XAML compiled-binding gate and adds migration-safety, hostile-backup, receipt-checksum, deliberate-integrity-corruption, privacy-log synchronization, and linked restore-recovery regression coverage.
 
-✅ CI-only commit `6ba519bf69174c68b67f8595872546a259c783dc` updated the primary workflow to Node-24-compatible current action majors (`checkout@v7`, `setup-python@v7`, `setup-dotnet@v6`, `upload-artifact@v7`). Its follow-up run successfully executed the updated structural path before the documentation sequence superseded it through CI concurrency; the completed repository head receives a fresh run after ledger finalization.
+✅ Migration production code now validates the target schema and SQLite foreign-key/integrity state before advancing `schema.version`; automated coverage includes fresh initialization/reopen, schema-version guards, v1→v2 data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection.
 
-⚠️ These source-build results are not evidence of Windows MSIX signing, signed Android AAB production packaging, Apple provisioning/signing/notarization, physical-device behavior, accessibility QA, process-kill recovery testing, or store approval.
+✅ Backup validation now requires valid 32-byte receipt SHA-256 metadata rather than accepting missing checksum metadata; authenticated hostile-payload tests cover unsupported schema, semantic relationship corruption, receipt path escape, receipt size/hash drift, and wrong/tampered/truncated encrypted inputs.
+
+✅ Integrity regression coverage now directly injects split-total drift, account/transaction currency mismatch, missing/changed receipts, invalid checksum metadata, category cycles, and foreign-key violations in addition to the pre-existing integrity families.
+
+✅ Restore-recovery tests now directly prove fail-closed behavior for linked recovery journals and linked rollback copies while preserving live receipt state/recovery evidence.
+
+⚠️ These source-build results are not evidence of Windows MSIX signing, signed Android AAB production packaging, Apple provisioning/signing/notarization, physical-device behavior, accessibility QA, actual process-kill/low-disk recovery testing, installed prior-version upgrades on every target, or store approval.
 
 ## Architecture
 
@@ -175,13 +181,13 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ## Attachments and private filesystem safety
 
-🧪 Receipt storage is app-private with MIME/size limits, generated internal names, SHA-256 metadata, list/open/delete/storage usage/orphan cleanup.
+🧪 Receipt storage is app-private with MIME/size limits, generated internal names, required SHA-256 metadata, list/open/delete/storage usage/orphan cleanup.
 
 🧪 Logical path confinement is supplemented by physical symbolic-link/reparse-point rejection.
 
 🧪 No-link policy is reused by attachment open/write/cleanup, encrypted backup validation/staging, crash-safe restore rollback copy, restore recovery journal/directories and integrity checking.
 
-🧪 Optional symlink regression tests run where host permits link creation.
+🧪 Optional symlink regression tests run where host permits link creation; linked recovery journal and rollback-copy failure paths are now directly covered.
 
 ## Backup and restore
 
@@ -189,11 +195,19 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Backup creation and authenticated preview/restore validate financial graph plus schema-v2 metadata before destructive replacement.
 
+🧪 Receipt checksum metadata is mandatory for portable backup state; creation, preview, and restore reject missing/invalid metadata and verify receipt bytes against SHA-256.
+
+🧪 Hostile-input regression coverage includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated relation corruption, receipt path escape, receipt size drift, and receipt hash drift.
+
 🧪 Receipt/plaintext buffers are cleared as early as managed-memory APIs permit on success and failure paths, including accumulated receipt buffers if a later file/query/validation step fails.
 
 🧪 Crash-safe wrapper persists recovery journal/commit marker and can restore/finalize receipt tree after interrupted restore.
 
+🧪 Recovery fails closed on linked journal/rollback state rather than following unsafe filesystem targets.
+
 🧪 Internal restore settings are not imported from backup snapshots.
+
+⚠️ Real process termination, low-disk, locked-file, and native filesystem recovery injection still require release-candidate device/host validation.
 
 ## Notifications
 
@@ -233,7 +247,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 About version/build comes from packaged `AppInfo`; attribution, technology summary, repository/profile, business/support contacts, Apache-2.0, notices, privacy/terms, contributing, security and support guide links are exposed.
 
-🧪 About now exposes the canonical optional Buy Me a Coffee support link through `AppConstants.BuyMeACoffeeUrl`; the action uses the system launcher and generic privacy-safe failure handling.
+🧪 About exposes the canonical optional Buy Me a Coffee support link through `AppConstants.BuyMeACoffeeUrl`; the action uses the system launcher and generic privacy-safe failure handling.
 
 ✅ Buy Me a Coffee is explicitly separated from Finora feature entitlement, premium state, and support priority in UI/docs.
 
@@ -243,13 +257,15 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Privacy logger ignores arbitrary caller properties and logs event/type tokens only; exception messages/stacks are not serialized.
 
-🧪 Diagnostic current/previous log paths reject symlink/reparse traversal; log is bounded/rotated.
+🧪 Diagnostic current/previous log paths reject symlink/reparse traversal; log is bounded/rotated. Rotation regression assertions synchronize with completed writes rather than racing the asynchronous logger.
 
 🧪 Bound ViewModel infrastructure errors and primary Settings/Reports alerts avoid raw filesystem/database/crypto/provider text.
 
 🧪 Unexpected `AsyncCommand` failures are contained and routed to privacy logger.
 
 🧪 Integrity checker covers SQLite/foreign keys, transaction/account/currency values, transfers, splits, category hierarchy, budgets, goal histories/completion, recurrence relations/state, reconciliation links and attachment path/size/hash/parent data.
+
+🧪 Deliberate-corruption tests directly verify split-total, account-currency, receipt file/size/hash/checksum, category-cycle, and foreign-key issue detection without changing production data to make diagnostics pass.
 
 ## Android privacy packaging
 
@@ -279,7 +295,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ✅ A complete documentation hub exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
 
-✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md`.
+✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and now records the 273-test migration/backup/integrity/recovery candidate.
 
 ✅ A prioritized execution roadmap exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
 
@@ -298,63 +314,3 @@ Source presence is not the same as native release validation. Current commit-spe
 ✅ Release documentation covers release checklist, store readiness, versioning/migrations/backup compatibility, store metadata preparation, changelog, and project status.
 
 ✅ Buy Me a Coffee is documented consistently in the docs hub, Settings reference, support guide, store metadata, roadmap, README and shared source identity.
-
-✅ Dependency-free structural preflight treats every core documentation reference as required and validates repository-relative Markdown file links without network access.
-
-⚠️ External URLs, Markdown anchors, live store policy requirements, package/signing, and native behavior described by platform docs still require external/current validation.
-
-## Repository engineering
-
-✅ Structural verifier, staged CI workflow, Dependabot, CodeQL, dependency review, CODEOWNERS, issue/PR templates and release/security documentation are present.
-
-✅ Structural preflight guards required documentation, local Markdown file links, product/support identity, Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
-
-✅ Actual GitHub Actions evidence now exists for structural preflight, 241 automated tests, all four MAUI Release source builds, and CodeQL on strict source candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`.
-
-✅ Primary CI action majors were updated to Node-24-compatible releases after the strict source-validation run.
-
-## Current next milestone
-
-The preferred next milestone remains a reproducible Finora 0.2.0 release candidate, but automated source validation is no longer the leading unknown. The next evidence work is the platform/release layer: migration/restore failure injection, native privacy/security behavior, accessibility, packaging/signing, dependency/license review, and store-policy validation.
-
-P0/P1 release evidence should be completed before major P2/P3 feature expansion.
-
-## Native/release validation still required
-
-The 2026-08-15 GitHub Actions evidence closes structural, automated-test, CodeQL, and four-target Release **source-build** uncertainty for the strict candidate. Before store-ready status, still execute and retain evidence for:
-
-1. fresh-install plus schema migration/upgrade using synthetic prior-version data;
-2. integrity checks on migrated/restored release-candidate datasets;
-3. encrypted backup create/preview/restore plus wrong-password, tamper, invalid-graph, linked-path, and process-interruption recovery paths on target environments;
-4. privacy-mode passive display/chart behavior on real native UI;
-5. 0/2/3/4-decimal currency precision QA where supported;
-6. non-UTC and DST-observing local-calendar/report validation;
-7. native notification permission/replacement/lifecycle/cancellation behavior;
-8. PIN/app-lock/biometric or Windows Hello/capture behavior on actual supported platform states;
-9. Android merged-manifest backup/data-transfer exclusion validation and actual backup/device-transfer behavior;
-10. file picker/share/import/export/receipt confinement and restart flows;
-11. TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast/reduced-motion validation;
-12. complete finance-data deletion validation including receipt files and persisted settings boundary;
-13. Android signed AAB production packaging;
-14. Windows MSIX identity/publisher/signing validation;
-15. iOS provisioning/signing/archive validation;
-16. Mac Catalyst signing/notarization/distribution validation;
-17. exact dependency-license/vulnerability review;
-18. current external Buy Me a Coffee contribution-link policy review for each target distribution channel;
-19. final privacy/data-safety/store metadata and submission review.
-
-## Intentionally later-version scope
-
-🧭 Finora remote account/login.
-
-🧭 Cloud sync/server API.
-
-🧭 Collaboration/shared finance spaces.
-
-🧭 Server/store-backed commercial entitlement verification.
-
-🧭 Automatic FX/exchange-rate workflow.
-
-🧭 Analytics/advertising telemetry by default.
-
-These are product-boundary decisions, not incomplete source claims for current local-first release.
