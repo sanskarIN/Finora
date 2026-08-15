@@ -1,3 +1,4 @@
+using Finora.Application;
 using Finora.Domain;
 using Finora.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -50,7 +51,7 @@ public sealed class IntegritySplitTotalRegressionTests : IAsyncLifetime
         Assert.False(report.IsHealthy);
         Assert.Contains(report.Issues, issue =>
             issue.Code == "TRANSACTION_SPLIT_TOTAL" &&
-            issue.Severity == Finora.Application.IntegritySeverity.Error &&
+            issue.Severity == IntegritySeverity.Error &&
             issue.AffectedRecords == 1);
     }
 }
