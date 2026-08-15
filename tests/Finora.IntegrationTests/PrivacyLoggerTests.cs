@@ -49,10 +49,13 @@ public sealed class PrivacyLoggerTests : IDisposable
 
         logger.Information("RotationCheck");
 
-        await WaitUntilAsync(() => File.Exists(previous) && File.Exists(current) && new FileInfo(current).Length < 8_192);
-        var currentText = await File.ReadAllTextAsync(current);
+        var exported = await logger.ExportSanitizedLogAsync();
+        var currentText = await WaitForContentAsync(exported, expectedMinimumLines: 1);
+        Assert.Equal(current, exported);
         Assert.Contains("RotationCheck", currentText, StringComparison.Ordinal);
+        Assert.True(File.Exists(previous));
         Assert.True(new FileInfo(previous).Length >= 512 * 1024);
+        Assert.True(new FileInfo(current).Length < 8_192);
     }
 
     [Fact]
