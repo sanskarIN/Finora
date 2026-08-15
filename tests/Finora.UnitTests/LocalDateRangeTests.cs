@@ -17,6 +17,18 @@ public sealed class LocalDateRangeTests
     }
 
     [Fact]
+    public void NegativeFixedOffsetZone_ConvertsLocalMidnightToUtc()
+    {
+        var zone = TimeZoneInfo.CreateCustomTimeZone("UTC-minus-seven-test", TimeSpan.FromHours(-7), "UTC-minus-seven-test", "UTC-minus-seven-test");
+
+        var range = LocalDateRange.ToUtc(new DateOnly(2026, 8, 11), new DateOnly(2026, 8, 11), zone);
+
+        Assert.Equal(new DateTimeOffset(2026, 8, 11, 7, 0, 0, TimeSpan.Zero), range.FromUtc);
+        Assert.Equal(new DateTimeOffset(2026, 8, 12, 7, 0, 0, TimeSpan.Zero), range.ToExclusiveUtc);
+        Assert.Equal(TimeSpan.FromDays(1), range.Duration);
+    }
+
+    [Fact]
     public void MultiDayRange_UsesExclusiveBoundaryAfterThroughDate()
     {
         var zone = TimeZoneInfo.CreateCustomTimeZone("UTC-plus-two-test", TimeSpan.FromHours(2), "UTC-plus-two-test", "UTC-plus-two-test");
