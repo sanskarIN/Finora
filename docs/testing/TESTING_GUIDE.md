@@ -2,6 +2,8 @@
 
 This guide complements `docs/TEST_PLAN.md` with practical commands, test-layer selection, synthetic-data rules, and release evidence expectations.
 
+Current dated GitHub Actions evidence is recorded in [CI_EVIDENCE.md](CI_EVIDENCE.md). The test plan and this guide define what should be exercised; the evidence record states what actually executed for a specific commit.
+
 ## Test philosophy
 
 Finora is a local finance application. Tests should prove correctness without using real financial data.
@@ -262,6 +264,8 @@ See [Build and Run](../setup/BUILD.md) for current target commands.
 
 Do not mark platform build complete without the correct workload/host.
 
+For the 2026-08-15 strict candidate, GitHub-hosted Windows, Android, iOS, and Mac Catalyst Release source-build evidence is retained in [CI_EVIDENCE.md](CI_EVIDENCE.md). Those successful compiler jobs do not replace package signing or device validation.
+
 ## 15. Synthetic test data rules
 
 Never commit or attach real:
@@ -301,4 +305,4 @@ Retain evidence for the exact release commit:
 - accessibility/security checks;
 - signing/package/store validation.
 
-An empty GitHub classic combined-status response is not passing CI evidence.
+The current concrete automated record is [CI_EVIDENCE.md](CI_EVIDENCE.md). It records exact commit/run/job identities and explicitly leaves package/device/store gates unresolved. An empty GitHub classic combined-status response is not passing CI evidence.
