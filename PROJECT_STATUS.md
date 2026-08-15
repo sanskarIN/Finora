@@ -1,6 +1,6 @@
 # Finora Project Status
 
-Last source review: **2026-08-12**
+Last source review: **2026-08-15**
 
 Current source line: **Finora 0.2.0 (build 2)**  
 Current database schema: **2**  
@@ -10,10 +10,38 @@ Repository: https://github.com/sanskarIN/Finora
 
 - ✅ **Implemented in source** — concrete code/resources are present.
 - 🧪 **Implemented + automated coverage** — source plus unit/integration/UI-contract coverage exists.
-- ⚠️ **External validation required** — needs .NET/MAUI workloads, CI runner, emulator/simulator/device, signing, or store-console evidence.
+- ✅ **Verified automated evidence** — executed GitHub Actions evidence exists for the exact referenced commit.
+- ⚠️ **External validation required** — needs emulator/simulator/device, packaging/signing, recovery-failure injection, accessibility, or store-console evidence beyond a source build.
 - 🧭 **Later-version scope** — intentionally outside current local-first release.
 
-Source presence is not the same as native release validation.
+Source presence is not the same as native release validation. Current commit-specific automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
+
+## Verified automated validation — 2026-08-15
+
+✅ Strict source-build candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7` passed Finora CI run `31872362394` and CodeQL run `31872362398`.
+
+✅ Structural preflight passed.
+
+✅ Exact automated test result: **241/241 passed, 0 failed**:
+
+- Unit: 97/97;
+- Integration: 109/109;
+- UI-contract: 35/35.
+
+✅ Independent Release source builds passed for:
+
+- Windows `net10.0-windows10.0.19041.0` — unpackaged source validation with `WindowsPackageType=None`;
+- Android `net10.0-android`;
+- iOS `net10.0-ios` on a GitHub macOS runner;
+- Mac Catalyst `net10.0-maccatalyst` on a GitHub macOS runner.
+
+✅ CodeQL analysis completed successfully on the same strict candidate.
+
+✅ `XC0022`, `XC0023`, and `XC0025` are promoted to errors in the app project; the successful native builds therefore provide compiler evidence that the migrated compiled-binding contracts do not retain those warning classes on the tested targets.
+
+✅ CI-only commit `6ba519bf69174c68b67f8595872546a259c783dc` updated the primary workflow to Node-24-compatible current action majors (`checkout@v7`, `setup-python@v7`, `setup-dotnet@v6`, `upload-artifact@v7`). Its follow-up run successfully executed the updated structural path before the documentation sequence superseded it through CI concurrency; the completed repository head receives a fresh run after ledger finalization.
+
+⚠️ These source-build results are not evidence of Windows MSIX signing, signed Android AAB production packaging, Apple provisioning/signing/notarization, physical-device behavior, accessibility QA, process-kill recovery testing, or store approval.
 
 ## Architecture
 
@@ -233,7 +261,7 @@ Source presence is not the same as native release validation.
 
 ✅ Structural preflight requires/wires these resources and guards masked secret fields, complete-reset wiring, biometric provider-text redaction, raw exception-alert regressions, raw minor-unit display labels, the roadmap, and canonical Buy Me a Coffee identity/entitlement boundary.
 
-⚠️ Final merged-manifest/package behavior and device backup/transfer behavior still require Android build/device evidence.
+⚠️ Final merged-manifest/package behavior and device backup/transfer behavior still require Android package/device evidence.
 
 ## Accessibility/adaptive UI
 
@@ -251,7 +279,9 @@ Source presence is not the same as native release validation.
 
 ✅ A complete documentation hub exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
 
-✅ A prioritized execution roadmap now exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
+✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md`.
+
+✅ A prioritized execution roadmap exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
 
 ✅ End-user documentation covers onboarding through destructive reset, backup/restore, platform limitations, privacy, reports, import/export, notifications, Settings, and support.
 
@@ -261,7 +291,7 @@ Source presence is not the same as native release validation.
 
 ✅ Security/operations documentation covers threat model, app lock/privacy, encrypted backup/crash recovery, data lifecycle, diagnostics/integrity, and reset/sample data.
 
-✅ Developer/testing documentation covers build/run, troubleshooting, developer workflow, safe feature changes, test-layer selection, and native platform validation matrix.
+✅ Developer/testing documentation covers build/run, troubleshooting, developer workflow, safe feature changes, test-layer selection, native platform validation matrix, and exact CI evidence.
 
 ✅ Platform documentation covers Android, Windows, iOS, and Mac Catalyst target frameworks, minimum platform metadata, native APIs, privacy boundaries, accessibility, packaging, and release QA.
 
@@ -271,7 +301,7 @@ Source presence is not the same as native release validation.
 
 ✅ Dependency-free structural preflight treats every core documentation reference as required and validates repository-relative Markdown file links without network access.
 
-⚠️ External URLs, Markdown anchors, live store policy requirements, and native behavior described by platform docs still require external/current validation.
+⚠️ External URLs, Markdown anchors, live store policy requirements, package/signing, and native behavior described by platform docs still require external/current validation.
 
 ## Repository engineering
 
@@ -279,41 +309,39 @@ Source presence is not the same as native release validation.
 
 ✅ Structural preflight guards required documentation, local Markdown file links, product/support identity, Android backup exclusions, masked secret inputs, complete-reset wiring, raw minor-unit display, biometric provider text and raw exception-message alerts.
 
-⚠️ CI/check-run success must be confirmed from actual GitHub Actions evidence. An empty classic combined-status response is not a passing result.
+✅ Actual GitHub Actions evidence now exists for structural preflight, 241 automated tests, all four MAUI Release source builds, and CodeQL on strict source candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`.
+
+✅ Primary CI action majors were updated to Node-24-compatible releases after the strict source-validation run.
 
 ## Current next milestone
 
-The preferred next milestone is defined in `docs/NEXT_STEPS.md`:
-
-> A reproducible Finora 0.2.0 release candidate with actual evidence for structural verification, dependency/workload restore, automated tests, all native builds, schema migration, backup/restore and interruption recovery, integrity, privacy, currency/date correctness, notifications, app lock/biometrics, accessibility, complete local data deletion, packaging/signing, dependency/security review, and store-policy validation.
+The preferred next milestone remains a reproducible Finora 0.2.0 release candidate, but automated source validation is no longer the leading unknown. The next evidence work is the platform/release layer: migration/restore failure injection, native privacy/security behavior, accessibility, packaging/signing, dependency/license review, and store-policy validation.
 
 P0/P1 release evidence should be completed before major P2/P3 feature expansion.
 
 ## Native/release validation still required
 
-⚠️ This execution environment does not provide a usable .NET/MAUI toolchain, so no local claim is made that restore/build/test/native compilation passed here.
+The 2026-08-15 GitHub Actions evidence closes structural, automated-test, CodeQL, and four-target Release **source-build** uncertainty for the strict candidate. Before store-ready status, still execute and retain evidence for:
 
-Before store-ready status, execute and retain evidence for:
-
-1. structural preflight;
-2. NuGet/workload restore;
-3. formatting/analyzers;
-4. Release core build/tests;
-5. Android + Windows MAUI builds;
-6. iOS + Mac Catalyst builds on macOS/Xcode host;
-7. migration/integrity/backup failure-path tests;
-8. local-calendar/date/report regression tests;
-9. notification replacement/lifecycle/cancellation tests;
-10. secret-entry/app-lock/biometric/capture tests;
-11. Android merged-manifest backup/data-transfer exclusion validation;
-12. Android physical/emulator backup-transfer behavior;
-13. receipt symlink/reparse tests where platform permits;
-14. privacy-mode passive display/chart tests on native UI;
-15. Dashboard period/transaction paging/sort/accessibility smoke tests;
-16. complete finance-data deletion validation;
-17. signing/package/store validation;
-18. current external Buy Me a Coffee contribution-link policy review for each target store;
-19. final privacy/data-safety/store metadata review.
+1. fresh-install plus schema migration/upgrade using synthetic prior-version data;
+2. integrity checks on migrated/restored release-candidate datasets;
+3. encrypted backup create/preview/restore plus wrong-password, tamper, invalid-graph, linked-path, and process-interruption recovery paths on target environments;
+4. privacy-mode passive display/chart behavior on real native UI;
+5. 0/2/3/4-decimal currency precision QA where supported;
+6. non-UTC and DST-observing local-calendar/report validation;
+7. native notification permission/replacement/lifecycle/cancellation behavior;
+8. PIN/app-lock/biometric or Windows Hello/capture behavior on actual supported platform states;
+9. Android merged-manifest backup/data-transfer exclusion validation and actual backup/device-transfer behavior;
+10. file picker/share/import/export/receipt confinement and restart flows;
+11. TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast/reduced-motion validation;
+12. complete finance-data deletion validation including receipt files and persisted settings boundary;
+13. Android signed AAB production packaging;
+14. Windows MSIX identity/publisher/signing validation;
+15. iOS provisioning/signing/archive validation;
+16. Mac Catalyst signing/notarization/distribution validation;
+17. exact dependency-license/vulnerability review;
+18. current external Buy Me a Coffee contribution-link policy review for each target distribution channel;
+19. final privacy/data-safety/store metadata and submission review.
 
 ## Intentionally later-version scope
 
