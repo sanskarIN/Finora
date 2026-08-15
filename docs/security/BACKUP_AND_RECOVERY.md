@@ -53,7 +53,7 @@ Conceptual creation sequence:
 7. require attachment file to exist;
 8. read attachment bytes;
 9. validate stored size;
-10. validate SHA-256 when metadata is present;
+10. require valid 32-byte SHA-256 metadata and verify it against the receipt bytes;
 11. validate financial/domain graph and unique IDs;
 12. serialize snapshot;
 13. derive encryption key;
@@ -106,7 +106,7 @@ Before encryption, current validation checks supported entity/domain/relationshi
 - savings goal/contribution relationships;
 - recurrence account/category/currency/state;
 - reconciliation links;
-- attachment path/size/hash;
+- attachment path/size/required SHA-256 metadata and receipt-byte hash;
 - notification/settings metadata shape.
 
 A locally corrupt graph should fail backup creation rather than creating a portable broken snapshot.
@@ -120,6 +120,7 @@ Preview:
 - checks basic backup bounds/format;
 - authenticates/decrypts with entered password;
 - validates schema and graph;
+- requires valid receipt checksum metadata and verifies receipt content where attachments are present;
 - returns safe summary counts/date/schema;
 - returns generic failure text for wrong password/tamper/malformed file instead of leaking cryptographic/filesystem exception details.
 
@@ -151,6 +152,8 @@ It also writes an internal pending database marker used to distinguish whether d
 
 The journal/marker are not portable user backup content.
 
+The recovery journal path and temporary journal path are confined to the app-private root and existing symbolic-link/reparse traversal is rejected.
+
 ## Recovery decision
 
 On startup, `IStorageRecoveryService` runs before normal finance navigation.
@@ -160,6 +163,8 @@ Conceptually:
 ### Pending marker still exists
 
 The database replacement did not reach the committed state expected by the wrapper. Recovery restores the pre-restore attachment snapshot when safe/available and removes temporary restore artifacts after the decision.
+
+If the journal says the rollback copy is ready but the rollback path is missing or linked/reparse-backed, recovery fails closed, keeps the live receipt tree intact, and preserves recovery state for manual repair rather than deleting evidence or following the unsafe path.
 
 ### Pending marker absent after the committed phase
 
@@ -182,7 +187,7 @@ Current path protections include:
 - existing symbolic-link/reparse-point rejection;
 - no-link directory traversal for rollback copy/cleanup;
 - staged relative-path resolution;
-- size/hash verification.
+- required receipt size/hash verification.
 
 ## Password UI handling
 
@@ -206,22 +211,40 @@ Privacy diagnostics can record a safe event token and exception type without ser
 
 A failed restore must not claim success and should leave prior usable state when the failure occurred before the committed replacement boundary.
 
-## Tests in source
+## Verified automated backup/recovery evidence — 2026-08-15
 
-Current automated coverage includes scenarios for:
+Verified source candidate:
+
+`f80b29d44a225a6d745529519e6c59cadbc152a8`
+
+Finora CI run:
+
+`31875164890`
+
+The current integration suite includes automated cases for:
 
 - create/preview/restore round trip;
-- wrong/tampered backup rejection;
-- attachment validation;
-- path confinement;
-- semantic graph validation;
+- wrong-password rejection;
+- modified ciphertext/authentication rejection;
+- truncated backup rejection;
+- authenticated unsupported-schema rejection;
+- authenticated semantic relationship corruption rejection;
+- authenticated receipt lexical path escape rejection;
+- authenticated receipt-size drift rejection;
+- authenticated receipt SHA-256 drift rejection;
+- required receipt SHA-256 metadata on backup creation/preview/restore;
+- attachment symbolic-link/reparse rejection where the host permits link creation;
 - crash-safe wrapper round trip;
 - pending-marker recovery restoring prior attachments;
 - committed restore finalization;
 - incomplete rollback-copy safety;
+- linked recovery-journal refusal;
+- linked rollback-copy refusal while preserving live receipts and recovery marker/journal;
 - orphan restore-directory cleanup;
-- receipt-buffer clearing on failure paths;
+- receipt-buffer clearing on success/failure paths;
 - internal restore marker/settings exclusion.
+
+The exact current test and native-build evidence is retained in `docs/testing/CI_EVIDENCE.md`.
 
 Automated source/integration tests do not replace real process-kill/low-disk/native-filesystem validation.
 
