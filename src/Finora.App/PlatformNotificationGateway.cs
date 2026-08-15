@@ -27,7 +27,7 @@ public sealed class PlatformNotificationGateway : IPlatformNotificationGateway
     {
         cancellationToken.ThrowIfCancellationRequested();
 #if ANDROID
-        if (Build.VERSION.SdkInt < BuildVersionCodes.Tiramisu) return NotificationPermissionState.Granted;
+        if (!OperatingSystem.IsAndroidVersionAtLeast(33)) return NotificationPermissionState.Granted;
         var status = await Permissions.CheckStatusAsync<PostNotificationsPermission>().ConfigureAwait(false);
         return status == PermissionStatus.Granted ? NotificationPermissionState.Granted : status == PermissionStatus.Denied ? NotificationPermissionState.Denied : NotificationPermissionState.Unknown;
 #elif IOS || MACCATALYST
@@ -44,7 +44,7 @@ public sealed class PlatformNotificationGateway : IPlatformNotificationGateway
     {
         cancellationToken.ThrowIfCancellationRequested();
 #if ANDROID
-        if (Build.VERSION.SdkInt < BuildVersionCodes.Tiramisu) return NotificationPermissionState.Granted;
+        if (!OperatingSystem.IsAndroidVersionAtLeast(33)) return NotificationPermissionState.Granted;
         var status = await Permissions.RequestAsync<PostNotificationsPermission>().ConfigureAwait(false);
         return status == PermissionStatus.Granted ? NotificationPermissionState.Granted : NotificationPermissionState.Denied;
 #elif IOS || MACCATALYST
@@ -116,7 +116,14 @@ public sealed class PlatformNotificationGateway : IPlatformNotificationGateway
     private static int RequestCode(Guid id) => BitConverter.ToInt32(id.ToByteArray(), 0) & int.MaxValue;
     private sealed class PostNotificationsPermission : Permissions.BasePlatformPermission
     {
-        public override (string androidPermission, bool isRuntime)[] RequiredPermissions => Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu ? [(Android.Manifest.Permission.PostNotifications, true)] : [];
+        public override (string androidPermission, bool isRuntime)[] RequiredPermissions
+        {
+            get
+            {
+                if (!OperatingSystem.IsAndroidVersionAtLeast(33)) return [];
+                return [(Android.Manifest.Permission.PostNotifications, true)];
+            }
+        }
     }
 #elif IOS || MACCATALYST
     private static async Task<FinoraResult> ScheduleAppleAsync(LocalReminder reminder, CancellationToken cancellationToken)
