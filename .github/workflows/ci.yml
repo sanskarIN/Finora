@@ -59,7 +59,7 @@ jobs:
         run: dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release --no-restore --logger "trx;LogFileName=ui-contract.trx"
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: core-test-results
           path: '**/*.trx'
@@ -88,7 +88,7 @@ jobs:
           exit $LASTEXITCODE
       - name: Upload Windows build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-windows
           path: artifacts/native-logs/windows.log
@@ -117,7 +117,7 @@ jobs:
           exit $LASTEXITCODE
       - name: Upload Android build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-android
           path: artifacts/native-logs/android.log
@@ -146,7 +146,7 @@ jobs:
           dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --verbosity normal 2>&1 | tee artifacts/native-logs/ios.log
       - name: Upload iOS build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-ios
           path: artifacts/native-logs/ios.log
@@ -175,7 +175,7 @@ jobs:
           dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --verbosity normal 2>&1 | tee artifacts/native-logs/maccatalyst.log
       - name: Upload Mac Catalyst build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-maccatalyst
           path: artifacts/native-logs/maccatalyst.log
