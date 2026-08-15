@@ -23,23 +23,40 @@ Concrete automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
 
 ### Automated source-validation gates completed on 2026-08-15
 
-The following source-validation work is no longer an unknown for strict candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`:
+The current verified source candidate is:
+
+`f80b29d44a225a6d745529519e6c59cadbc152a8`
+
+Verified Finora CI run:
+
+`31875164890`
+
+Verified CodeQL run:
+
+`31875164864`
+
+The following source-validation work is no longer an unknown for that candidate:
 
 - ✅ dependency-free structural preflight passed;
 - ✅ NuGet/test-project restores completed on GitHub-hosted CI;
 - ✅ Unit tests passed: 97/97;
-- ✅ Integration tests passed: 109/109;
+- ✅ Integration tests passed: 141/141;
 - ✅ UI-contract tests passed: 35/35;
-- ✅ total automated result: 241/241 passed, 0 failed;
+- ✅ total automated result: 273/273 passed, 0 failed;
 - ✅ Windows Release source build passed with `WindowsPackageType=None`;
 - ✅ Android Release source build passed;
 - ✅ iOS Release source build passed on a GitHub macOS runner;
 - ✅ Mac Catalyst Release source build passed on a GitHub macOS runner;
 - ✅ CodeQL passed;
-- ✅ XAML compiled-binding diagnostics `XC0022`, `XC0023`, and `XC0025` are enforced as errors and the four native source builds passed under that policy;
-- ✅ primary CI action majors were moved to Node-24-compatible releases in follow-up CI-only commit `6ba519bf69174c68b67f8595872546a259c783dc`.
+- ✅ XAML compiled-binding diagnostics `XC0022`, `XC0023`, and `XC0025` remain enforced as errors and all four native source builds passed under that policy;
+- ✅ schema 1 → schema 2 migration source coverage now includes target-schema validation, schema-version guards, fresh initialization/reopen, data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection;
+- ✅ encrypted-backup hostile-input coverage now includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated semantic corruption, and receipt path/size/hash corruption;
+- ✅ receipt SHA-256 metadata is required by backup validation and missing checksum metadata has direct regression coverage;
+- ✅ deliberate integrity-corruption coverage now includes split totals, account currency, missing/changed receipts, invalid checksum metadata, category cycles, and foreign-key violations;
+- ✅ linked restore-journal and linked rollback-copy recovery cases now fail closed in direct integration coverage;
+- ✅ primary CI action majors run on the Node-24-compatible versions introduced by commit `6ba519bf69174c68b67f8595872546a259c783dc`.
 
-This evidence proves source/test/build correctness only for the recorded candidate. It does not prove signed packaging, physical-device behavior, recovery interruption, accessibility, or store approval.
+This evidence proves source/test/build correctness only for the recorded candidate. It does not prove signed packaging, installed prior-version upgrade behavior on every target, real process-kill/low-disk recovery, physical-device behavior, accessibility, or store approval.
 
 ### 1. Structural preflight — completed automated evidence, keep as every-commit gate
 
@@ -51,7 +68,7 @@ python build/scripts/verify_structure.py
 
 The preflight guards repository structure, required documentation, local Markdown links, XML/XAML parsing, solution/project wiring, selected privacy/security invariants, version/schema drift, masked secret inputs, complete-reset wiring, and other source contracts.
 
-The 2026-08-15 strict candidate passed this gate. It remains mandatory for every final release head.
+The current 2026-08-15 candidate passed this gate. It remains mandatory for every final release head.
 
 ### 2. Restore exact .NET/MAUI dependency graph — CI restore proven; release inventory still required
 
@@ -75,7 +92,7 @@ dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Rele
 dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release
 ```
 
-Current evidence is 97 unit + 109 integration + 35 UI-contract = **241/241 passed**.
+Current evidence is 97 unit + 141 integration + 35 UI-contract = **273/273 passed**.
 
 Highest-priority future failures to fix first remain:
 
@@ -118,13 +135,13 @@ Mac Catalyst on macOS/Xcode:
 dotnet build src/Finora.App/Finora.App.csproj -f net10.0-maccatalyst -c Release
 ```
 
-All four source-build targets passed on the strict 2026-08-15 candidate. Windows MSIX generation/signing, Android signed AAB packaging, Apple provisioning/signing/archive/notarization, and device behavior are separate unresolved gates.
+All four source-build targets passed on the current 2026-08-15 candidate. Windows MSIX generation/signing, Android signed AAB packaging, Apple provisioning/signing/archive/notarization, and device behavior are separate unresolved gates.
 
 ### 5. Compiler/analyzer/XAML warning policy — current strict gate completed
 
 The repository is configured for strict analysis. Fix source rather than suppressing warnings broadly.
 
-The current pass specifically eliminated the large `XC0022` compiled-binding warning set by adding explicit typed binding contracts across the affected pages/templates and then promoted `XC0022`, `XC0023`, and `XC0025` to errors.
+The current source retains explicit typed binding contracts across the affected pages/templates and promotes `XC0022`, `XC0023`, and `XC0025` to errors.
 
 Continue reviewing especially:
 
@@ -139,71 +156,92 @@ Continue reviewing especially:
 - filesystem/path operations;
 - cryptographic API warnings.
 
-### 6. Execute migration validation with synthetic copies
+### 6. Migration validation — automated core completed; installed-upgrade evidence still required
 
-Required cases:
+Current automated production-path coverage now includes:
 
-- fresh schema creation;
-- schema 1 → schema 2;
-- every later released schema in sequence when future versions exist;
-- interrupted/failed migration behavior;
-- duplicate migration execution;
-- malformed legacy data rejection;
-- foreign-key preservation;
-- finance data unchanged except intended migration transforms.
+- ✅ fresh schema creation and reopen;
+- ✅ schema 1 → schema 2;
+- ✅ invalid/current/future schema-version guards;
+- ✅ target changed-table validation before version advance;
+- ✅ SQLite foreign-key/integrity validation before version advance;
+- ✅ duplicate migration execution/idempotence;
+- ✅ representative legacy attachment data preservation and intended filename backfill;
+- ✅ malformed target-schema rollback without advancing the marker;
+- ✅ synthetic legacy foreign-key corruption rejection.
+
+Remaining release evidence:
+
+- install the actual prior released build/profile on each target family where applicable;
+- populate a representative complete synthetic finance graph;
+- upgrade with the candidate without clearing app data;
+- verify the schema marker, finance graph, receipts, and settings after startup migration;
+- run the normal data-integrity service after migration;
+- create a new encrypted backup from the migrated profile and restore it into a clean candidate profile;
+- repeat for every later released schema in sequence when future versions exist.
 
 Do not edit `schema.version` manually to make a test pass.
 
-### 7. Perform complete encrypted backup/restore validation
+### 7. Encrypted backup/restore — hostile automated matrix expanded; native failure injection still required
 
-Test synthetic datasets containing:
+Automated source/integration coverage now directly proves:
 
-- multiple accounts;
-- transactions;
-- transfers;
-- splits;
-- tags/categories;
-- budgets/custom periods;
-- savings goals/contributions;
-- recurring rules/occurrences;
-- reconciliation history;
-- receipt attachments.
+- ✅ create/preview/restore current schema;
+- ✅ wrong password rejection;
+- ✅ changed ciphertext/authentication rejection;
+- ✅ truncated encrypted file rejection;
+- ✅ authenticated unsupported schema rejection;
+- ✅ authenticated semantic relationship corruption rejection;
+- ✅ authenticated receipt lexical path escape rejection;
+- ✅ authenticated receipt-size drift rejection;
+- ✅ authenticated receipt SHA-256 drift rejection;
+- ✅ missing/invalid receipt checksum metadata rejection;
+- ✅ linked/reparse receipt-path refusal where host link creation is supported;
+- ✅ pending-marker recovery restores prior attachments;
+- ✅ committed restore finalizes new attachments;
+- ✅ incomplete rollback-copy behavior remains fail-safe;
+- ✅ linked recovery-journal refusal;
+- ✅ linked rollback-copy refusal while preserving live receipts and recovery state;
+- ✅ internal restore settings/markers remain excluded from portable state;
+- ✅ receipt/plaintext buffer clearing paths remain under regression coverage.
 
-Required backup cases:
+Still required with synthetic release-candidate profiles on native hosts/devices:
 
-- create;
-- preview;
-- restore to clean profile;
-- restore over existing data;
-- wrong password;
-- tampered ciphertext/tag;
-- truncated file;
-- unsupported schema;
-- semantically invalid authenticated graph;
-- invalid receipt path;
-- invalid receipt size/hash;
-- linked/reparse receipt path where host supports testing;
+- restore over a realistic existing profile;
 - process termination before database commit;
 - process termination after database commit;
-- startup recovery after interruption.
+- relaunch/startup recovery after interruption;
+- low disk during copy/staging;
+- locked/unavailable file behavior;
+- platform-native picker/share/save behavior;
+- final receipt byte/checksum round trip after those flows.
 
-### 8. Run data-integrity checks against clean and deliberately corrupted synthetic datasets
+### 8. Data-integrity diagnostics — automated corruption matrix expanded; release-profile run still required
 
-Verify the local integrity service catches expected corruption classes without leaking private finance contents.
+Automated tests now directly inject and detect representative corruption including:
 
-Required families include:
+- ✅ SQLite foreign-key violations;
+- ✅ transaction/account currency mismatch;
+- ✅ transfer pairing drift through existing regression coverage;
+- ✅ split-total corruption;
+- ✅ category parent cycles;
+- ✅ budget period/category corruption through existing regression coverage;
+- ✅ goal contribution/completion corruption through existing regression coverage;
+- ✅ recurrence dependency/payment corruption through existing regression coverage;
+- ✅ reconciliation corruption through existing regression coverage;
+- ✅ missing receipt files;
+- ✅ receipt-size drift;
+- ✅ changed receipt bytes/SHA-256 drift;
+- ✅ invalid/missing receipt checksum metadata;
+- ✅ unsafe attachment path/link behavior through existing regression coverage.
 
-- SQLite integrity;
-- foreign keys;
-- transaction/account/currency state;
-- transfer pairing;
-- split totals/signs;
-- category cycles;
-- budget period/category state;
-- goal contribution history/completion state;
-- recurrence dependencies/payment links;
-- reconciliation links/arithmetic;
-- receipt path/file/size/hash state.
+Still required before store-ready status:
+
+- run the integrity service against the complete migrated synthetic release profile;
+- run it again after full backup/restore on a clean profile;
+- confirm healthy reports on valid profiles;
+- confirm issue-code/count output remains sanitized on deliberately corrupted copies;
+- perform native filesystem corruption cases that cannot be faithfully modeled on every CI host.
 
 ### 9. Validate privacy mode screen by screen
 
@@ -744,14 +782,14 @@ Prefer privacy-preserving diagnostics and never send finance contents by default
 
 ## Recommended execution order
 
-The completed automated source-build block is now an every-commit regression gate rather than the next unknown. Continue in this order:
+The completed automated source-build and data-safety regression block is now an every-commit gate rather than the next unknown. Continue in this order:
 
-1. keep structural preflight + 241-test + four-target source-build + CodeQL gates green;
-2. execute fresh-install/schema-1→2 migration and integrity validation with synthetic data;
-3. execute backup/restore and process-interruption recovery validation;
+1. keep structural preflight + 273-test + four-target source-build + CodeQL gates green;
+2. execute a complete installed prior-version/schema-1→2 upgrade profile and run integrity/backup validation after migration;
+3. execute native process-interruption, low-disk, locked-file, and relaunch recovery validation;
 4. validate privacy/security/currency/time-zone behavior on native UI;
 5. validate notifications/app lock/biometrics/Windows Hello and capture limitations;
-6. validate attachment/file/share/import/export flows and path confinement;
+6. validate attachment/file/share/import/export flows and path confinement on native platforms;
 7. run accessibility/native UI QA;
 8. validate complete data deletion;
 9. build signed release candidates outside source control;
@@ -766,9 +804,9 @@ The completed automated source-build block is now an every-commit regression gat
 
 ## Definition of the next successful milestone
 
-The next milestone is now narrower because source compilation and automated tests have concrete evidence:
+The next milestone is narrower again because migration, hostile-backup, integrity-corruption, restore-link safety, source compilation, and automated tests now have concrete CI evidence:
 
-> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build gates and adds migration, backup/recovery, native privacy/security/accessibility, signed packaging, and store evidence for every applicable release checklist item.**
+> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build/data-safety gates and adds complete installed-upgrade, real recovery failure-injection, native privacy/security/accessibility, signed packaging, dependency-review, and store evidence for every applicable release checklist item.**
 
 After that milestone, P2 improvements can be prioritized using actual performance, accessibility, user feedback, and support data instead of guessing.
 
