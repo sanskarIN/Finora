@@ -90,6 +90,31 @@ public sealed class FinanceDataResetTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Reset_PreservesNonFinanceAppSettings()
+    {
+        const string preferenceKey = "test.ui.preference";
+        const string preferenceValue = "preserve-me";
+
+        await using (var db = await _factory.CreateDbContextAsync())
+        {
+            db.AppSettings.Add(new AppSetting
+            {
+                Key = preferenceKey,
+                Value = preferenceValue
+            });
+            await db.SaveChangesAsync();
+        }
+
+        var reset = await new FinanceDataResetService(_factory).DeleteAllFinanceDataAsync();
+        Assert.True(reset.IsSuccess, reset.Error);
+
+        await using var verify = await _factory.CreateDbContextAsync();
+        var preserved = await verify.AppSettings.SingleAsync(setting => setting.Key == preferenceKey);
+        Assert.Equal(preferenceValue, preserved.Value);
+        Assert.Equal("2", (await verify.AppSettings.SingleAsync(setting => setting.Key == "schema.version")).Value);
+    }
+
+    [Fact]
     public async Task CompleteResetWorkflow_RemovesReceipt_AndLeavesHealthyReusableDatabase()
     {
         var account = new Account { Name = "Reset cash", Type = AccountType.Cash, Currency = "INR" };
