@@ -51,6 +51,33 @@ A database migration must:
 8. be covered with representative synthetic prior-schema data;
 9. run integrity diagnostics after migration in release QA.
 
+## Current automated migration evidence — 2026-08-15
+
+Verified source candidate:
+
+`f80b29d44a225a6d745529519e6c59cadbc152a8`
+
+Finora CI run:
+
+`31875164890`
+
+The current production runner and integration suite now prove the following source-level cases for schema 1 → schema 2:
+
+- safe schema-version guards for missing/invalid/current/future markers;
+- fresh database initialization and reopen;
+- transactional v1 → v2 migration;
+- schema-2 target validation before advancing `schema.version`;
+- required changed-table column validation;
+- SQLite `foreign_key_check` and integrity validation before version-marker commit;
+- preservation of representative legacy attachment data while adding the intended schema-2 filename field;
+- idempotent repeated migration execution;
+- rollback when a pre-existing malformed target table makes the schema invalid;
+- rejection of synthetic legacy foreign-key corruption.
+
+The exact current automated result is retained in `docs/testing/CI_EVIDENCE.md`.
+
+This automated evidence does **not** replace installed prior-version upgrade testing on every target platform. Release QA still needs a representative previously released profile upgraded through the candidate binary, followed by integrity diagnostics, finance-data verification, receipt verification, and encrypted backup/restore.
+
 ## Adding schema v3 or later
 
 For a future schema v3:
@@ -84,6 +111,8 @@ Use synthetic prior-schema databases containing representative:
 - schema-specific metadata.
 
 Never commit real user databases as migration fixtures.
+
+The current compact migration fixtures intentionally target the production schema-transition invariants they exercise. A release upgrade profile should additionally model the complete released schema and representative finance graph rather than treating a partial fixture as full installed-version evidence.
 
 ## Backup format vs database schema
 
