@@ -34,6 +34,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Feature-change procedure | `docs/development/ADDING_A_FEATURE.md` | Current |
 | Test plan | `docs/TEST_PLAN.md` | Current |
 | Practical testing guide | `docs/testing/TESTING_GUIDE.md` | Current |
+| Dated CI/check-run evidence | `docs/testing/CI_EVIDENCE.md` | Current — strict 2026-08-15 candidate recorded |
 | Native validation matrix | `docs/testing/NATIVE_VALIDATION_MATRIX.md` | Current |
 | Android | `docs/platforms/ANDROID.md` | Current |
 | Windows | `docs/platforms/WINDOWS.md` | Current |
@@ -80,7 +81,7 @@ Documentation and UI must not describe that link as premium entitlement, subscri
 
 `build/scripts/verify_structure.py` treats the core documentation tree as required repository structure and validates repository-relative Markdown file links without network access.
 
-The documentation index itself links the remaining cross-cutting manuals, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
+The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md`, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
 
 The link check deliberately does not prove:
 
@@ -93,27 +94,29 @@ The link check deliberately does not prove:
 
 A platform document describes intended/current source behavior and required QA. It does not convert unexecuted native validation into a passing result.
 
-The release decision must still retain real evidence for:
+As of 2026-08-15, `docs/testing/CI_EVIDENCE.md` records actual structural, automated-test, four-target MAUI Release source-build, and CodeQL evidence for strict candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`.
 
-- .NET restore/build/tests;
-- MAUI target builds;
+The remaining release decision must still retain real evidence for:
+
+- signed/package artifacts;
 - Android device/emulator behavior;
 - Windows packaged behavior;
-- iOS/Mac Catalyst builds/devices;
+- iOS/Mac Catalyst provisioning/signing/device behavior;
+- migration and process-interrupted backup/restore recovery;
 - accessibility;
-- signing;
-- store declarations.
+- store declarations and policy review.
 
 ## Next-step priority rule
 
 `docs/NEXT_STEPS.md` is the current execution roadmap. The preferred order is:
 
-1. P0 financial correctness, build/test, migration, backup/recovery, privacy, native and accessibility validation;
-2. P1 release-candidate packaging/store/security/license evidence;
-3. P2 quality/performance/localization/product polish;
-4. P3 later-version cloud/account/collaboration/entitlement/FX/telemetry architecture.
+1. keep the proven structural/test/four-target source-build/CodeQL gates green;
+2. P0 migration, backup/recovery, privacy/security, native behavior and accessibility validation;
+3. P1 release-candidate packaging/store/security/license evidence;
+4. P2 quality/performance/localization/product polish;
+5. P3 later-version cloud/account/collaboration/entitlement/FX/telemetry architecture.
 
-Do not prioritize cosmetic expansion above an unresolved P0 data-corruption, migration, backup, privacy, or native-build failure.
+Do not prioritize cosmetic expansion above an unresolved P0 data-corruption, migration, backup, privacy, native-behavior, accessibility, or packaging failure.
 
 ## Update policy
 
@@ -175,6 +178,15 @@ Update:
 - Settings reference;
 - store metadata/release gates;
 - current target-store policy review.
+
+### New CI/release evidence
+
+Update:
+
+- `docs/testing/CI_EVIDENCE.md` with exact commit/run/job IDs and test counts;
+- project status and roadmap;
+- changelog and detailed ledger;
+- release/store checklists only for gates actually executed.
 
 ### New later-version network feature
 
