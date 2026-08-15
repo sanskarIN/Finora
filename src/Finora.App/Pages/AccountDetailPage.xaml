@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<ContentPage x:Class="Finora.App.AccountDetailPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Account details">
+<ContentPage x:Class="Finora.App.AccountDetailPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Finora.App"
+             xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
+             x:DataType="local:AccountDetailViewModel"
+             Title="Account details">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Account details" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
     <Border Style="{StaticResource Card}"><Label Text="{Binding Summary}" /></Border>
@@ -14,7 +20,7 @@
     <Button Text="Archive / restore account" Command="{Binding ArchiveOrRestoreCommand}" />
     <Button Text="Reconcile this account" Clicked="OnReconcileClicked" />
     <Label Text="Account transactions" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <CollectionView x:Name="AccountTransactions" ItemsSource="{Binding Transactions}" SelectionMode="Single" SelectionChanged="OnTransactionSelected" EmptyView="No transactions." HeightRequest="360"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" /></VerticalStackLayout><Label Grid.Column="1"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <CollectionView x:Name="AccountTransactions" ItemsSource="{Binding Transactions}" SelectionMode="Single" SelectionChanged="OnTransactionSelected" EmptyView="No transactions." HeightRequest="360"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:TransactionListItem"><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding CategoryName}" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" /></VerticalStackLayout><Label Grid.Column="1"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="{Binding Status}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
