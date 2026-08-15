@@ -84,7 +84,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force artifacts/native-logs | Out-Null
-          dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --verbosity normal *>&1 | Tee-Object -FilePath artifacts/native-logs/windows.log
+          dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 -p:WindowsPackageType=None --verbosity normal *>&1 | Tee-Object -FilePath artifacts/native-logs/windows.log
           exit $LASTEXITCODE
       - name: Upload Windows build diagnostics
         if: always()
