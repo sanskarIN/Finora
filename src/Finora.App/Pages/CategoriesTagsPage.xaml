@@ -1,24 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<ContentPage x:Class="Finora.App.CategoriesTagsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Categories &amp; Tags">
+<ContentPage x:Class="Finora.App.CategoriesTagsPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Finora.App"
+             xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
+             x:DataType="local:CategoriesTagsViewModel"
+             Title="Categories &amp; Tags">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Categories &amp; tags" Style="{StaticResource Title}" />
     <Label Text="Categories" Style="{StaticResource SectionTitle}" />
-    <Picker Title="Selected category" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedCategory}" />
+    <Picker Title="Selected category" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
     <Entry Placeholder="Category name" Text="{Binding CategoryName}" MaxLength="120" />
     <Entry Placeholder="Icon name" Text="{Binding CategoryIcon}" MaxLength="60" />
-    <Picker Title="Parent category (optional)" ItemsSource="{Binding ActiveCategories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding ParentCategory}" />
+    <Picker Title="Parent category (optional)" ItemsSource="{Binding ActiveCategories}" SelectedItem="{Binding ParentCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Create category" Command="{Binding NewCategoryCommand}" /><Button Grid.Column="1" Text="Update selected" Command="{Binding UpdateCategoryCommand}" /></Grid>
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Move up" Command="{Binding MoveUpCommand}" /><Button Grid.Column="1" Text="Move down" Command="{Binding MoveDownCommand}" /></Grid>
-    <Picker Title="Merge/reassign target" ItemsSource="{Binding ActiveCategories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding MergeTarget}" />
+    <Picker Title="Merge/reassign target" ItemsSource="{Binding ActiveCategories}" SelectedItem="{Binding MergeTarget}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
     <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8"><Button Text="Merge" Command="{Binding MergeCategoryCommand}" /><Button Grid.Column="1" Text="Archive" Command="{Binding ArchiveCategoryCommand}" /><Button Grid.Column="2" Text="Restore" Command="{Binding RestoreCategoryCommand}" /></Grid>
-    <CollectionView ItemsSource="{Binding Categories}" EmptyView="No categories." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding ParentName, StringFormat='Parent: {0}'}" FontSize="12" /></VerticalStackLayout><Label Grid.Column="1" Text="{Binding IsArchived, StringFormat='Archived: {0}'}" /></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <CollectionView ItemsSource="{Binding Categories}" EmptyView="No categories." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:CategoryInfo"><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding ParentName, StringFormat='Parent: {0}'}" FontSize="12" /></VerticalStackLayout><Label Grid.Column="1" Text="{Binding IsArchived, StringFormat='Archived: {0}'}" /></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="Tags" Style="{StaticResource SectionTitle}" />
-    <Picker Title="Selected tag" ItemsSource="{Binding Tags}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding SelectedTag}" />
+    <Picker Title="Selected tag" ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:TagInfo" /></Picker.ItemDisplayBinding></Picker>
     <Entry Placeholder="Tag name" Text="{Binding TagName}" MaxLength="80" />
     <Entry Placeholder="Optional color label" Text="{Binding TagColor}" MaxLength="32" />
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Create tag" Command="{Binding NewTagCommand}" /><Button Grid.Column="1" Text="Update selected" Command="{Binding UpdateTagCommand}" /></Grid>
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Archive tag" Command="{Binding ArchiveTagCommand}" /><Button Grid.Column="1" Text="Restore tag" Command="{Binding RestoreTagCommand}" /></Grid>
-    <CollectionView ItemsSource="{Binding Tags}" EmptyView="No tags." HeightRequest="220"><CollectionView.ItemTemplate><DataTemplate><Grid Padding="10" ColumnDefinitions="*,Auto"><Label Text="{Binding Name}" /><Label Grid.Column="1" Text="{Binding TransactionCount, StringFormat='{0} transaction(s)'}" /></Grid></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <CollectionView ItemsSource="{Binding Tags}" EmptyView="No tags." HeightRequest="220"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:TagInfo"><Grid Padding="10" ColumnDefinitions="*,Auto"><Label Text="{Binding Name}" /><Label Grid.Column="1" Text="{Binding TransactionCount, StringFormat='{0} transaction(s)'}" /></Grid></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="{Binding Status}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
