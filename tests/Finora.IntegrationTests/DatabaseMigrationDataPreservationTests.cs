@@ -24,7 +24,7 @@ public sealed class DatabaseMigrationDataPreservationTests
                     CREATE TABLE "Accounts" ("Id" TEXT NOT NULL PRIMARY KEY);
                     CREATE TABLE "Transactions" ("Id" TEXT NOT NULL PRIMARY KEY);
                     CREATE TABLE "Attachments" ("Id" TEXT NOT NULL PRIMARY KEY,"CreatedAtUtc" TEXT NOT NULL,"UpdatedAtUtc" TEXT NOT NULL,"TransactionId" TEXT NOT NULL,"RelativePath" TEXT NOT NULL,"ContentType" TEXT NOT NULL,"SizeBytes" INTEGER NOT NULL,"Sha256" BLOB NULL);
-                    INSERT INTO "AppSettings" ("Id","CreatedAtUtc","UpdatedAtUtc","Key","Value") VALUES ('schema-setting',datetime('now'),datetime('now'),'schema.version','1');
+                    INSERT INTO "AppSettings" ("Id","CreatedAtUtc","UpdatedAtUtc","Key","Value") VALUES ('11111111-1111-1111-1111-111111111111',datetime('now'),datetime('now'),'schema.version','1');
                     INSERT INTO "Accounts" ("Id") VALUES ('account-1');
                     INSERT INTO "Transactions" ("Id") VALUES ('transaction-1');
                     INSERT INTO "Attachments" ("Id","CreatedAtUtc","UpdatedAtUtc","TransactionId","RelativePath","ContentType","SizeBytes","Sha256")
