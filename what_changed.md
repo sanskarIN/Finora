@@ -3768,3 +3768,308 @@ Those remaining gates are preserved in `docs/NEXT_STEPS.md`, `docs/releases/RELE
 `docs/testing/CI_EVIDENCE.md` is now the dated automated proof record.
 
 `what_changed.md` remains the cumulative detailed project ledger and this update is intentionally the final content write of the 2026-08-15 continuation.
+
+---
+
+## 122. Migration, backup, integrity and recovery hardening continuation — 2026-08-15
+
+This continuation began from verified pre-hardening head:
+
+`31269a99a49c43ffdceb696eac216acff452c339`
+
+and produced final source candidate:
+
+`f80b29d44a225a6d745529519e6c59cadbc152a8`
+
+The source candidate is **34 focused commits ahead** of the base and contains production hardening plus targeted integration regression coverage for the P0 migration/backup/integrity/recovery workstream.
+
+No broad analyzer suppression or release-gate weakening was used to obtain a green result.
+
+---
+
+## 123. Database migration runner hardened before schema-version advancement
+
+`src/Finora.Infrastructure/DatabaseMigrationRunner.cs` was strengthened so a migration step does not merely execute DDL and then trust `CREATE TABLE IF NOT EXISTS` semantics.
+
+Current migration behavior now additionally validates:
+
+- the expected target table/column shape after the migration step;
+- SQLite `PRAGMA foreign_key_check` state;
+- SQLite integrity state;
+- the target schema before the `schema.version` marker is advanced.
+
+The version marker remains inside the same migration transaction, so malformed target state cannot be recorded as a successful schema upgrade.
+
+This closes the observed safety gap where an already-existing but malformed schema-2 table could otherwise satisfy `CREATE TABLE IF NOT EXISTS` while lacking the expected shape.
+
+---
+
+## 124. Migration integration matrix expanded
+
+New migration-focused integration files include:
+
+- `tests/Finora.IntegrationTests/DatabaseInitializationTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationDataPreservationTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationForeignKeyTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationRollbackTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationVersionGuardTests.cs`.
+
+The expanded suite proves:
+
+- fresh database initialization succeeds;
+- reopening a current database remains safe;
+- invalid/future schema markers fail closed;
+- current-schema execution is harmless;
+- schema 1 → schema 2 preserves representative attachment metadata;
+- intended filename backfill occurs;
+- repeated migration execution is idempotent;
+- malformed target schema causes rollback;
+- a failed migration does not advance the schema marker;
+- deliberately injected legacy foreign-key corruption is rejected.
+
+The synthetic v1 fixture remains test data only and is not represented as a substitute for installing an actual prior released binary on each platform.
+
+---
+
+## 125. Encrypted backup hostile-input coverage expanded
+
+New backup regression helpers/tests include:
+
+- `BackupTestCipher.cs` — test-only authenticated backup rewriter;
+- `BackupAttachmentFixture.cs` — reusable receipt-bearing synthetic fixture;
+- `BackupCryptographicFailureTests.cs`;
+- `BackupTruncationTests.cs`;
+- `BackupSchemaCompatibilityTests.cs`;
+- `BackupAuthenticatedGraphTamperTests.cs`;
+- `BackupAttachmentPathTamperTests.cs`;
+- `BackupAttachmentSizeTamperTests.cs`;
+- `BackupAttachmentHashTamperTests.cs`;
+- `BackupAttachmentMissingHashTests.cs`.
+
+The test-only authenticated rewriter is important because it exercises semantically malicious/corrupt plaintext behind a valid AES-GCM envelope, not only random ciphertext damage.
+
+Current automated cases include:
+
+- wrong password;
+- changed ciphertext/tag;
+- truncation;
+- authenticated unsupported/future schema;
+- authenticated semantic relationship corruption;
+- authenticated receipt path escape;
+- authenticated receipt size drift;
+- authenticated receipt SHA-256 drift;
+- missing receipt checksum metadata.
+
+---
+
+## 126. Receipt checksum consistency defect fixed
+
+`src/Finora.Infrastructure/BackupService.cs` previously treated receipt SHA-256 metadata as optional at backup validation time even though the integrity subsystem treats missing checksum metadata as invalid.
+
+The portable backup boundary now requires a valid **32-byte SHA-256 checksum** for receipt metadata.
+
+Creation, preview and restore therefore fail closed when receipt checksum metadata is absent or malformed instead of preserving/importing unverifiable attachment state.
+
+This aligns:
+
+- attachment metadata expectations;
+- integrity diagnostics;
+- backup creation validation;
+- authenticated preview validation;
+- restore validation.
+
+---
+
+## 127. Deliberate integrity-corruption regression matrix expanded
+
+New direct integrity regression files include:
+
+- `IntegritySplitTotalRegressionTests.cs`;
+- `IntegrityCurrencyRegressionTests.cs`;
+- `IntegrityMissingReceiptRegressionTests.cs`;
+- `IntegrityReceiptSizeRegressionTests.cs`;
+- `IntegrityReceiptHashRegressionTests.cs`;
+- `IntegrityReceiptHashMetadataRegressionTests.cs`;
+- `IntegrityCategoryCycleRegressionTests.cs`;
+- `IntegrityForeignKeyRegressionTests.cs`.
+
+These tests deliberately inject stored corruption and require `DataIntegrityService` to identify it without silently rewriting the underlying finance history.
+
+Covered classes now directly include:
+
+- split-total drift;
+- transaction/account currency mismatch;
+- missing receipt file;
+- receipt size drift;
+- changed receipt bytes/checksum drift;
+- missing/invalid receipt hash metadata;
+- category parent cycle;
+- SQLite foreign-key violation.
+
+This supplements existing transfer, budget, savings, recurrence, reconciliation, path-safety and privacy-safe integrity coverage.
+
+---
+
+## 128. Restore recovery linked-path regression coverage added
+
+Two additional host-conditional recovery tests were added:
+
+- `tests/Finora.IntegrationTests/RestoreRecoveryJournalLinkTests.cs`;
+- `tests/Finora.IntegrationTests/RestoreRecoveryRollbackLinkTests.cs`.
+
+The tests prove the recovery layer fails closed when:
+
+- the recovery journal is replaced by a symbolic link/reparse-style link supported by the host;
+- the verified rollback directory is a link.
+
+The rollback-link case also proves the live receipt tree and recovery state are preserved rather than deleting trusted live data and following an unsafe external filesystem target.
+
+These source tests complement, but do not replace, real process-kill/native-filesystem recovery injection.
+
+---
+
+## 129. Privacy logger rotation regression synchronized with completed writes
+
+The enlarged integration pass exposed a race in the existing privacy logger rotation assertion.
+
+The test could observe a newly created rotated/current file before the asynchronous append had completed.
+
+`tests/Finora.IntegrationTests/PrivacyLoggerTests.cs` now synchronizes through the logger/export gate before asserting rotated/current file state.
+
+This was a test-correctness fix; production privacy logging/redaction policy was not weakened.
+
+---
+
+## 130. Exact final source-candidate CI evidence
+
+Final source candidate:
+
+`f80b29d44a225a6d745529519e6c59cadbc152a8`
+
+Finora CI run:
+
+`31875164890`
+
+CodeQL run:
+
+`31875164864`
+
+Finora CI completed successfully with:
+
+- Structural preflight — job `94989697902` — success;
+- Core tests — job `94989708606` — success;
+- MAUI Windows — job `94989803961` — success;
+- MAUI Android — job `94989803975` — success;
+- MAUI iOS — job `94989804013` — success;
+- MAUI Mac Catalyst — job `94989803934` — success.
+
+Exact current automated result:
+
+- Unit: **97/97 passed**;
+- Integration: **141/141 passed**;
+- UI-contract: **35/35 passed**;
+- Total: **273/273 passed**;
+- Failed: **0**;
+- Skipped: **0**.
+
+The core run used Release configuration and the repository warnings-as-errors policy.
+
+CodeQL completed successfully on the same source candidate after restoring the app, building the Android analysis target and performing analysis.
+
+The exact retained evidence is recorded in `docs/testing/CI_EVIDENCE.md`.
+
+---
+
+## 131. Exact 34-commit changed-file inventory for this hardening pass
+
+Compared from `31269a99a49c43ffdceb696eac216acff452c339` to `f80b29d44a225a6d745529519e6c59cadbc152a8`, GitHub reports 34 commits and these changed files:
+
+### Production source
+
+- `src/Finora.Infrastructure/BackupService.cs`;
+- `src/Finora.Infrastructure/DatabaseMigrationRunner.cs`.
+
+### Existing regression source modified
+
+- `tests/Finora.IntegrationTests/PrivacyLoggerTests.cs`.
+
+### New backup regression infrastructure/tests
+
+- `tests/Finora.IntegrationTests/BackupAttachmentFixture.cs`;
+- `tests/Finora.IntegrationTests/BackupAttachmentHashTamperTests.cs`;
+- `tests/Finora.IntegrationTests/BackupAttachmentMissingHashTests.cs`;
+- `tests/Finora.IntegrationTests/BackupAttachmentPathTamperTests.cs`;
+- `tests/Finora.IntegrationTests/BackupAttachmentSizeTamperTests.cs`;
+- `tests/Finora.IntegrationTests/BackupAuthenticatedGraphTamperTests.cs`;
+- `tests/Finora.IntegrationTests/BackupCryptographicFailureTests.cs`;
+- `tests/Finora.IntegrationTests/BackupSchemaCompatibilityTests.cs`;
+- `tests/Finora.IntegrationTests/BackupTestCipher.cs`;
+- `tests/Finora.IntegrationTests/BackupTruncationTests.cs`.
+
+### New migration regression tests
+
+- `tests/Finora.IntegrationTests/DatabaseInitializationTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationDataPreservationTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationForeignKeyTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationRollbackTests.cs`;
+- `tests/Finora.IntegrationTests/DatabaseMigrationVersionGuardTests.cs`.
+
+### New integrity regression tests
+
+- `tests/Finora.IntegrationTests/IntegrityCategoryCycleRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegrityCurrencyRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegrityForeignKeyRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegrityMissingReceiptRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegrityReceiptHashMetadataRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegrityReceiptHashRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegrityReceiptSizeRegressionTests.cs`;
+- `tests/Finora.IntegrationTests/IntegritySplitTotalRegressionTests.cs`.
+
+### New restore-recovery regression tests
+
+- `tests/Finora.IntegrationTests/RestoreRecoveryJournalLinkTests.cs`;
+- `tests/Finora.IntegrationTests/RestoreRecoveryRollbackLinkTests.cs`.
+
+No source file from GitHub's compare result for this 34-commit pass is omitted from this inventory.
+
+---
+
+## 132. Evidence-based release boundary after migration/backup/integrity hardening
+
+Finora 0.2.0 now has automated evidence on the exact current source candidate for:
+
+- structural preflight;
+- 273/273 current automated tests;
+- Windows MAUI Release source compilation;
+- Android MAUI Release source compilation;
+- iOS MAUI Release source compilation;
+- Mac Catalyst MAUI Release source compilation;
+- CodeQL;
+- production migration target validation before schema-marker advancement;
+- migration version guards/data preservation/idempotence/rollback/foreign-key rejection;
+- hostile encrypted-backup validation;
+- mandatory portable receipt checksum metadata;
+- deliberate integrity-corruption detection;
+- linked restore-journal and rollback-copy fail-closed behavior.
+
+The following remain separate release gates and are **not** relabeled complete by these source/CI results:
+
+- signed Android AAB production packaging;
+- Windows MSIX generation/publisher/signing;
+- iOS provisioning/signing/archive/TestFlight/App Store;
+- Mac Catalyst signing/notarization/distribution packaging;
+- installed prior-version upgrade testing on every target;
+- actual process-kill/low-disk/locked-file restore failure injection;
+- real notification/biometric/Windows Hello behavior;
+- real file picker/share/receipt behavior;
+- Android merged-manifest and actual backup/device-transfer behavior;
+- TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast/reduced-motion QA;
+- final dependency-license/vulnerability acceptance;
+- live store-policy/privacy/data-safety/external-support-link approval;
+- complete absence of undiscovered defects.
+
+Those external gates remain in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHECKLIST.md`, `docs/releases/STORE_READINESS.md`, and `docs/testing/NATIVE_VALIDATION_MATRIX.md`.
+
+`docs/testing/CI_EVIDENCE.md` remains the commit/run/job evidence record.
+
+This `what_changed.md` update is intentionally the final content write for the migration/backup/integrity/recovery hardening continuation.
