@@ -4,6 +4,30 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Changed — 2026-08-15 cross-platform build and XAML stabilization
+
+- Split native CI validation into independent Windows, Android, iOS, and Mac Catalyst jobs so one platform failure no longer cancels another platform before diagnostics are collected.
+- Fixed Android platform-version analysis by using runtime-recognized API guards for biometric APIs and notification permission.
+- Resolved the Apple `AppDelegate` naming-analyzer conflict with a narrow required-entry-point suppression rather than weakening analyzers globally.
+- Updated Microsoft.EntityFrameworkCore and Microsoft.EntityFrameworkCore.Sqlite to the 10.0.10 servicing line, clearing the linker metadata failure observed during native Release builds.
+- Separated Windows source compilation from MSIX packaging in CI by validating Windows with `WindowsPackageType=None`; signed/package identity validation remains a separate release gate.
+- Audited native diagnostics and found a large compiled-binding warning set (`XC0022`) across the app's XAML surfaces.
+- Added explicit `x:DataType` contracts to the affected pages, templates, and picker item bindings instead of suppressing compiled-binding diagnostics.
+- Promoted `XC0022`, `XC0023`, and `XC0025` to build errors so missing/incorrect compiled-binding context cannot silently return.
+- Updated the primary Finora CI workflow to Node-24-compatible current GitHub Action majors: checkout v7, setup-python v7, setup-dotnet v6, and upload-artifact v7.
+
+### Verified — 2026-08-15 automated evidence
+
+- Strict source candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7` passed Finora CI run `31872362394` and CodeQL run `31872362398`.
+- Structural preflight passed.
+- Unit tests passed 97/97.
+- Integration tests passed 109/109.
+- UI-contract tests passed 35/35.
+- Total automated tests passed: 241/241, with zero failures.
+- Release source builds passed independently for Windows, Android, iOS, and Mac Catalyst while the compiled-binding warning classes above were fatal.
+- Added `docs/testing/CI_EVIDENCE.md` to retain exact commit/run/job boundaries and explicitly distinguish source-build evidence from signed packaging, device, recovery, accessibility, and store evidence.
+- No claim is made that successful source builds complete Windows MSIX signing, Android signed AAB packaging, Apple provisioning/notarization, physical-device QA, process-kill restore testing, accessibility, or store submission.
+
 ### Added — 2026-08-12 project support and next-step roadmap
 
 - Added canonical `AppConstants.BuyMeACoffeeUrl` for `https://buymeacoffee.com/sanskarIN`.
