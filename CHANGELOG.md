@@ -4,6 +4,28 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Changed — 2026-08-15 migration, backup, integrity and recovery hardening
+
+- Hardened schema migration so the version marker advances only after required target-column validation plus SQLite foreign-key/integrity validation succeeds inside the migration transaction.
+- Added schema-version guard, fresh-initialization/reopen, v1→v2 data-preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption regression coverage.
+- Expanded encrypted-backup hostile-input testing for wrong password, ciphertext tampering, truncation, authenticated unsupported schema, authenticated relationship corruption, and authenticated receipt path/size/hash corruption.
+- Tightened portable receipt validation so backup creation/preview/restore require valid 32-byte SHA-256 metadata instead of accepting missing checksum metadata.
+- Expanded deliberate data-integrity corruption tests for split totals, transaction/account currency drift, missing/changed receipt files, invalid receipt checksum metadata, category parent cycles, and SQLite foreign-key violations.
+- Corrected privacy-log rotation test synchronization so assertions observe completed asynchronous writes instead of racing a newly created rotated file.
+- Added recovery regression coverage proving linked recovery journals and linked rollback copies fail closed without following unsafe filesystem targets or discarding live receipt/recovery state.
+
+### Verified — 2026-08-15 data-safety candidate
+
+- Source candidate `f80b29d44a225a6d745529519e6c59cadbc152a8` passed Finora CI run `31875164890` and CodeQL run `31875164864`.
+- Structural preflight passed.
+- Unit tests passed 97/97.
+- Integration tests passed 141/141.
+- UI-contract tests passed 35/35.
+- Total automated tests passed: 273/273, with zero failures.
+- Release source builds passed independently for Windows, Android, iOS, and Mac Catalyst with warnings-as-errors and the strict XAML compiled-binding diagnostics still active.
+- Retained core and native diagnostic artifacts are recorded with job/artifact IDs and digests in `docs/testing/CI_EVIDENCE.md`.
+- Installed prior-version upgrade testing, real process-kill/low-disk recovery injection, signed packaging, physical-device QA, accessibility, dependency acceptance, and store submission remain separate release gates.
+
 ### Changed — 2026-08-15 cross-platform build and XAML stabilization
 
 - Split native CI validation into independent Windows, Android, iOS, and Mac Catalyst jobs so one platform failure no longer cancels another platform before diagnostics are collected.
@@ -16,9 +38,9 @@ All notable Finora changes are documented here. The project follows semantic-ver
 - Promoted `XC0022`, `XC0023`, and `XC0025` to build errors so missing/incorrect compiled-binding context cannot silently return.
 - Updated the primary Finora CI workflow to Node-24-compatible current GitHub Action majors: checkout v7, setup-python v7, setup-dotnet v6, and upload-artifact v7.
 
-### Verified — 2026-08-15 automated evidence
+### Verified — 2026-08-15 earlier automated evidence
 
-- Strict source candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7` passed Finora CI run `31872362394` and CodeQL run `31872362398`.
+- Earlier strict source candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7` passed Finora CI run `31872362394` and CodeQL run `31872362398`.
 - Structural preflight passed.
 - Unit tests passed 97/97.
 - Integration tests passed 109/109.
@@ -26,7 +48,7 @@ All notable Finora changes are documented here. The project follows semantic-ver
 - Total automated tests passed: 241/241, with zero failures.
 - Release source builds passed independently for Windows, Android, iOS, and Mac Catalyst while the compiled-binding warning classes above were fatal.
 - Added `docs/testing/CI_EVIDENCE.md` to retain exact commit/run/job boundaries and explicitly distinguish source-build evidence from signed packaging, device, recovery, accessibility, and store evidence.
-- No claim is made that successful source builds complete Windows MSIX signing, Android signed AAB packaging, Apple provisioning/notarization, physical-device QA, process-kill restore testing, accessibility, or store submission.
+- This earlier evidence is retained as stabilization history; the newer `f80b29d…` data-safety candidate is the current automated baseline.
 
 ### Added — 2026-08-12 project support and next-step roadmap
 
