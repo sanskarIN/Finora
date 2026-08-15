@@ -1,6 +1,6 @@
 # What Changed — Finora
 
-Last continuation: **2026-08-12**  
+Last continuation: **2026-08-15**  
 Repository: https://github.com/sanskarIN/Finora  
 Current branch: **main**  
 Current source line: **Finora 0.2.0 (build 2)**  
@@ -3383,3 +3383,388 @@ Remote accounts, cloud sync, collaboration, secure commercial entitlement, expli
 `docs/DOCUMENTATION_STATUS.md` remains the documentation coverage/update-policy matrix.
 
 `what_changed.md` remains the cumulative detailed project ledger and is intentionally the final content write of this continuation.
+
+---
+
+## 105. Cross-platform build stabilization continuation — 2026-08-14 to 2026-08-15
+
+This continuation resumed from a large sequence of MAUI/platform/XAML build-hardening commits on `main` and converted the previous source-only validation uncertainty into concrete GitHub Actions evidence.
+
+The work intentionally followed actual CI diagnostics rather than weakening analyzers or broadly suppressing failures.
+
+Primary objectives completed in this continuation:
+
+- expose every native platform failure independently;
+- fix Android platform-version analyzer issues;
+- fix Apple analyzer/platform entry-point conflict;
+- remove the EF Core linker failure with a matching servicing-line dependency update;
+- separate Windows source compilation from MSIX packaging-toolchain validation;
+- run and retain exact automated test evidence;
+- run all four MAUI Release source-build targets;
+- run CodeQL;
+- audit successful native logs rather than trusting only green job status;
+- eliminate the large XAML compiled-binding warning set;
+- make the relevant XAML binding diagnostics fatal so the warning class cannot silently regress;
+- update stale GitHub Actions runtime majors;
+- add a permanent CI evidence document;
+- align project status, roadmap, changelog, testing guide, documentation index/status, and this cumulative ledger.
+
+---
+
+## 106. Independent native CI topology
+
+The earlier native workflow layout allowed one target failure to hide another target's diagnostics because Windows preceded Android and iOS preceded Mac Catalyst in paired jobs.
+
+The workflow was changed so these targets execute as independent jobs:
+
+- MAUI Windows;
+- MAUI Android;
+- MAUI iOS;
+- MAUI Mac Catalyst.
+
+Each job retains its own diagnostic artifact/log.
+
+This was a diagnostic correctness change: a failure on one target no longer cancels a different target before its compile/link error can be observed.
+
+---
+
+## 107. Android API-level analyzer fixes
+
+Two source-level Android issues were exposed by CodeQL/platform analysis and fixed in focused commits.
+
+### Biometric APIs
+
+`src/Finora.App/PlatformBiometricService.cs` now uses a runtime-recognized:
+
+`OperatingSystem.IsAndroidVersionAtLeast(28)`
+
+guard around Android API 28+ biometric APIs.
+
+The activity main executor is also explicitly validated rather than flowing a possibly-null executor into the platform builder.
+
+Representative commit:
+
+`fix(android): guard biometric APIs by platform version`
+
+### Notification permission
+
+The Android notification permission provider now uses:
+
+`OperatingSystem.IsAndroidVersionAtLeast(33)`
+
+before referencing the Android 13 `POST_NOTIFICATIONS` permission.
+
+Representative commit:
+
+`fix(android): guard notification permission by API level`
+
+These changes allow the platform compatibility analyzer to prove the guards instead of relying on checks it did not recognize.
+
+---
+
+## 108. Apple AppDelegate analyzer conflict fixed narrowly
+
+Mac Catalyst exposed `CA1711` on the required Apple entry-point class name `AppDelegate`.
+
+The conflict was handled at the required Apple entry-point boundary rather than disabling naming analyzers for the project.
+
+This keeps analyzer coverage intact for ordinary application code while permitting the platform-mandated delegate name.
+
+---
+
+## 109. EF Core native linker failure fixed with servicing packages
+
+The iOS/native linker failure was traced to `IL2037` emitted from Microsoft.EntityFrameworkCore metadata around `ExecuteUpdateAsync` rather than to Finora's own JSON/reflection code.
+
+The centrally pinned EF Core packages were moved from 10.0.0 to 10.0.10:
+
+- `Microsoft.EntityFrameworkCore` 10.0.10;
+- `Microsoft.EntityFrameworkCore.Sqlite` 10.0.10.
+
+This aligned the application with the current .NET 10 servicing toolchain used by the CI runners and cleared the observed linker failure across the native builds.
+
+Unrelated package versions were not changed as part of that fix.
+
+---
+
+## 110. Windows source validation separated from MSIX packaging
+
+The Windows failure was isolated to the Windows App SDK manifest/package generation task loading `System.Security.Permissions`, not to Finora C# compilation.
+
+The CI Windows source-build gate now uses:
+
+`WindowsPackageType=None`
+
+This lets CI validate the Windows MAUI application source, analyzers, XAML, and references independently from Microsoft Store/MSIX identity/signing/toolchain work.
+
+This does **not** mark MSIX packaging complete.
+
+Still required separately:
+
+- final Windows package identity;
+- publisher configuration;
+- MSIX generation;
+- signing;
+- packaged toast/Hello/file behavior;
+- Store validation.
+
+Representative commit:
+
+`fa5055b…` — Windows compile-only CI correction.
+
+---
+
+## 111. Exact automated test evidence established
+
+GitHub Actions retained exact test evidence for strict source candidate:
+
+`f7dbfbb8691edc79cee559101f284ccd90a44cf7`
+
+Finora CI run:
+
+`31872362394`
+
+Results:
+
+- Unit: **97/97 passed**;
+- Integration: **109/109 passed**;
+- UI-contract: **35/35 passed**;
+- Total: **241/241 passed**;
+- Failures: **0**.
+
+Structural preflight also passed on that same candidate.
+
+This supersedes the older Aug 12 source-only statements in sections 3, 60, 61, and 103 for the newer Aug 15 evidence point. Those historical sections remain unchanged because they accurately recorded the validation state at the time they were written.
+
+---
+
+## 112. Four-target MAUI Release source-build evidence established
+
+The same strict candidate passed all four independent native Release source-build jobs:
+
+- Windows job `94983017634` — success;
+- Android job `94983017627` — success;
+- iOS job `94983017606` — success;
+- Mac Catalyst job `94983017649` — success.
+
+The iOS job completed its actual `Build iOS with analyzers/warnings as errors` step successfully on the GitHub macOS runner.
+
+This proves source compilation for the tested target frameworks and configuration. It does not prove signed packages, physical-device behavior, app-store submission, accessibility, or OS-level notification/biometric behavior.
+
+---
+
+## 113. CodeQL evidence established
+
+CodeQL run:
+
+`31872362398`
+
+completed successfully for strict source candidate:
+
+`f7dbfbb8691edc79cee559101f284ccd90a44cf7`.
+
+Its Android analysis build completed successfully before the CodeQL analysis step closed green.
+
+The earlier Android platform-version findings were no longer the blocking source failures after the focused guard fixes.
+
+---
+
+## 114. Native log audit exposed 1,152 XAML compiled-binding warnings
+
+Successful native jobs were not treated as the end of quality validation.
+
+The native build logs were inspected and exposed approximately **1,152 `XC0022` warnings per native build**, concentrated across 16 application XAML pages.
+
+The warnings indicated bindings that could not be compiled because binding-context/template types were not explicit enough.
+
+The warning set was fixed instead of hidden with `NoWarn`, `x:Object`, or `x:Null` shortcuts.
+
+---
+
+## 115. Typed XAML binding migration completed
+
+The affected XAML surfaces were updated with real compile-time binding contracts, including:
+
+- page-level `x:DataType` declarations;
+- typed `DataTemplate` declarations;
+- typed picker/item display bindings;
+- nested collection item types where required.
+
+The work was intentionally split across many focused page-level commits.
+
+Known focused commits from the pass include:
+
+- Dashboard: `e019162a41ff02c0aaec3aa6740caea962d9b451`;
+- Reports: `a3549edd20aa1aee980057a9c6fcbbd7f64375bc`;
+- Transaction Detail: `9fa36787e8b5684a59626396b59b9cf203fe8e03`;
+- Recurring: `ffdf15ee2bb6a333ba9b4435d0287cfd21ab9034`.
+
+Other affected finance/settings/onboarding/list pages were migrated in separate commits as part of the same pass.
+
+---
+
+## 116. XAML warning classes are now build-breaking regressions
+
+After the binding migration, `src/Finora.App/Finora.App.csproj` was changed so these diagnostics are errors:
+
+- `XC0022`;
+- `XC0023`;
+- `XC0025`.
+
+Strict enforcement commit:
+
+`f7dbfbb8691edc79cee559101f284ccd90a44cf7`
+
+Commit message:
+
+`build(xaml): enforce compiled binding diagnostics`
+
+The full four-target successful native run occurred on this exact strict candidate, so the migration is validated under the policy that makes those warning classes fatal.
+
+---
+
+## 117. GitHub Actions Node runtime maintenance
+
+The strict core test log exposed GitHub-hosted warnings that several action majors in `.github/workflows/ci.yml` still targeted the deprecated Node 20 runtime and were being forced to Node 24.
+
+The primary Finora CI workflow was updated to:
+
+- `actions/checkout@v7`;
+- `actions/setup-python@v7`;
+- `actions/setup-dotnet@v6`;
+- `actions/upload-artifact@v7`.
+
+CI-only commit:
+
+`6ba519bf69174c68b67f8595872546a259c783dc`
+
+Commit message:
+
+`ci: update actions to Node 24 runtimes`
+
+CodeQL and dependency-review workflows were already using current compatible majors and did not require the same migration.
+
+The follow-up run `31873092936` successfully executed the updated checkout/Python structural path and progressed through updated .NET setup/restores/test execution before the intentional documentation commit sequence superseded the run through CI concurrency.
+
+---
+
+## 118. CI evidence documentation added
+
+New file:
+
+`docs/testing/CI_EVIDENCE.md`
+
+records:
+
+- exact strict source candidate SHA;
+- Finora CI and CodeQL run IDs;
+- exact 241-test result;
+- native job IDs;
+- Windows unpackaged source-build boundary;
+- strict XAML diagnostic policy;
+- CI runtime-maintenance commit/run;
+- what the evidence proves;
+- what remains external.
+
+The evidence document is linked from:
+
+- `docs/README.md`;
+- `docs/testing/TESTING_GUIDE.md`;
+- `docs/DOCUMENTATION_STATUS.md`.
+
+Repository-relative Markdown link validation therefore protects the evidence link from silently becoming broken.
+
+---
+
+## 119. Status, roadmap, and changelog advanced
+
+`PROJECT_STATUS.md` now has a 2026-08-15 review state and records actual automated evidence instead of leaving CI as entirely unconfirmed.
+
+`docs/NEXT_STEPS.md` now treats structural preflight, the 241 tests, four-target Release source builds, CodeQL, and strict XAML diagnostics as completed automated regression gates for the recorded candidate.
+
+Remaining P0/P1 priority is explicitly shifted to evidence that source CI cannot prove:
+
+- migration/upgrade validation;
+- backup/restore process-interruption recovery;
+- integrity checks on migrated/restored datasets;
+- native privacy-mode behavior;
+- currency/time-zone/DST QA;
+- native notification lifecycle;
+- PIN/biometric/Windows Hello/capture behavior;
+- attachment/file picker/share flows;
+- accessibility;
+- complete finance-data deletion;
+- signed packaging;
+- exact dependency/license/security review;
+- current store-policy/privacy/data-safety review.
+
+`CHANGELOG.md` records the cross-platform build, linker, XAML, CI-runtime, and evidence changes under Unreleased.
+
+---
+
+## 120. 2026-08-15 final continuation changed-file inventory
+
+This continuation changed source/build/documentation areas including:
+
+### Platform source
+
+- `src/Finora.App/PlatformBiometricService.cs` — analyzer-recognized Android API guard and executor safety;
+- Android notification-permission source — analyzer-recognized API 33 guard;
+- Apple platform entry-point source — narrow `AppDelegate` analyzer handling.
+
+### Dependency/build configuration
+
+- `Directory.Packages.props` — EF Core/SQLite servicing update to 10.0.10;
+- `src/Finora.App/Finora.App.csproj` — strict compiled-binding diagnostic enforcement;
+- `.github/workflows/ci.yml` — independent native targets, Windows unpackaged source validation, current Node-24-compatible action majors.
+
+### XAML
+
+The binding-contract migration covered the affected application pages/templates, including Dashboard, Reports, Transaction Detail, Recurring, and the other warning-producing finance/settings/onboarding/list surfaces.
+
+### Documentation/evidence
+
+- `docs/testing/CI_EVIDENCE.md` — new exact evidence record;
+- `docs/README.md` — evidence link;
+- `docs/testing/TESTING_GUIDE.md` — evidence policy/link;
+- `PROJECT_STATUS.md` — verified automated status;
+- `docs/NEXT_STEPS.md` — advanced automated gates and remaining P0/P1 work;
+- `CHANGELOG.md` — stabilization/evidence history;
+- `docs/DOCUMENTATION_STATUS.md` — CI evidence coverage/update policy;
+- `what_changed.md` — this cumulative final ledger update.
+
+The exact Git history is authoritative for every focused page-level/build-fix commit and its ordering.
+
+---
+
+## 121. Current evidence-based release boundary after this continuation
+
+Finora 0.2.0 now has concrete automated evidence for:
+
+- structural preflight;
+- exact current Unit/Integration/UI-contract execution;
+- **241/241 passing automated tests**;
+- Windows MAUI Release source compilation;
+- Android MAUI Release source compilation;
+- iOS MAUI Release source compilation;
+- Mac Catalyst MAUI Release source compilation;
+- strict XAML compiled-binding diagnostics;
+- CodeQL.
+
+This continuation still does **not** claim:
+
+- a signed Android AAB production artifact;
+- a generated/signed production Windows MSIX;
+- Apple provisioning/signing/notarization/store archives;
+- physical-device/emulator native behavior for notifications/biometrics/files/backup/capture;
+- process-kill restore recovery evidence on target devices;
+- TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast validation;
+- final dependency-license/vulnerability acceptance;
+- current store approval or current external-support-link policy approval;
+- complete absence of undiscovered defects.
+
+Those remaining gates are preserved in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHECKLIST.md`, `docs/releases/STORE_READINESS.md`, and `docs/testing/NATIVE_VALIDATION_MATRIX.md`.
+
+`docs/testing/CI_EVIDENCE.md` is now the dated automated proof record.
+
+`what_changed.md` remains the cumulative detailed project ledger and this update is intentionally the final content write of the 2026-08-15 continuation.
