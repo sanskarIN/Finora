@@ -34,8 +34,10 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
                 {
                     if (attachment.SizeBytes != bytes.LongLength)
                         throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' size does not match the database record.");
+                    if (attachment.Sha256 is not { Length: 32 })
+                        throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' checksum metadata is missing or invalid.");
                     var hash = SHA256.HashData(bytes);
-                    if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
+                    if (!CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
                         throw new InvalidDataException($"Attachment '{attachment.OriginalFileName}' failed integrity verification.");
                     blobs.Add(new AttachmentBlob(attachment.Id, bytes));
                     bytes = [];
@@ -246,8 +248,9 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
                 _ = ResolveAttachmentPath(attachment.RelativePath);
                 var blob = snapshot.AttachmentBlobs.Single(x => x.AttachmentId == attachment.Id);
                 if (blob.Data.LongLength != attachment.SizeBytes) throw new InvalidDataException("Backup attachment size is invalid.");
+                if (attachment.Sha256 is not { Length: 32 }) throw new InvalidDataException("Backup attachment checksum metadata is missing or invalid.");
                 var hash = SHA256.HashData(blob.Data);
-                if (attachment.Sha256 is not null && !CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
+                if (!CryptographicOperations.FixedTimeEquals(hash, attachment.Sha256))
                     throw new InvalidDataException("Backup attachment integrity check failed.");
             }
             return snapshot;
