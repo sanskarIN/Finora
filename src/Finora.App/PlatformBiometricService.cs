@@ -21,7 +21,7 @@ public sealed class PlatformBiometricService : IBiometricService
     {
         cancellationToken.ThrowIfCancellationRequested();
 #if ANDROID
-        if (Build.VERSION.SdkInt < BuildVersionCodes.P) return Task.FromResult(BiometricAvailability.Unsupported);
+        if (!OperatingSystem.IsAndroidVersionAtLeast(28)) return Task.FromResult(BiometricAvailability.Unsupported);
         var activity = Platform.CurrentActivity; if (activity is null) return Task.FromResult(BiometricAvailability.NotAvailable);
         var keyguard = (KeyguardManager?)activity.GetSystemService(Context.KeyguardService);
         if (keyguard?.IsDeviceSecure != true) return Task.FromResult(BiometricAvailability.NotEnrolled);
@@ -40,15 +40,16 @@ public sealed class PlatformBiometricService : IBiometricService
     {
         reason = string.IsNullOrWhiteSpace(reason) ? "Confirm your identity to unlock Finora." : reason.Trim();
 #if ANDROID
-        if (Build.VERSION.SdkInt < BuildVersionCodes.P) return FinoraResult.Failure("Biometric unlock requires Android 9 or later on this build.");
+        if (!OperatingSystem.IsAndroidVersionAtLeast(28)) return FinoraResult.Failure("Biometric unlock requires Android 9 or later on this build.");
         var activity = Platform.CurrentActivity; if (activity is null) return FinoraResult.Failure("Biometric authentication is unavailable right now.");
+        var executor = activity.MainExecutor; if (executor is null) return FinoraResult.Failure("Biometric authentication is unavailable right now.");
         var tcs = new TaskCompletionSource<FinoraResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var signal = new CancellationSignal(); using var registration = cancellationToken.Register(signal.Cancel);
         var callback = new AndroidAuthenticationCallback(tcs); var negative = new AndroidNegativeButtonListener(tcs);
         try
         {
-            var prompt = new BiometricPrompt.Builder(activity).SetTitle("Unlock Finora").SetSubtitle(reason).SetNegativeButton("Use PIN", activity.MainExecutor, negative).Build();
-            prompt.Authenticate(signal, activity.MainExecutor, callback); return await tcs.Task.ConfigureAwait(false);
+            var prompt = new BiometricPrompt.Builder(activity).SetTitle("Unlock Finora").SetSubtitle(reason).SetNegativeButton("Use PIN", executor, negative).Build();
+            prompt.Authenticate(signal, executor, callback); return await tcs.Task.ConfigureAwait(false);
         }
         catch (Exception) { return FinoraResult.Failure("Biometric authentication is unavailable on this device."); }
 #elif IOS || MACCATALYST
