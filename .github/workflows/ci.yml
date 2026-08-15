@@ -25,9 +25,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - name: Validate repository structure
@@ -40,9 +40,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Restore unit tests
@@ -59,7 +59,7 @@ jobs:
         run: dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release --no-restore --logger "trx;LogFileName=ui-contract.trx"
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: core-test-results
           path: '**/*.trx'
@@ -73,9 +73,9 @@ jobs:
     timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
@@ -88,7 +88,7 @@ jobs:
           exit $LASTEXITCODE
       - name: Upload Windows build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-windows
           path: artifacts/native-logs/windows.log
@@ -102,9 +102,9 @@ jobs:
     timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
@@ -117,7 +117,7 @@ jobs:
           exit $LASTEXITCODE
       - name: Upload Android build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-android
           path: artifacts/native-logs/android.log
@@ -131,9 +131,9 @@ jobs:
     timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
@@ -146,7 +146,7 @@ jobs:
           dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --verbosity normal 2>&1 | tee artifacts/native-logs/ios.log
       - name: Upload iOS build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-ios
           path: artifacts/native-logs/ios.log
@@ -160,9 +160,9 @@ jobs:
     timeout-minutes: 50
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - name: Install MAUI workload
@@ -175,7 +175,7 @@ jobs:
           dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --verbosity normal 2>&1 | tee artifacts/native-logs/maccatalyst.log
       - name: Upload Mac Catalyst build diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-build-maccatalyst
           path: artifacts/native-logs/maccatalyst.log
