@@ -139,8 +139,9 @@ public sealed class FinanceDataResetTests : IAsyncLifetime
             Type = AccountType.Cash,
             Currency = "INR"
         };
-        var saveAccount = await _store.SaveAccountAsync(freshAccount);
-        Assert.True(saveAccount.IsSuccess, saveAccount.Error);
+        var savedAccountId = await _store.SaveAccountAsync(freshAccount);
+        Assert.Equal(freshAccount.Id, savedAccountId);
+        Assert.NotEqual(Guid.Empty, savedAccountId);
 
         var freshTransaction = TransactionFactory.Create(
             TransactionType.Income,
@@ -149,8 +150,9 @@ public sealed class FinanceDataResetTests : IAsyncLifetime
             freshAccount.Id,
             DateTimeOffset.UtcNow,
             merchant: "Synthetic post-reset income");
-        var saveTransaction = await _store.SaveTransactionAsync(freshTransaction);
-        Assert.True(saveTransaction.IsSuccess, saveTransaction.Error);
+        var savedTransactionId = await _store.SaveTransactionAsync(freshTransaction);
+        Assert.Equal(freshTransaction.Id, savedTransactionId);
+        Assert.NotEqual(Guid.Empty, savedTransactionId);
 
         await using (var verify = await _factory.CreateDbContextAsync())
         {
