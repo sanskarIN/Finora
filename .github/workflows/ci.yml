@@ -81,7 +81,19 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
       - name: Build Windows with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/native-logs | Out-Null
+          dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-windows10.0.19041.0 --verbosity normal *>&1 | Tee-Object -FilePath artifacts/native-logs/windows.log
+          exit $LASTEXITCODE
+      - name: Upload Windows build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-windows
+          path: artifacts/native-logs/windows.log
+          if-no-files-found: ignore
+          retention-days: 14
 
   maui-android:
     name: MAUI Android
@@ -98,7 +110,19 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
       - name: Build Android with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/native-logs | Out-Null
+          dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-android --verbosity normal *>&1 | Tee-Object -FilePath artifacts/native-logs/android.log
+          exit $LASTEXITCODE
+      - name: Upload Android build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-android
+          path: artifacts/native-logs/android.log
+          if-no-files-found: ignore
+          retention-days: 14
 
   maui-ios:
     name: MAUI iOS
@@ -115,7 +139,19 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
       - name: Build iOS with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios
+        shell: bash
+        run: |
+          mkdir -p artifacts/native-logs
+          set -o pipefail
+          dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-ios --verbosity normal 2>&1 | tee artifacts/native-logs/ios.log
+      - name: Upload iOS build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-ios
+          path: artifacts/native-logs/ios.log
+          if-no-files-found: ignore
+          retention-days: 14
 
   maui-maccatalyst:
     name: MAUI Mac Catalyst
@@ -132,4 +168,16 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
       - name: Build Mac Catalyst with analyzers/warnings as errors
-        run: dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst
+        shell: bash
+        run: |
+          mkdir -p artifacts/native-logs
+          set -o pipefail
+          dotnet build src/Finora.App/Finora.App.csproj -c Release -f net10.0-maccatalyst --verbosity normal 2>&1 | tee artifacts/native-logs/maccatalyst.log
+      - name: Upload Mac Catalyst build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-build-maccatalyst
+          path: artifacts/native-logs/maccatalyst.log
+          if-no-files-found: ignore
+          retention-days: 14
