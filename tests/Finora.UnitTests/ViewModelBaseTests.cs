@@ -136,17 +136,22 @@ public sealed class ViewModelBaseTests
     public async Task AsyncCommand_ContainsUnexpectedFailure_AndInvokesPrivacyHook()
     {
         var observed = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var restored = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var previous = AsyncCommand.UnexpectedFailureHandler;
         AsyncCommand.UnexpectedFailureHandler = exception => observed.TrySetResult(exception);
         try
         {
             var command = new AsyncCommand(() => throw new IOException("private path detail"));
+            command.CanExecuteChanged += (_, _) =>
+            {
+                if (command.CanExecute(null)) restored.TrySetResult(true);
+            };
 
             command.Execute(null);
             var exception = await observed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            await restored.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
             Assert.IsType<IOException>(exception);
-            await Task.Yield();
             Assert.True(command.CanExecute(null));
         }
         finally
