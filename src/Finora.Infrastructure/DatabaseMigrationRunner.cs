@@ -1,5 +1,7 @@
+using System.Data.Common;
 using Finora.Shared;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Finora.Infrastructure;
 
@@ -20,10 +22,13 @@ public sealed class DatabaseMigrationRunner
             {
                 case 2:
                     await MigrateFrom1To2Async(db, cancellationToken).ConfigureAwait(false);
+                    await ValidateSchema2Async(db, cancellationToken).ConfigureAwait(false);
                     break;
                 default:
                     throw new InvalidOperationException($"No database migration is registered for schema {currentVersion} to {nextVersion}.");
             }
+
+            await ValidateDatabaseHealthAsync(db, cancellationToken).ConfigureAwait(false);
 
             var nextVersionText = nextVersion.ToString(System.Globalization.CultureInfo.InvariantCulture);
             var updated = await db.Database.ExecuteSqlInterpolatedAsync(
@@ -88,5 +93,69 @@ public sealed class DatabaseMigrationRunner
             CREATE INDEX IF NOT EXISTS "IX_NotificationSchedules_DedupeKey" ON "NotificationSchedules" ("DedupeKey");
             """;
         await db.Database.ExecuteSqlRawAsync(sql, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task ValidateSchema2Async(FinoraDbContext db, CancellationToken cancellationToken)
+    {
+        (string Table, string[] Columns)[] requirements =
+        [
+            ("Attachments", ["OriginalFileName"]),
+            ("TransactionRevisions", ["Id", "CreatedAtUtc", "UpdatedAtUtc", "TransactionId", "ChangeKind", "SnapshotJson", "ChangedAtUtc"]),
+            ("AccountReconciliations", ["Id", "CreatedAtUtc", "UpdatedAtUtc", "AccountId", "StatementDateUtc", "BookBalanceMinor", "StatementBalanceMinor", "DifferenceMinor", "AdjustmentCreated", "AdjustmentTransactionId", "Note", "CompletedAtUtc"]),
+            ("NotificationSchedules", ["Id", "CreatedAtUtc", "UpdatedAtUtc", "Kind", "Title", "Body", "TriggerAtUtc", "DedupeKey", "IsEnabled", "DeliveredAtUtc"])
+        ];
+
+        foreach (var requirement in requirements)
+        {
+            var columns = await GetTableColumnsAsync(db, requirement.Table, cancellationToken).ConfigureAwait(false);
+            foreach (var requiredColumn in requirement.Columns)
+            {
+                if (!columns.Contains(requiredColumn))
+                {
+                    throw new InvalidDataException($"Migration to schema 2 did not produce required column '{requirement.Table}.{requiredColumn}'.");
+                }
+            }
+        }
+    }
+
+    private static async Task<HashSet<string>> GetTableColumnsAsync(FinoraDbContext db, string tableName, CancellationToken cancellationToken)
+    {
+        await using var command = CreateTransactionCommand(db, $"PRAGMA table_info(\"{tableName}\");");
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+        {
+            columns.Add(reader.GetString(1));
+        }
+
+        return columns;
+    }
+
+    private static async Task ValidateDatabaseHealthAsync(FinoraDbContext db, CancellationToken cancellationToken)
+    {
+        await using (var foreignKeyCommand = CreateTransactionCommand(db, "PRAGMA foreign_key_check;"))
+        await using (var reader = await foreignKeyCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+        {
+            if (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                var table = reader.IsDBNull(0) ? "unknown" : reader.GetString(0);
+                throw new InvalidDataException($"Database migration produced or preserved a foreign-key violation in table '{table}'.");
+            }
+        }
+
+        await using var integrityCommand = CreateTransactionCommand(db, "PRAGMA integrity_check;");
+        var integrityResult = await integrityCommand.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        if (!string.Equals(Convert.ToString(integrityResult, System.Globalization.CultureInfo.InvariantCulture), "ok", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException("Database migration failed SQLite integrity validation.");
+        }
+    }
+
+    private static DbCommand CreateTransactionCommand(FinoraDbContext db, string commandText)
+    {
+        var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText = commandText;
+        command.Transaction = db.Database.CurrentTransaction?.GetDbTransaction();
+        return command;
     }
 }
