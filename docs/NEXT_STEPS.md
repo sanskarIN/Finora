@@ -1,5 +1,7 @@
 # Finora — Next Steps to Consider
 
+Last prioritized review: **2026-08-15**
+
 This document is the execution roadmap for the current Finora 0.2.0 (build 2), database schema 2 source line.
 
 It is intentionally ordered by risk. Finora is a personal-finance application, so financial correctness, migration safety, backup/restore safety, privacy, native validation, and release evidence should come before large new feature families.
@@ -13,25 +15,47 @@ The roadmap distinguishes:
 
 Buy Me a Coffee support is optional and external. It must not unlock Finora features, change finance behavior, bypass store entitlement rules, or be treated as a secure premium-license mechanism.
 
+Concrete automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
+
 ---
 
 ## P0 — Release blockers
 
-### 1. Run the dependency-free structural preflight
+### Automated source-validation gates completed on 2026-08-15
 
-Execute:
+The following source-validation work is no longer an unknown for strict candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`:
+
+- ✅ dependency-free structural preflight passed;
+- ✅ NuGet/test-project restores completed on GitHub-hosted CI;
+- ✅ Unit tests passed: 97/97;
+- ✅ Integration tests passed: 109/109;
+- ✅ UI-contract tests passed: 35/35;
+- ✅ total automated result: 241/241 passed, 0 failed;
+- ✅ Windows Release source build passed with `WindowsPackageType=None`;
+- ✅ Android Release source build passed;
+- ✅ iOS Release source build passed on a GitHub macOS runner;
+- ✅ Mac Catalyst Release source build passed on a GitHub macOS runner;
+- ✅ CodeQL passed;
+- ✅ XAML compiled-binding diagnostics `XC0022`, `XC0023`, and `XC0025` are enforced as errors and the four native source builds passed under that policy;
+- ✅ primary CI action majors were moved to Node-24-compatible releases in follow-up CI-only commit `6ba519bf69174c68b67f8595872546a259c783dc`.
+
+This evidence proves source/test/build correctness only for the recorded candidate. It does not prove signed packaging, physical-device behavior, recovery interruption, accessibility, or store approval.
+
+### 1. Structural preflight — completed automated evidence, keep as every-commit gate
+
+Execute locally when available:
 
 ```bash
 python build/scripts/verify_structure.py
 ```
 
-Do not continue toward store release until any structural failures are understood and fixed.
+The preflight guards repository structure, required documentation, local Markdown links, XML/XAML parsing, solution/project wiring, selected privacy/security invariants, version/schema drift, masked secret inputs, complete-reset wiring, and other source contracts.
 
-The preflight is expected to guard repository structure, required documentation, local Markdown links, XML/XAML parsing, solution/project wiring, selected privacy/security invariants, version/schema drift, masked secret inputs, complete-reset wiring, and other source contracts.
+The 2026-08-15 strict candidate passed this gate. It remains mandatory for every final release head.
 
-### 2. Restore the exact .NET/MAUI dependency graph
+### 2. Restore exact .NET/MAUI dependency graph — CI restore proven; release inventory still required
 
-On supported build hosts:
+On supported release hosts:
 
 ```bash
 dotnet --info
@@ -39,11 +63,9 @@ dotnet workload restore src/Finora.App/Finora.App.csproj
 dotnet restore Finora.sln
 ```
 
-Capture the actual SDK/workload/package versions used for the release candidate.
+CI has proven the current test/native dependency graph can restore and build. Before signed release, still capture the exact SDK/workload/direct/transitive package inventory used for the release artifact and perform license/vulnerability review.
 
-If package restore reveals deprecations, incompatible TFMs, security advisories, or licensing concerns, resolve those before native packaging.
-
-### 3. Run core automated tests in Release configuration
+### 3. Core automated tests — completed automated evidence, keep as regression gate
 
 Run:
 
@@ -53,7 +75,9 @@ dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Rele
 dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release
 ```
 
-Highest-priority failures to fix first:
+Current evidence is 97 unit + 109 integration + 35 UI-contract = **241/241 passed**.
+
+Highest-priority future failures to fix first remain:
 
 1. money/currency correctness;
 2. transfer pairing;
@@ -66,7 +90,9 @@ Highest-priority failures to fix first:
 9. XAML/source-contract failures;
 10. notification replacement consistency.
 
-### 4. Build every native target on the correct host
+### 4. Native Release source builds — completed automated evidence; packaging/device gates remain
+
+Commands remain:
 
 Android:
 
@@ -74,10 +100,10 @@ Android:
 dotnet build src/Finora.App/Finora.App.csproj -f net10.0-android -c Release
 ```
 
-Windows:
+Windows source validation:
 
 ```powershell
-dotnet build src/Finora.App/Finora.App.csproj -f net10.0-windows10.0.19041.0 -c Release
+dotnet build src/Finora.App/Finora.App.csproj -f net10.0-windows10.0.19041.0 -c Release -p:WindowsPackageType=None
 ```
 
 iOS on macOS/Xcode:
@@ -92,13 +118,15 @@ Mac Catalyst on macOS/Xcode:
 dotnet build src/Finora.App/Finora.App.csproj -f net10.0-maccatalyst -c Release
 ```
 
-Do not treat successful core tests as proof that MAUI/XAML/native APIs compile on every target.
+All four source-build targets passed on the strict 2026-08-15 candidate. Windows MSIX generation/signing, Android signed AAB packaging, Apple provisioning/signing/archive/notarization, and device behavior are separate unresolved gates.
 
-### 5. Resolve all compiler/analyzer/XAML warnings treated as errors
+### 5. Compiler/analyzer/XAML warning policy — current strict gate completed
 
-The repository is configured for strict analysis. Fix the source rather than suppressing warnings broadly.
+The repository is configured for strict analysis. Fix source rather than suppressing warnings broadly.
 
-Review especially:
+The current pass specifically eliminated the large `XC0022` compiled-binding warning set by adding explicit typed binding contracts across the affected pages/templates and then promoted `XC0022`, `XC0023`, and `XC0025` to errors.
+
+Continue reviewing especially:
 
 - nullability;
 - async/cancellation;
@@ -716,36 +744,31 @@ Prefer privacy-preserving diagnostics and never send finance contents by default
 
 ## Recommended execution order
 
-Use this order for the next major development/release workstream:
+The completed automated source-build block is now an every-commit regression gate rather than the next unknown. Continue in this order:
 
-1. structural preflight;
-2. restore dependencies/workloads;
-3. compile core and native targets;
-4. fix every compiler/XAML/analyzer error;
-5. run all automated tests;
-6. fix financial-correctness failures first;
-7. execute migration tests;
-8. execute backup/restore and interruption tests;
-9. run privacy/security/integrity tests;
-10. validate notifications/app lock/biometrics;
-11. validate local-calendar/currency behavior;
-12. run accessibility/native UI QA;
-13. validate complete data deletion;
-14. build signed release candidates outside source control;
-15. validate store privacy/payment-link rules, including Buy Me a Coffee placement;
-16. create synthetic screenshots/store metadata;
-17. dependency/license/security review;
-18. final release checklist/store readiness review;
-19. tag/release only after evidence exists;
-20. then begin P2 product polish.
+1. keep structural preflight + 241-test + four-target source-build + CodeQL gates green;
+2. execute fresh-install/schema-1→2 migration and integrity validation with synthetic data;
+3. execute backup/restore and process-interruption recovery validation;
+4. validate privacy/security/currency/time-zone behavior on native UI;
+5. validate notifications/app lock/biometrics/Windows Hello and capture limitations;
+6. validate attachment/file/share/import/export flows and path confinement;
+7. run accessibility/native UI QA;
+8. validate complete data deletion;
+9. build signed release candidates outside source control;
+10. validate store privacy/payment-link rules, including Buy Me a Coffee placement;
+11. create synthetic screenshots/store metadata;
+12. complete exact dependency/license/security review;
+13. final release checklist/store readiness review;
+14. tag/release only after evidence exists;
+15. then begin P2 product polish.
 
 ---
 
 ## Definition of the next successful milestone
 
-The strongest next milestone is not “more features.” It is:
+The next milestone is now narrower because source compilation and automated tests have concrete evidence:
 
-> **A fully reproducible Finora 0.2.0 release candidate that restores, builds, tests, migrates, backs up/restores, protects private finance displays, passes native platform validation, and has evidence for every applicable release checklist item.**
+> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build gates and adds migration, backup/recovery, native privacy/security/accessibility, signed packaging, and store evidence for every applicable release checklist item.**
 
 After that milestone, P2 improvements can be prioritized using actual performance, accessibility, user feedback, and support data instead of guessing.
 
