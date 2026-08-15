@@ -29,6 +29,7 @@ public sealed class MoneyTests
     [InlineData("JPY", "1234.6", 1235, 0)]
     [InlineData("INR", "1234.56", 123456, 2)]
     [InlineData("KWD", "12.3456", 12346, 3)]
+    [InlineData("CLF", "1.23456", 12346, 4)]
     public void CurrencyMinorUnitPrecision_IsAppliedByDefault(string currency, string majorText, long expectedMinor, int expectedPlaces)
     {
         var major = decimal.Parse(majorText, CultureInfo.InvariantCulture);
@@ -54,5 +55,6 @@ public sealed class MoneyTests
         Assert.Equal("JPY 1,235", new Money(1235, "JPY").Format(culture));
         Assert.Equal("INR 12.35", new Money(1235, "INR").Format(culture));
         Assert.Equal("KWD 1.235", new Money(1235, "KWD").Format(culture));
+        Assert.Equal("CLF 1.2345", new Money(12345, "CLF").Format(culture));
     }
 }
