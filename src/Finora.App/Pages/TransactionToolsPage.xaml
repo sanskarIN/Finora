@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<ContentPage x:Class="Finora.App.TransactionToolsPage" xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" Title="Transaction tools">
+<ContentPage x:Class="Finora.App.TransactionToolsPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Finora.App"
+             xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
+             xmlns:domain="clr-namespace:Finora.Domain;assembly=Finora.Domain"
+             x:DataType="local:TransactionToolsViewModel"
+             Title="Transaction tools">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
     <Label Text="Transaction tools" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
     <Label Text="Bulk categorization and duplicate detection never delete records automatically. Review each result before making destructive changes." />
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><DatePicker Date="{Binding FromDate}" SemanticProperties.Description="Transaction tools start date" /><DatePicker Grid.Column="1" Date="{Binding ToDate}" SemanticProperties.Description="Transaction tools end date" /></Grid>
     <Button Text="Refresh period" Command="{Binding LoadCommand}" />
     <Label Text="Bulk categorization" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <Picker Title="New category (leave blank to uncategorize)" ItemsSource="{Binding Categories}" ItemDisplayBinding="{Binding Name}" SelectedItem="{Binding BulkCategory}" />
+    <Picker Title="New category (leave blank to uncategorize)" ItemsSource="{Binding Categories}" SelectedItem="{Binding BulkCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="domain:Category" /></Picker.ItemDisplayBinding></Picker>
     <CollectionView ItemsSource="{Binding Transactions}" EmptyView="No transactions in this period." HeightRequest="320">
-      <CollectionView.ItemTemplate><DataTemplate><Grid Padding="8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8"><CheckBox IsChecked="{Binding IsSelected}" /><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" FontSize="12" /><Label Text="{Binding CategoryName}" FontSize="12" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /></VerticalStackLayout><VerticalStackLayout Grid.Column="2"><Label Text="{Binding Type}" HorizontalTextAlignment="End" /><Label HorizontalTextAlignment="End"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></VerticalStackLayout></Grid></DataTemplate></CollectionView.ItemTemplate>
+      <CollectionView.ItemTemplate><DataTemplate x:DataType="local:ToolTransactionItem"><Grid Padding="8" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8"><CheckBox IsChecked="{Binding IsSelected}" /><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" FontSize="12" /><Label Text="{Binding CategoryName}" FontSize="12" /><Label Text="{Binding OccurredAtUtc, StringFormat='{0:g}'}" FontSize="12" /></VerticalStackLayout><VerticalStackLayout Grid.Column="2"><Label Text="{Binding Type}" HorizontalTextAlignment="End" /><Label HorizontalTextAlignment="End"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></VerticalStackLayout></Grid></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
     <Button Text="Apply category to selected" Command="{Binding BulkCategorizeCommand}" />
     <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Export selected CSV" Clicked="OnExportSelectedCsvClicked" /><Button Grid.Column="1" Text="Export selected PDF" Clicked="OnExportSelectedPdfClicked" /></Grid>
     <Label Text="Duplicate review" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
     <Button Text="Scan for likely duplicates" Command="{Binding ScanDuplicatesCommand}" />
     <CollectionView x:Name="DuplicateList" ItemsSource="{Binding Duplicates}" SelectionMode="Single" SelectionChanged="OnDuplicateSelected" EmptyView="No likely duplicates found." HeightRequest="300">
-      <CollectionView.ItemTemplate><DataTemplate><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label><Label.Text><MultiBinding StringFormat="Amount: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label><Label Text="{Binding OccurredAtUtc, StringFormat='Date: {0:g}'}" /><Label Text="{Binding ConfidencePercent, StringFormat='Similarity confidence: {0}%'}" /><Label Text="Tap to review the first transaction. The possible duplicate ID is retained for comparison." FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
+      <CollectionView.ItemTemplate><DataTemplate x:DataType="application:DuplicateTransactionCandidate"><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Merchant}" FontAttributes="Bold" /><Label Text="{Binding AccountName}" /><Label><Label.Text><MultiBinding StringFormat="Amount: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="AmountMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label><Label Text="{Binding OccurredAtUtc, StringFormat='Date: {0:g}'}" /><Label Text="{Binding ConfidencePercent, StringFormat='Similarity confidence: {0}%'}" /><Label Text="Tap to review the first transaction. The possible duplicate ID is retained for comparison." FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
     <Label Text="{Binding Status}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
