@@ -41,6 +41,18 @@ public sealed class LocalDateRangeTests
     }
 
     [Fact]
+    public void DaylightSavingEndDay_UsesTwentyFiveHourUtcSpan()
+    {
+        var zone = CreateDstTestZone();
+
+        var range = LocalDateRange.ToUtc(new DateOnly(2026, 11, 1), new DateOnly(2026, 11, 1), zone);
+
+        Assert.Equal(new DateTimeOffset(2026, 11, 1, 4, 0, 0, TimeSpan.Zero), range.FromUtc);
+        Assert.Equal(new DateTimeOffset(2026, 11, 2, 5, 0, 0, TimeSpan.Zero), range.ToExclusiveUtc);
+        Assert.Equal(TimeSpan.FromHours(25), range.Duration);
+    }
+
+    [Fact]
     public void MultiDayRange_UsesExclusiveBoundaryAfterThroughDate()
     {
         var zone = TimeZoneInfo.CreateCustomTimeZone("UTC-plus-two-test", TimeSpan.FromHours(2), "UTC-plus-two-test", "UTC-plus-two-test");
