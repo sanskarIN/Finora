@@ -22,7 +22,7 @@ public sealed class DatabaseMigrationRollbackTests
                     CREATE TABLE "Transactions" ("Id" TEXT NOT NULL PRIMARY KEY);
                     CREATE TABLE "Attachments" ("Id" TEXT NOT NULL PRIMARY KEY,"CreatedAtUtc" TEXT NOT NULL,"UpdatedAtUtc" TEXT NOT NULL,"TransactionId" TEXT NOT NULL,"RelativePath" TEXT NOT NULL,"ContentType" TEXT NOT NULL,"SizeBytes" INTEGER NOT NULL,"Sha256" BLOB NULL);
                     CREATE TABLE "NotificationSchedules" ("Id" TEXT NOT NULL PRIMARY KEY,"TriggerAtUtc" TEXT NOT NULL,"DedupeKey" TEXT NULL);
-                    INSERT INTO "AppSettings" ("Id","CreatedAtUtc","UpdatedAtUtc","Key","Value") VALUES ('schema-setting',datetime('now'),datetime('now'),'schema.version','1');
+                    INSERT INTO "AppSettings" ("Id","CreatedAtUtc","UpdatedAtUtc","Key","Value") VALUES ('11111111-1111-1111-1111-111111111111',datetime('now'),datetime('now'),'schema.version','1');
                     """;
                 await command.ExecuteNonQueryAsync();
             }
