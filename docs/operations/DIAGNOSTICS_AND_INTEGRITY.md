@@ -50,6 +50,8 @@ Privacy logs live in Finora-controlled cache storage. The implementation maintai
 
 Diagnostic log paths are checked for symbolic-link/reparse traversal so an attacker cannot intentionally redirect the log file to an arbitrary location through an existing link path.
 
+Rotation tests synchronize through the logger/export gate before asserting current/previous file state so they validate completed asynchronous writes rather than racing a just-created rotated file.
+
 ## Unexpected command failures
 
 `MauiProgram` sets `AsyncCommand.UnexpectedFailureHandler` to route unexpected command exceptions to `IPrivacyLogger`.
@@ -152,14 +154,42 @@ The integrity service examines already-stored relationships/data and can detect 
 
 Attachment diagnostics verify that database metadata corresponds to safe app-private files.
 
-Checks can include:
+Checks include:
 
 - path remains inside attachment root;
 - no unsafe symbolic-link/reparse traversal;
 - expected file exists;
 - byte size matches metadata;
-- SHA-256 matches when required;
+- SHA-256 metadata has the required shape;
+- SHA-256 matches the current receipt bytes;
 - transaction/attachment parent relationship is valid.
+
+## Verified automated corruption evidence — 2026-08-15
+
+Verified source candidate:
+
+`f80b29d44a225a6d745529519e6c59cadbc152a8`
+
+Finora CI run:
+
+`31875164890`
+
+The current integration suite directly exercises deliberately corrupted synthetic datasets for additional issue classes including:
+
+- split-total drift;
+- transaction/account currency mismatch;
+- missing receipt files;
+- receipt-size metadata drift;
+- changed receipt bytes and SHA-256 drift;
+- missing/invalid receipt checksum metadata;
+- category parent cycles;
+- SQLite foreign-key violations.
+
+These cases supplement the existing direct coverage for transfer pairs, transaction values/signs, budget period/category state, savings contribution state, recurrence relationships/payment state, reconciliation state, unsafe attachment paths, and privacy-safe report output.
+
+All 273 automated tests on the candidate passed, including 141 integration tests. Exact run/job/artifact evidence is retained in `docs/testing/CI_EVIDENCE.md`.
+
+This does not replace deliberate corruption/failure injection on copied native release-candidate profiles or real filesystem/device validation.
 
 ## Exported integrity report
 
