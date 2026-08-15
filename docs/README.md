@@ -44,6 +44,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 
 - [Test Plan](TEST_PLAN.md)
 - [Testing Guide](testing/TESTING_GUIDE.md)
+- [CI Evidence](testing/CI_EVIDENCE.md) — dated, commit-specific GitHub Actions evidence and explicit source-build versus release-validation boundaries.
 - [Native Validation Matrix](testing/NATIVE_VALIDATION_MATRIX.md)
 - [Project Status](../PROJECT_STATUS.md)
 - [What Changed](../what_changed.md)
@@ -104,4 +105,4 @@ The current local-first source line intentionally does not claim remote Finora a
 
 ## Validation statement
 
-Documentation describes implemented source and required validation. A documented native capability is not automatically a verified store-ready capability. Android, Windows, iOS, and Mac Catalyst builds, package signing, device behavior, notification APIs, biometrics, screenshot protection, accessibility, file sharing, interrupted-restore behavior, and store declarations require evidence on the corresponding platform/toolchain before release.
+Documentation describes implemented source and required validation. Current commit-specific automated evidence is recorded in [CI Evidence](testing/CI_EVIDENCE.md). A successful source build is not automatically a verified store-ready package. Android, Windows, iOS, and Mac Catalyst package signing, device behavior, notification APIs, biometrics, screenshot protection, accessibility, file sharing, interrupted-restore behavior, and store declarations require evidence on the corresponding platform/toolchain before release.
