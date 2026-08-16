@@ -26,6 +26,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - [Budgets, Savings, and Recurring Items](features/BUDGETS_GOALS_RECURRING.md)
 - [Reports, Import, and Export](features/REPORTS_IMPORT_EXPORT.md)
 - [Settings Reference](features/SETTINGS_REFERENCE.md)
+- [Project Support / Buy Me a Coffee](features/PROJECT_SUPPORT.md)
 - [Backup and Restore](security/BACKUP_AND_RECOVERY.md)
 - [App Lock and Privacy](security/APP_LOCK_AND_PRIVACY.md)
 
