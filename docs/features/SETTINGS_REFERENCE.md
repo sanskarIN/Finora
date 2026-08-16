@@ -187,7 +187,9 @@ The Buy Me a Coffee action opens the external page through the system launcher. 
 
 Buy Me a Coffee is not a Finora setting, entitlement, subscription, premium flag, or finance feature. Supporting the project does not unlock app functionality, alter support priority, or replace store/server-backed purchase validation.
 
-Because mobile/desktop store policies around external contribution/payment links can change, each packaged release must verify whether the target store permits this link in the intended distribution context.
+Project support is also discoverable through the optional onboarding support card and the clickable tablet/desktop adaptive-flyout artwork. All in-app BMC launcher surfaces use the shared canonical `AppConstants.BuyMeACoffeeUrl`; the artwork is the packaged Finora-branded `bmc_support.svg`. See `docs/features/PROJECT_SUPPORT.md` for the complete support UX/trust boundary.
+
+Because mobile/desktop store policies around external contribution/payment links can change, each packaged release must verify whether the target store permits these link placements in the intended distribution context.
 
 ## Backup/restore controls
 
