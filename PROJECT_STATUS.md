@@ -1,6 +1,6 @@
 # Finora Project Status
 
-Last source review: **2026-08-15**
+Last source review: **2026-08-16**
 
 Current source line: **Finora 0.2.0 (build 2)**  
 Current database schema: **2**  
@@ -16,16 +16,16 @@ Repository: https://github.com/sanskarIN/Finora
 
 Source presence is not the same as native release validation. Current commit-specific automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
 
-## Verified automated validation — 2026-08-15
+## Verified automated validation — 2026-08-16
 
-✅ Current release-hardening source candidate `f80b29d44a225a6d745529519e6c59cadbc152a8` passed Finora CI run `31875164890` and CodeQL run `31875164864`.
+✅ Current release-hardening source candidate `8260ac02e4f683fa9749f9371185c25d5e3043f6` passed Finora CI run `31934249592` and CodeQL run `31934249613`.
 
 ✅ Structural preflight passed.
 
-✅ Exact automated test result: **273/273 passed, 0 failed**:
+✅ Exact automated test result: **310/310 passed, 0 failed**:
 
-- Unit: 97/97;
-- Integration: 141/141;
+- Unit: 102/102;
+- Integration: 173/173;
 - UI-contract: 35/35.
 
 ✅ Independent Release source builds passed for:
@@ -35,17 +35,21 @@ Source presence is not the same as native release validation. Current commit-spe
 - iOS `net10.0-ios` on a GitHub macOS runner;
 - Mac Catalyst `net10.0-maccatalyst` on a GitHub macOS runner.
 
-✅ CodeQL analysis completed successfully on the same candidate.
+✅ CodeQL analysis completed successfully on the same exact candidate.
 
-✅ The current candidate includes the earlier strict XAML compiled-binding gate and adds migration-safety, hostile-backup, receipt-checksum, deliberate-integrity-corruption, privacy-log synchronization, and linked restore-recovery regression coverage.
+✅ The current candidate retains the earlier strict XAML compiled-binding, migration-safety, hostile-backup, receipt-checksum, deliberate-integrity-corruption, privacy-log synchronization, reset-safety, and linked restore-recovery coverage and adds a focused currency-precision/local-calendar correctness pass.
 
-✅ Migration production code now validates the target schema and SQLite foreign-key/integrity state before advancing `schema.version`; automated coverage includes fresh initialization/reopen, schema-version guards, v1→v2 data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection.
+✅ Representative 0-, 2-, 3-, and 4-decimal currency classes are now exercised with JPY, INR, KWD, and CLF through conversion/import/export/report/account/budget/savings/recurring/reconciliation/encrypted-backup workflows with exact minor-unit assertions.
 
-✅ Backup validation now requires valid 32-byte receipt SHA-256 metadata rather than accepting missing checksum metadata; authenticated hostile-payload tests cover unsupported schema, semantic relationship corruption, receipt path escape, receipt size/hash drift, and wrong/tampered/truncated encrypted inputs.
+✅ `FinanceStore` budget and legacy Dashboard date windows now use the shared local-calendar `[from,toExclusive)` conversion instead of UTC-midnight assumptions. Automated store coverage includes UTC+05:30, UTC-07:00, and deterministic DST boundaries, while the shared `LocalDateRange` unit suite includes UTC, positive/negative offsets, DST start/end, multi-day and reversed-range behavior.
 
-✅ Integrity regression coverage now directly injects split-total drift, account/transaction currency mismatch, missing/changed receipts, invalid checksum metadata, category cycles, and foreign-key violations in addition to the pre-existing integrity families.
+✅ Migration production code validates the target schema and SQLite foreign-key/integrity state before advancing `schema.version`; automated coverage includes fresh initialization/reopen, schema-version guards, v1→v2 data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection.
 
-✅ Restore-recovery tests now directly prove fail-closed behavior for linked recovery journals and linked rollback copies while preserving live receipt state/recovery evidence.
+✅ Backup validation requires valid 32-byte receipt SHA-256 metadata rather than accepting missing checksum metadata; authenticated hostile-payload tests cover unsupported schema, semantic relationship corruption, receipt path escape, receipt size/hash drift, wrong/tampered/truncated encrypted inputs, and exact multi-precision money restoration.
+
+✅ Integrity regression coverage directly injects split-total drift, account/transaction currency mismatch, missing/changed receipts, invalid checksum metadata, category cycles, and foreign-key violations in addition to the pre-existing integrity families.
+
+✅ Restore-recovery tests directly prove fail-closed behavior for linked recovery journals and linked rollback copies while preserving live receipt state/recovery evidence.
 
 ⚠️ These source-build results are not evidence of Windows MSIX signing, signed Android AAB production packaging, Apple provisioning/signing/notarization, physical-device behavior, accessibility QA, actual process-kill/low-disk recovery testing, installed prior-version upgrades on every target, or store approval.
 
@@ -70,7 +74,9 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Money is signed 64-bit minor units; major-unit conversion uses `decimal` with currency-aware precision.
 
-🧪 Domain/EF persistence boundary now validates Added/Modified schema-v2 entities, including:
+🧪 Automated money coverage now spans representative 0-decimal JPY, 2-decimal INR, 3-decimal KWD, and 4-decimal CLF behavior, including half-unit rounding and exact minor-unit preservation across finance workflows and portable data paths.
+
+🧪 Domain/EF persistence boundary validates Added/Modified schema-v2 entities, including:
 
 - accounts;
 - transactions and deletion-state/timestamp agreement;
@@ -103,6 +109,8 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Account list/detail/history monetary display honors privacy/hide-on-launch; credit/opening edit formatting uses currency precision and billing-day UI/domain range is consistently 1–31.
 
+🧪 Account balance and reconciliation regression tests now carry exact JPY/INR/KWD/CLF minor units through opening balances, adjustments, previews, and final balances.
+
 ## Transactions
 
 🧪 Expense/income/refund/adjustment quick-add/edit, calculator, advanced filtering, revision history, bulk categorization, duplicate review, splits, tags, receipts, soft-delete/restore, selected/all export, and linked transfer editing are present.
@@ -125,6 +133,10 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Shared budget-period policy prevents overlap, treats custom budgets as active only within explicit windows, and uses rollover only when enabled.
 
+🧪 `FinanceStore.GetBudgetsAsync` resolves each local budget period through shared `LocalDateRange` and filters UTC persistence using an exclusive end boundary; regression coverage proves the positive non-hour UTC+05:30 boundary instead of assuming UTC midnight.
+
+🧪 Exact planned/actual values are covered across JPY/INR/KWD/CLF representative precision classes.
+
 🧪 Failed explicit-period replacement is covered for transactional rollback.
 
 🧪 Passive budget planned/actual amounts use currency-aware privacy display.
@@ -137,6 +149,8 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 New goals initialize completion from starting progress; startup repairs stale derived completion flags from older source behavior when history is valid.
 
+🧪 JPY/INR/KWD/CLF savings regressions assert target, starting/contribution/current values and progress without decimal-to-minor drift.
+
 🧪 Goal cards and monthly contribution forecast no longer reveal monetary values while privacy/hide-on-launch is active.
 
 ## Recurring items
@@ -148,6 +162,8 @@ Source presence is not the same as native release validation. Current commit-spe
 🧪 Resume revalidates active dependencies.
 
 🧪 Generated recurring transaction/pair drift fails closed.
+
+🧪 JPY/INR/KWD/CLF recurring regressions preserve exact rule/occurrence amounts and generated paid-transaction minor units.
 
 🧪 Paid occurrence may retain a valid historical postponed date; unpaid states cannot silently contain payment data.
 
@@ -163,9 +179,13 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Local-calendar date selections use shared `LocalDateRange` conversion to UTC `[from,toExclusive)` boundaries rather than UTC-midnight assumptions.
 
+🧪 The legacy `FinanceStore.GetDashboardAsync` path now also uses that shared local boundary, with deterministic UTC+05:30, UTC-07:00, and DST-start integration regressions.
+
 🧪 Current balance uses direct current account summaries; period-sensitive cards use the selected Dashboard date range.
 
 🧪 Reports include category spending, income/expense, account trend, budget performance, merchant/payee, monthly comparison, yearly comparison, recurring obligations, savings progress and tag data; category/budget reporting is split-aware and descendant-aware.
+
+🧪 Income/expense reporting now has explicit exact-minor-unit regression coverage for JPY/INR/KWD/CLF precision classes.
 
 🧪 Monthly/yearly comparisons group by local calendar and stop at today, excluding future-dated imported rows until their date arrives.
 
@@ -174,6 +194,10 @@ Source presence is not the same as native release validation. Current commit-spe
 ## Import/export
 
 🧪 Mapped CSV import with preview/limits/validation/duplicate protection/transfer validation and transactional persistence is present.
+
+🧪 Major-unit CSV import now has explicit JPY/INR/KWD/CLF precision regression coverage.
+
+🧪 CSV export is verified to preserve exact stored `AmountMinor`; exported data is previewed and imported into a second SQLite database with exact minor-unit equality across the four precision classes.
 
 🧪 CSV and dependency-free multipage PDF exports are present.
 
@@ -187,7 +211,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 No-link policy is reused by attachment open/write/cleanup, encrypted backup validation/staging, crash-safe restore rollback copy, restore recovery journal/directories and integrity checking.
 
-🧪 Optional symlink regression tests run where host permits link creation; linked recovery journal and rollback-copy failure paths are now directly covered.
+🧪 Optional symlink regression tests run where host permits link creation; linked recovery journal and rollback-copy failure paths are directly covered.
 
 ## Backup and restore
 
@@ -198,6 +222,8 @@ Source presence is not the same as native release validation. Current commit-spe
 🧪 Receipt checksum metadata is mandatory for portable backup state; creation, preview, and restore reject missing/invalid metadata and verify receipt bytes against SHA-256.
 
 🧪 Hostile-input regression coverage includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated relation corruption, receipt path escape, receipt size drift, and receipt hash drift.
+
+🧪 Encrypted backup precision regression now writes JPY/INR/KWD/CLF finance rows, previews the encrypted archive, completely resets finance data, restores the archive, checks exact restored minor values/account relations, and completes a healthy integrity check.
 
 🧪 Receipt/plaintext buffers are cleared as early as managed-memory APIs permit on success and failure paths, including accumulated receipt buffers if a later file/query/validation step fails.
 
@@ -244,6 +270,8 @@ Source presence is not the same as native release validation. Current commit-spe
 🧪 Settings can revisit onboarding without duplicating opening/sample data when accounts already exist.
 
 🧪 Full local-finance deletion is wired to the dedicated complete reset service and retains typed destructive confirmation.
+
+🧪 Reset regression coverage proves finance data is removed while unrelated app settings are preserved.
 
 🧪 About version/build comes from packaged `AppInfo`; attribution, technology summary, repository/profile, business/support contacts, Apache-2.0, notices, privacy/terms, contributing, security and support guide links are exposed.
 
@@ -295,7 +323,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ✅ A complete documentation hub exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
 
-✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and now records the 273-test migration/backup/integrity/recovery candidate.
+✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and records the **310-test** currency-precision/local-calendar source candidate while retaining earlier migration/backup/integrity/recovery history.
 
 ✅ A prioritized execution roadmap exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
 
