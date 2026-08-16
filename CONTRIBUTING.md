@@ -1,5 +1,9 @@
 # Contributing to Finora
 
+[![Support Finora on Buy Me a Coffee](src/Finora.App/Resources/Images/bmc_support.svg)](https://buymeacoffee.com/sanskarIN)
+
+> **☕ Optional project support:** [Buy Me a Coffee — sanskarIN](https://buymeacoffee.com/sanskarIN). Contributions never affect code-review priority, feature access, product support, or security-report handling.
+
 Thanks for contributing to Finora. This repository contains a local-first personal-finance application, so correctness, privacy, migration safety, and accessibility are part of the definition of done—not optional cleanup.
 
 ## Product boundaries
