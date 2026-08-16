@@ -12,6 +12,7 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\Finora.App\AppShell.xaml" Link="Contracts\AppShell.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\DashboardPage.xaml" Link="Contracts\DashboardPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\DashboardViewModel.cs" Link="Contracts\DashboardViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\ReportsPage.xaml" Link="Contracts\ReportsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
