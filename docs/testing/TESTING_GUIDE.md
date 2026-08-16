@@ -41,11 +41,11 @@ dotnet test tests/Finora.UnitTests/Finora.UnitTests.csproj -c Release --no-resto
 
 Use unit tests for:
 
-- Money/currency precision;
+- Money/currency precision across 0-, 2-, 3-, and 4-decimal metadata classes;
 - DomainRules;
 - pure budget/date policies;
 - DashboardPeriodPolicy;
-- LocalDateRange;
+- LocalDateRange, including UTC, positive/negative fixed offsets, and DST transitions;
 - culture normalization;
 - PIN attempt policy;
 - ViewModelBase/AsyncCommand behavior where compiled as dependency-free test source.
@@ -77,8 +77,10 @@ Current areas include:
 - budgets;
 - goals;
 - recurrence;
-- CSV import;
+- CSV import/export round trips;
 - reports;
+- currency precision through core finance workflows;
+- local-calendar finance-store boundaries;
 - backup/restore/recovery;
 - persistence-boundary invariants;
 - integrity diagnostics;
@@ -114,7 +116,7 @@ Current contracts cover areas such as:
 - transaction sort/paging;
 - signed chart implementation;
 - onboarding Privacy/Terms links;
-- passive amount privacy surfaces.
+- passive amount privacy surfaces and currency-aware formatting.
 
 ## 5. Combined host wrappers
 
@@ -144,9 +146,10 @@ Every money-affecting change should consider:
 - 0-decimal currency such as JPY behavior;
 - 2-decimal currency such as INR/USD behavior;
 - 3-decimal currency such as KWD behavior;
-- known 4-decimal metadata where applicable;
+- known 4-decimal metadata such as CLF behavior;
 - unlike-currency isolation;
-- decimal rounding at half-unit boundaries.
+- decimal rounding at half-unit boundaries;
+- exact minor-unit preservation across manual workflows, CSV import/export, reports, backup/restore, budgets, savings, recurrence, and reconciliation.
 
 Do not test finance totals with `double` expectations.
 
@@ -155,14 +158,17 @@ Do not test finance totals with `double` expectations.
 For local calendar filters/reports test:
 
 - UTC time zone;
-- non-UTC fixed offset;
+- positive non-hour fixed offset such as UTC+05:30;
+- negative fixed offset such as UTC-07:00;
+- DST start/end transitions using a deterministic test zone;
 - range start/end inclusion;
 - reversed range rejection;
 - month boundary;
 - year boundary;
 - financial-month start before/after configured day;
 - future-dated row excluded from current month/year;
-- DST-capable local environment in native/manual validation where practical.
+- budget and dashboard store paths use local-calendar `[from,toExclusive)` boundaries rather than UTC-midnight assumptions;
+- native/device validation uses the actual platform local time zone in addition to deterministic automated zones.
 
 ## 8. Database tests
 
@@ -207,6 +213,7 @@ Automated coverage should include:
 - symbolic-link/reparse path where supported;
 - accumulated sensitive buffer cleanup paths;
 - internal marker exclusion;
+- exact currency/minor-unit preservation through encrypted backup/restore;
 - crash-safe pending-marker rollback;
 - committed-marker finalization;
 - incomplete rollback copy safety;
@@ -221,7 +228,8 @@ Test:
 - encoding/size/row limits;
 - mapping;
 - major/minor modes;
-- currency precision;
+- currency precision across 0-, 2-, 3-, and 4-decimal classes;
+- export → preview/import minor-unit round trip;
 - invalid amount/type/date/currency;
 - fallback account;
 - category creation;
@@ -264,7 +272,7 @@ See [Build and Run](../setup/BUILD.md) for current target commands.
 
 Do not mark platform build complete without the correct workload/host.
 
-For the 2026-08-15 strict candidate, GitHub-hosted Windows, Android, iOS, and Mac Catalyst Release source-build evidence is retained in [CI_EVIDENCE.md](CI_EVIDENCE.md). Those successful compiler jobs do not replace package signing or device validation.
+The exact current GitHub-hosted Windows, Android, iOS, and Mac Catalyst Release source-build evidence, when available for a candidate, is retained in [CI_EVIDENCE.md](CI_EVIDENCE.md). Successful compiler jobs do not replace package signing or device validation.
 
 ## 15. Synthetic test data rules
 
