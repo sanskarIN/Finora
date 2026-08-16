@@ -31,6 +31,7 @@ public sealed class CurrencyAwareImportTests : IAsyncLifetime
 
     [Theory]
     [InlineData("JPY", "1234.6", -1235L)]
+    [InlineData("INR", "12.345", -1235L)]
     [InlineData("KWD", "12.3456", -12346L)]
     [InlineData("CLF", "1.23456", -12346L)]
     public async Task MajorUnitImport_UsesCurrencySpecificPrecision(string currency, string amount, long expectedMinor)
