@@ -7,7 +7,10 @@
   FlyoutBehavior="Disabled">
 
   <Shell.FlyoutFooter>
-    <Grid Padding="12" SemanticProperties.Description="Support Finora development on Buy Me a Coffee from Settings">
+    <Grid Padding="12" SemanticProperties.Description="Support Finora development on Buy Me a Coffee. Opens the external support page in the system browser.">
+      <Grid.GestureRecognizers>
+        <TapGestureRecognizer Tapped="OnShellBuyMeACoffeeTapped" />
+      </Grid.GestureRecognizers>
       <Image Source="bmc_support.svg" Aspect="AspectFit" HeightRequest="72" />
     </Grid>
   </Shell.FlyoutFooter>
