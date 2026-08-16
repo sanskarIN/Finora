@@ -1,5 +1,11 @@
 # Finora Support
 
+[![Support Finora on Buy Me a Coffee](src/Finora.App/Resources/Images/bmc_support.svg)](https://buymeacoffee.com/sanskarIN)
+
+> **☕ Support Finora development:** [Buy Me a Coffee — sanskarIN](https://buymeacoffee.com/sanskarIN)
+>
+> Contributions are optional. They never unlock Finora features, change support priority, or replace store/server-backed entitlement validation.
+
 ## Before asking for help
 
 1. Read `docs/setup/TROUBLESHOOTING.md`.
@@ -19,7 +25,7 @@ If the issue is a suspected security vulnerability, private-data exposure, app-l
 - Business/project/security contact: `sanskarin@outlook.in`
 - Repository: https://github.com/sanskarIN/Finora
 - Creator/open-source profile: https://www.github.com/sanskarIN
-- Optional project support: https://buymeacoffee.com/sanskarIN
+- **☕ Optional project support: https://buymeacoffee.com/sanskarIN**
 
 Buy Me a Coffee is an optional external contribution link. A contribution does not unlock Finora features, create premium entitlement, guarantee or accelerate support, or change security/reporting priority. Product support and security reporting remain available through the contacts and repository guidance above without a contribution.
 
