@@ -1,5 +1,9 @@
 # Finora Documentation
 
+[![Support Finora on Buy Me a Coffee](../src/Finora.App/Resources/Images/bmc_support.svg)](https://buymeacoffee.com/sanskarIN)
+
+> **☕ Like Finora? Support ongoing development on [Buy Me a Coffee](https://buymeacoffee.com/sanskarIN).** Support is optional and remains separate from app features, entitlement, product support, and security reporting.
+
 This directory is the documentation entry point for the current Finora 0.2.0 (build 2) source line and database schema 2.
 
 Finora is a local-first personal-finance application built with .NET MAUI, C#, XAML, SQLite/EF Core, and MVVM-style presentation/service separation. The current release requires no Finora account or login, core finance workflows are offline-capable, backups are user-triggered, and the application does not silently aggregate unlike currencies or invent exchange rates.
@@ -92,7 +96,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - Attribution: **Made by the Sanskar**
 - Repository: https://github.com/sanskarIN/Finora
 - Creator profile: https://www.github.com/sanskarIN
-- Support development: https://buymeacoffee.com/sanskarIN
+- **☕ Support development: https://buymeacoffee.com/sanskarIN**
 - Business/security contact: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
 - License: Apache-2.0
