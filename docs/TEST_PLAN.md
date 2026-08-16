@@ -18,11 +18,17 @@ Use the platform-appropriate SDK/workloads and repository verification wrappers.
 
 Core/non-MAUI projects can be restored/built/tested on a general .NET host. MAUI target builds require corresponding workloads/platform hosts.
 
+Strict test analyzers are also part of the gate. If a new test triggers an analyzer such as `xUnit2031`, fix the test pattern instead of suppressing the analyzer.
+
 ## 3. Unit tests
 
 Cover pure/domain behavior:
 
-- currency-aware major/minor money conversion including 0-, 2-, and 3-decimal currencies;
+- currency-aware major/minor money conversion including representative 0-, 2-, 3-, and 4-decimal currencies;
+- JPY-style zero-decimal rounding;
+- INR/USD-style two-decimal rounding;
+- KWD-style three-decimal rounding;
+- known four-decimal metadata such as CLF;
 - rounding boundaries and integer overflow;
 - currency normalization/validation;
 - transaction sign/domain/deletion-state validation;
@@ -43,7 +49,14 @@ Cover pure/domain behavior:
 - decimal calculator precedence/parentheses/division/error cases;
 - locale normalization/application helpers;
 - dashboard current/previous financial-month, trailing 30/90-day, and year-to-date period policy;
-- local calendar date range conversion to exclusive UTC bounds, including non-UTC offsets and invalid ranges;
+- local calendar date range conversion to exclusive UTC bounds;
+- explicit UTC local-midnight boundary;
+- positive non-hour fixed offset such as UTC+05:30;
+- negative fixed offset such as UTC-07:00;
+- deterministic DST-start 23-hour UTC span;
+- deterministic DST-end 25-hour UTC span;
+- multi-day exclusive boundary;
+- reversed/invalid ranges;
 - PIN attempt escalation/lockout policy;
 - ViewModel busy/error/command behavior;
 - safe error mapper preserves short validation text but redacts path/database/crypto/provider details;
@@ -57,6 +70,7 @@ Use isolated SQLite databases per test.
 
 - create/edit/archive/restore account;
 - opening balance/current balance checked calculation;
+- exact opening/current balance behavior across representative JPY/INR/KWD/CLF precision classes;
 - same-currency paired transfer is atomic and net-zero across accounts;
 - transfer edit updates both halves;
 - transfer delete/restore affects both halves;
@@ -70,7 +84,8 @@ Use isolated SQLite databases per test.
 - reconciliation with unresolved difference is rejected;
 - reconciliation arithmetic overflow fails closed;
 - reconciled opening balance cannot be silently changed;
-- reconciliation history persists.
+- reconciliation history persists;
+- reconciliation preview/adjustment/final balance preserve exact JPY/INR/KWD/CLF minor units.
 
 ### Transactions
 
@@ -131,7 +146,10 @@ These tests complement relational services, foreign keys, backup graph validatio
 - rollover applies only when enabled;
 - effective planned amount remains positive;
 - warning-threshold arithmetic cannot overflow;
-- failed explicit-period replacement rolls back prior persisted period set.
+- failed explicit-period replacement rolls back prior persisted period set;
+- `FinanceStore.GetBudgetsAsync` converts resolved local dates through shared `LocalDateRange` and uses `[from,toExclusive)` UTC boundaries;
+- positive non-hour UTC+05:30 budget boundary includes the intended local-day transaction and excludes the next local day;
+- planned/actual values preserve exact representative JPY/INR/KWD/CLF minor units.
 
 ### Savings goals
 
@@ -142,7 +160,8 @@ These tests complement relational services, foreign keys, backup graph validatio
 - target/milestone/completion behavior;
 - checked contribution aggregation;
 - savings-progress report derives current amount/completion from validated history;
-- savings forecast does not expose estimated money while privacy mode hides amounts.
+- savings forecast does not expose estimated money while privacy mode hides amounts;
+- JPY/INR/KWD/CLF target/start/contribution/current values remain exact and progress stays numerically correct.
 
 ### Recurrence
 
@@ -163,12 +182,14 @@ These tests complement relational services, foreign keys, backup graph validatio
 - completed/archived rule cannot be resumed;
 - backlog guard prevents unbounded occurrence generation;
 - end date and custom interval behavior;
-- recurring-obligation report retains rule type/status/currency/next-due information.
+- recurring-obligation report retains rule type/status/currency/next-due information;
+- JPY/INR/KWD/CLF rule amount, occurrence amount and generated paid transaction preserve exact minor units.
 
 ### Reports and local-calendar boundaries
 
 - category spending remains split-aware and currency-scoped;
 - income-versus-expense remains currency-scoped;
+- income/expense report preserves exact JPY/INR/KWD/CLF minor-unit totals;
 - account balance trend uses local-calendar boundaries;
 - budget performance resolves budget windows through `BudgetPeriodPolicy` and local-calendar UTC boundaries;
 - monthly comparison groups by local calendar month rather than UTC month;
@@ -177,7 +198,11 @@ These tests complement relational services, foreign keys, backup graph validatio
 - yearly comparison returns the requested trailing-year range with checked income/expense/net values;
 - savings-progress report uses checked contribution history;
 - recurring-obligation report excludes archived rules but preserves active/paused/completed report state as applicable;
-- chart source can represent negative net values without applying absolute magnitude.
+- chart source can represent negative net values without applying absolute magnitude;
+- legacy `FinanceStore.GetDashboardAsync` uses shared local `[from,toExclusive)` boundaries;
+- Dashboard store path is tested with positive non-hour UTC+05:30;
+- Dashboard store path is tested with negative UTC-07:00;
+- Dashboard store path is tested across a deterministic DST-start transition.
 
 ### Local notifications
 
@@ -192,13 +217,13 @@ These tests complement relational services, foreign keys, backup graph validatio
 - generic privacy-safe content remains free of amount/account/merchant/note details;
 - Android cancellation queries an existing `PendingIntent` with `NoCreate` rather than creating a cancellation artifact.
 
-### CSV import
+### CSV import/export
 
 - quoted commas/escaped quotes/newlines where parser supports them;
 - UTF-8 validation;
 - file/row limits;
 - explicit user-selected column mapping;
-- currency-specific major-unit decimal conversion (including JPY/KWD-style precision);
+- currency-specific major-unit decimal conversion for representative JPY/INR/KWD/CLF precision classes;
 - minor-unit import;
 - `long.MinValue` rejection before sign normalization;
 - invalid date/type/currency/amount rejection;
@@ -208,7 +233,10 @@ These tests complement relational services, foreign keys, backup graph validatio
 - duplicate skipping including duplicates within same import batch;
 - transfer-group/counterparty pair validation;
 - parse errors counted exactly once;
-- transactional failure/rollback.
+- transactional failure/rollback;
+- CSV export preserves exact stored `AmountMinor` for JPY/INR/KWD/CLF;
+- exported CSV preview accepts the generated rows;
+- exported `AmountMinor` data re-imports into a second SQLite database without minor-unit drift.
 
 ### Backup/restore
 
@@ -239,7 +267,9 @@ These tests complement relational services, foreign keys, backup graph validatio
 - incomplete rollback snapshots do not delete untouched live attachments;
 - stale restore staging/rollback directories are cleaned after recovery decision;
 - failed restore leaves prior data usable;
-- backup metadata/audit entries do not expose finance contents.
+- backup metadata/audit entries do not expose finance contents;
+- JPY/INR/KWD/CLF exact values survive encrypted backup creation, authenticated preview, complete finance reset and restore;
+- restored multi-precision finance graph passes the normal data-integrity check.
 
 ### Diagnostics and temporary artifacts
 
@@ -283,7 +313,17 @@ Current required migration coverage includes v1 → v2.
 - reconciliation arithmetic/adjustment-link drift is detected;
 - missing/changed receipt file is detected;
 - unsafe lexical or linked attachment path is detected;
-- sanitized report contains counts/codes only, not account names, merchant/payee names, notes, amounts, or receipt filenames.
+- sanitized report contains counts/codes only, not account names, merchant/payee names, notes, amounts, or receipt filenames;
+- healthy multi-precision backup/restore graph remains healthy after restoration.
+
+### Complete finance-data reset
+
+- all intended finance-domain tables are cleared;
+- attachment/receipt files are removed as intended;
+- finance-reset result is success only after safe deletion completes;
+- unrelated app settings are preserved;
+- app remains usable after reset;
+- empty/current profile passes integrity validation.
 
 ## 5. ViewModel/UI-contract tests
 
@@ -330,6 +370,8 @@ At minimum test a current emulator and a physical device when available:
 - fresh install/onboarding;
 - app restart/force-stop persistence;
 - account/transaction/transfer/budget/goal/recurrence core flows;
+- representative JPY/INR/KWD/CLF manual entry/display/edit behavior;
+- actual local timezone/date-boundary behavior, including India UTC+05:30 where applicable;
 - recurring pause/resume/archive and stale-reminder cleanup;
 - receipt picker/open/delete;
 - CSV import and CSV/PDF export;
@@ -353,6 +395,8 @@ At minimum test a current emulator and a physical device when available:
 - install/upgrade/uninstall MSIX/package;
 - resizable window/minimum usable size/high DPI;
 - keyboard focus/navigation;
+- representative JPY/INR/KWD/CLF manual entry/display/edit behavior;
+- actual Windows timezone/date-boundary behavior;
 - Windows Hello success/cancel/unavailable with PIN fallback;
 - scheduled toast behavior with packaged identity;
 - stale toast/reminder cleanup after recurring lifecycle change;
@@ -365,6 +409,8 @@ At minimum test a current emulator and a physical device when available:
 
 - archive/build on supported Xcode host;
 - onboarding/core finance flows;
+- representative JPY/INR/KWD/CLF manual entry/display/edit behavior;
+- actual Apple timezone/date-boundary behavior including DST where supported;
 - LocalAuthentication states with PIN fallback;
 - UserNotifications permission/scheduling and lifecycle cleanup;
 - document picker/share/export/backup/restore/receipt flows;
@@ -376,6 +422,8 @@ At minimum test a current emulator and a physical device when available:
 
 - archive/build/signing prerequisites;
 - resizable windows and keyboard/mouse focus;
+- representative JPY/INR/KWD/CLF manual entry/display/edit behavior;
+- actual macOS timezone/date-boundary behavior including DST where supported;
 - LocalAuthentication/UserNotifications;
 - reminder lifecycle cleanup;
 - file picker/share flows;
@@ -401,7 +449,9 @@ Exercise:
 - notification replacement OS failure and DB failure paths;
 - secure-storage unavailable/missing/malformed PIN verifier paths;
 - database lock contention;
-- migration interruption using a copied synthetic database.
+- migration interruption using a copied synthetic database;
+- device timezone change between launches and while date filters are active;
+- DST transition cases where the platform/environment supports them.
 
 Never intentionally corrupt a user's real finance database during testing.
 
@@ -427,4 +477,21 @@ Verify:
 
 ## 12. Release evidence
 
-For a release candidate, retain CI run links, test result artifacts, platform build logs, migration-test results, backup/recovery failure-path results, Android backup-rule packaging evidence, and device-smoke-test checklist results. Do not mark a platform gate complete based only on source inspection or an empty classic commit-status list.
+For a release candidate, retain:
+
+- exact candidate commit SHA;
+- structural preflight result;
+- exact unit/integration/UI-contract counts;
+- test result artifacts and digests;
+- platform source-build logs/artifacts and digests;
+- CodeQL/security-analysis result;
+- migration-test results;
+- backup/recovery failure-path results;
+- currency-precision matrix results;
+- local-calendar/timezone boundary results;
+- Android backup-rule packaging evidence;
+- device/simulator/emulator smoke-test checklist results;
+- accessibility results;
+- signing/package/store results.
+
+Do not mark a platform gate complete based only on source inspection or an empty classic commit-status list. Do not relabel a successful unsigned source build as signed package/device/store evidence.
