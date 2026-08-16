@@ -1,14 +1,16 @@
 using Finora.Application;
 using Finora.Domain;
+using Finora.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace Finora.Infrastructure;
 
-public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, DatabaseInitializer initializer) : IFinanceStore
+public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, DatabaseInitializer initializer, TimeZoneInfo? localTimeZone = null) : IFinanceStore
 {
     private const int MaximumGeneratedOccurrencesPerRule = 10_000;
     private readonly IDbContextFactory<FinoraDbContext> _factory = factory;
     private readonly DatabaseInitializer _initializer = initializer;
+    private readonly TimeZoneInfo _localTimeZone = localTimeZone ?? TimeZoneInfo.Local;
 
     public Task InitializeAsync(CancellationToken cancellationToken = default)
         => _initializer.InitializeAsync(cancellationToken);
@@ -376,11 +378,10 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
         {
             DomainRules.ValidateBudget(budget);
             if (!BudgetPeriodPolicy.TryResolve(budget, periodDate, out var period)) continue;
-            var from = new DateTimeOffset(period.StartsOn.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-            var to = new DateTimeOffset(period.EndsOn.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+            var utcRange = LocalDateRange.ToUtc(period.StartsOn, period.EndsOn, _localTimeZone);
             var transactions = await db.Transactions.AsNoTracking()
                 .Include(x => x.Splits)
-                .Where(x => !x.IsDeleted && x.Currency == budget.Currency && x.Type != TransactionType.Transfer && x.OccurredAtUtc >= from && x.OccurredAtUtc < to)
+                .Where(x => !x.IsDeleted && x.Currency == budget.Currency && x.Type != TransactionType.Transfer && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -642,12 +643,11 @@ public sealed class FinanceStore(IDbContextFactory<FinoraDbContext> factory, Dat
         if (end < start) throw new ArgumentException("Dashboard period end cannot precede the start.");
 
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        var from = new DateTimeOffset(start.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-        var to = new DateTimeOffset(end.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var utcRange = LocalDateRange.ToUtc(start, end, _localTimeZone);
         var transactions = await db.Transactions.AsNoTracking()
             .Include(x => x.Account)
             .Include(x => x.Category)
-            .Where(x => !x.IsDeleted && x.OccurredAtUtc >= from && x.OccurredAtUtc < to)
+            .Where(x => !x.IsDeleted && x.OccurredAtUtc >= utcRange.FromUtc && x.OccurredAtUtc < utcRange.ToExclusiveUtc)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         var accounts = await GetAccountsAsync(cancellationToken).ConfigureAwait(false);
