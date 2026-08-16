@@ -160,7 +160,7 @@ public sealed class ExportCurrencyPrecisionTests : IAsyncLifetime
         Assert.Equal(4, restored.Count);
         foreach (var fixture in sourceFixtures)
         {
-            var transaction = Assert.Single(restored.Where(item => item.Currency == fixture.Currency));
+            var transaction = Assert.Single(restored, item => item.Currency == fixture.Currency);
             Assert.Equal(fixture.Minor, transaction.AmountMinor);
         }
     }
