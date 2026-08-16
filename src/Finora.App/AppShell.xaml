@@ -6,6 +6,12 @@
   xmlns:local="clr-namespace:Finora.App"
   FlyoutBehavior="Disabled">
 
+  <Shell.FlyoutFooter>
+    <Grid Padding="12" SemanticProperties.Description="Support Finora development on Buy Me a Coffee from Settings">
+      <Image Source="bmc_support.svg" Aspect="AspectFit" HeightRequest="72" />
+    </Grid>
+  </Shell.FlyoutFooter>
+
   <TabBar x:Name="MobileTabBar" Route="mobile-tabs">
     <ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate local:DashboardPage}" />
     <ShellContent Title="Transactions" Route="transactions" ContentTemplate="{DataTemplate local:TransactionsPage}" />
