@@ -86,4 +86,18 @@ public partial class AppShell : Shell
             return desktop ? "//settings-desktop" : "//settings";
         return desktop ? AppRoutes.DesktopDashboardRoot : AppRoutes.MobileDashboardRoot;
     }
+
+    private async void OnShellBuyMeACoffeeTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            var opened = await Launcher.Default.OpenAsync(new Uri(Finora.Shared.AppConstants.BuyMeACoffeeUrl));
+            if (!opened)
+                await DisplayAlertAsync("Support Finora", "The Buy Me a Coffee support page could not be opened with the available browser or system handler.", "OK");
+        }
+        catch (Exception)
+        {
+            await DisplayAlertAsync("Support Finora", "The Buy Me a Coffee support page could not be opened right now.", "OK");
+        }
+    }
 }
