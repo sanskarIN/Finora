@@ -113,6 +113,42 @@ public sealed class LocalCalendarFinanceStoreTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task DashboardWindow_UsesNegativeOffsetLocalBoundary()
+    {
+        var zone = TimeZoneInfo.CreateCustomTimeZone(
+            "UTC-minus-seven-store-test",
+            TimeSpan.FromHours(-7),
+            "UTC-minus-seven-store-test",
+            "UTC-minus-seven-store-test");
+        var store = new FinanceStore(_factory, new DatabaseInitializer(_factory), zone);
+        var date = new DateOnly(2026, 8, 11);
+        var account = new Account { Name = "Negative offset bank", Type = AccountType.Bank, Currency = "INR" };
+        await store.SaveAccountAsync(account);
+
+        await store.SaveTransactionAsync(TransactionFactory.Create(
+            TransactionType.Expense,
+            250,
+            "INR",
+            account.Id,
+            new DateTimeOffset(2026, 8, 11, 6, 45, 0, TimeSpan.Zero),
+            merchant: "Previous local day"));
+        await store.SaveTransactionAsync(TransactionFactory.Create(
+            TransactionType.Income,
+            1_250,
+            "INR",
+            account.Id,
+            new DateTimeOffset(2026, 8, 11, 7, 30, 0, TimeSpan.Zero),
+            merchant: "Inside negative-offset day"));
+
+        var dashboard = await store.GetDashboardAsync(date, date);
+
+        Assert.Equal(1_250, dashboard.IncomeMinor);
+        Assert.Equal(0, dashboard.ExpenseMinor);
+        var recent = Assert.Single(dashboard.RecentTransactions);
+        Assert.Equal("Inside negative-offset day", recent.Merchant);
+    }
+
+    [Fact]
     public async Task DashboardWindow_UsesDstTransitionBoundary()
     {
         var zone = CreateDstTestZone();
