@@ -92,10 +92,10 @@ public sealed class BackupCurrencyPrecisionRoundTripTests : IAsyncLifetime
 
         foreach (var fixture in fixtures)
         {
-            var account = Assert.Single(accounts.Where(item => item.Currency == fixture.Currency));
+            var account = Assert.Single(accounts, item => item.Currency == fixture.Currency);
             Assert.Equal($"{fixture.Currency} backup account", account.Name);
 
-            var transaction = Assert.Single(transactions.Where(item => item.Currency == fixture.Currency));
+            var transaction = Assert.Single(transactions, item => item.Currency == fixture.Currency);
             Assert.Equal(fixture.ExpectedMinor, transaction.AmountMinor);
             Assert.Equal(account.Name, transaction.AccountName);
         }
