@@ -1,6 +1,6 @@
 # Finora — Next Steps to Consider
 
-Last prioritized review: **2026-08-15**
+Last prioritized review: **2026-08-16**
 
 This document is the execution roadmap for the current Finora 0.2.0 (build 2), database schema 2 source line.
 
@@ -11,7 +11,7 @@ The roadmap distinguishes:
 - **P0 — Release blockers:** work that should be completed before representing the current source as store-ready.
 - **P1 — Release-candidate completion:** packaging, store, documentation, and operational work needed around a validated release candidate.
 - **P2 — Quality and product polish:** important improvements that can follow once the current core is natively proven.
-- **P3 — Later-version architecture:** larger features that require new architecture/privacy/security decisions and should not be silently inserted into the current local-first design.
+- **P3 — Later-version architecture:** larger features that require new architecture/privacy/security/migration decisions and should not be silently inserted into the current local-first design.
 
 Buy Me a Coffee support is optional and external. It must not unlock Finora features, change finance behavior, bypass store entitlement rules, or be treated as a secure premium-license mechanism.
 
@@ -21,42 +21,50 @@ Concrete automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
 
 ## P0 — Release blockers
 
-### Automated source-validation gates completed on 2026-08-15
+### Automated source-validation gates completed on 2026-08-16
 
 The current verified source candidate is:
 
-`f80b29d44a225a6d745529519e6c59cadbc152a8`
+`8260ac02e4f683fa9749f9371185c25d5e3043f6`
 
 Verified Finora CI run:
 
-`31875164890`
+`31934249592`
 
 Verified CodeQL run:
 
-`31875164864`
+`31934249613`
 
-The following source-validation work is no longer an unknown for that candidate:
+The following source-validation work is no longer an unknown for that exact candidate:
 
 - ✅ dependency-free structural preflight passed;
 - ✅ NuGet/test-project restores completed on GitHub-hosted CI;
-- ✅ Unit tests passed: 97/97;
-- ✅ Integration tests passed: 141/141;
+- ✅ Unit tests passed: 102/102;
+- ✅ Integration tests passed: 173/173;
 - ✅ UI-contract tests passed: 35/35;
-- ✅ total automated result: 273/273 passed, 0 failed;
+- ✅ total automated result: **310/310 passed, 0 failed**;
 - ✅ Windows Release source build passed with `WindowsPackageType=None`;
 - ✅ Android Release source build passed;
 - ✅ iOS Release source build passed on a GitHub macOS runner;
 - ✅ Mac Catalyst Release source build passed on a GitHub macOS runner;
 - ✅ CodeQL passed;
 - ✅ XAML compiled-binding diagnostics `XC0022`, `XC0023`, and `XC0025` remain enforced as errors and all four native source builds passed under that policy;
-- ✅ schema 1 → schema 2 migration source coverage now includes target-schema validation, schema-version guards, fresh initialization/reopen, data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection;
-- ✅ encrypted-backup hostile-input coverage now includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated semantic corruption, and receipt path/size/hash corruption;
+- ✅ schema 1 → schema 2 migration source coverage includes target-schema validation, schema-version guards, fresh initialization/reopen, data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection;
+- ✅ encrypted-backup hostile-input coverage includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated semantic corruption, and receipt path/size/hash corruption;
 - ✅ receipt SHA-256 metadata is required by backup validation and missing checksum metadata has direct regression coverage;
-- ✅ deliberate integrity-corruption coverage now includes split totals, account currency, missing/changed receipts, invalid checksum metadata, category cycles, and foreign-key violations;
-- ✅ linked restore-journal and linked rollback-copy recovery cases now fail closed in direct integration coverage;
+- ✅ deliberate integrity-corruption coverage includes split totals, account currency, missing/changed receipts, invalid checksum metadata, category cycles, and foreign-key violations;
+- ✅ linked restore-journal and linked rollback-copy recovery cases fail closed in direct integration coverage;
+- ✅ complete finance-data reset coverage preserves unrelated app settings;
+- ✅ representative 0-, 2-, 3-, and 4-decimal currency classes are covered with JPY, INR, KWD, and CLF through conversion/import/export/report/account/budget/savings/recurring/reconciliation/encrypted-backup paths with exact minor-unit assertions;
+- ✅ CSV export → preview/import into a second SQLite database preserves exact stored minor units across those precision classes;
+- ✅ encrypted backup → complete reset → restore preserves exact minor units across those precision classes and finishes with a healthy integrity check;
+- ✅ shared local-calendar conversion covers UTC, UTC+05:30, UTC-07:00, deterministic DST start/end, multi-day and reversed ranges;
+- ✅ `FinanceStore` budget and legacy Dashboard windows now use shared local-calendar `[from,toExclusive)` UTC boundaries instead of UTC-midnight assumptions, with deterministic UTC+05:30, UTC-07:00 and DST integration coverage;
 - ✅ primary CI action majors run on the Node-24-compatible versions introduced by commit `6ba519bf69174c68b67f8595872546a259c783dc`.
 
 This evidence proves source/test/build correctness only for the recorded candidate. It does not prove signed packaging, installed prior-version upgrade behavior on every target, real process-kill/low-disk recovery, physical-device behavior, accessibility, or store approval.
+
+Documentation-only commits after the exact source candidate may advance `main`; runtime source evidence remains anchored to `8260ac02e4f683fa9749f9371185c25d5e3043f6` until a newer exact source candidate is recorded.
 
 ### 1. Structural preflight — completed automated evidence, keep as every-commit gate
 
@@ -68,7 +76,7 @@ python build/scripts/verify_structure.py
 
 The preflight guards repository structure, required documentation, local Markdown links, XML/XAML parsing, solution/project wiring, selected privacy/security invariants, version/schema drift, masked secret inputs, complete-reset wiring, and other source contracts.
 
-The current 2026-08-15 candidate passed this gate. It remains mandatory for every final release head.
+The current 2026-08-16 source candidate passed this gate. It remains mandatory for every final release head.
 
 ### 2. Restore exact .NET/MAUI dependency graph — CI restore proven; release inventory still required
 
@@ -92,7 +100,7 @@ dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Rele
 dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release
 ```
 
-Current evidence is 97 unit + 141 integration + 35 UI-contract = **273/273 passed**.
+Current exact source-candidate evidence is 102 unit + 173 integration + 35 UI-contract = **310/310 passed**.
 
 Highest-priority future failures to fix first remain:
 
@@ -105,7 +113,8 @@ Highest-priority future failures to fix first remain:
 7. budget/goal/reconciliation correctness;
 8. privacy/display leaks;
 9. XAML/source-contract failures;
-10. notification replacement consistency.
+10. notification replacement consistency;
+11. local-calendar/timezone boundary regressions.
 
 ### 4. Native Release source builds — completed automated evidence; packaging/device gates remain
 
@@ -135,13 +144,15 @@ Mac Catalyst on macOS/Xcode:
 dotnet build src/Finora.App/Finora.App.csproj -f net10.0-maccatalyst -c Release
 ```
 
-All four source-build targets passed on the current 2026-08-15 candidate. Windows MSIX generation/signing, Android signed AAB packaging, Apple provisioning/signing/archive/notarization, and device behavior are separate unresolved gates.
+All four source-build targets passed on the exact current 2026-08-16 candidate. Windows MSIX generation/signing, Android signed AAB packaging, Apple provisioning/signing/archive/notarization, and device behavior are separate unresolved gates.
 
 ### 5. Compiler/analyzer/XAML warning policy — current strict gate completed
 
 The repository is configured for strict analysis. Fix source rather than suppressing warnings broadly.
 
 The current source retains explicit typed binding contracts across the affected pages/templates and promotes `XC0022`, `XC0023`, and `XC0025` to errors.
+
+During this continuation, an intermediate candidate failed because three new test assertions violated xUnit analyzer `xUnit2031`. The test source was corrected in focused commits; the warning was not suppressed. That failure is useful evidence that analyzer warnings remain release-blocking.
 
 Continue reviewing especially:
 
@@ -158,7 +169,7 @@ Continue reviewing especially:
 
 ### 6. Migration validation — automated core completed; installed-upgrade evidence still required
 
-Current automated production-path coverage now includes:
+Current automated production-path coverage includes:
 
 - ✅ fresh schema creation and reopen;
 - ✅ schema 1 → schema 2;
@@ -182,9 +193,9 @@ Remaining release evidence:
 
 Do not edit `schema.version` manually to make a test pass.
 
-### 7. Encrypted backup/restore — hostile automated matrix expanded; native failure injection still required
+### 7. Encrypted backup/restore — hostile and precision automated matrix expanded; native failure injection still required
 
-Automated source/integration coverage now directly proves:
+Automated source/integration coverage directly proves:
 
 - ✅ create/preview/restore current schema;
 - ✅ wrong password rejection;
@@ -203,7 +214,8 @@ Automated source/integration coverage now directly proves:
 - ✅ linked recovery-journal refusal;
 - ✅ linked rollback-copy refusal while preserving live receipts and recovery state;
 - ✅ internal restore settings/markers remain excluded from portable state;
-- ✅ receipt/plaintext buffer clearing paths remain under regression coverage.
+- ✅ receipt/plaintext buffer clearing paths remain under regression coverage;
+- ✅ JPY/INR/KWD/CLF exact minor-unit preservation across encrypted backup, authenticated preview, finance reset, restore, and integrity verification.
 
 Still required with synthetic release-candidate profiles on native hosts/devices:
 
@@ -218,7 +230,7 @@ Still required with synthetic release-candidate profiles on native hosts/devices
 
 ### 8. Data-integrity diagnostics — automated corruption matrix expanded; release-profile run still required
 
-Automated tests now directly inject and detect representative corruption including:
+Automated tests directly inject and detect representative corruption including:
 
 - ✅ SQLite foreign-key violations;
 - ✅ transaction/account currency mismatch;
@@ -233,7 +245,8 @@ Automated tests now directly inject and detect representative corruption includi
 - ✅ receipt-size drift;
 - ✅ changed receipt bytes/SHA-256 drift;
 - ✅ invalid/missing receipt checksum metadata;
-- ✅ unsafe attachment path/link behavior through existing regression coverage.
+- ✅ unsafe attachment path/link behavior through existing regression coverage;
+- ✅ healthy integrity state after multi-precision encrypted backup/reset/restore.
 
 Still required before store-ready status:
 
@@ -263,41 +276,62 @@ Native QA should verify that passive monetary values do not remain visible throu
 
 Explicit edit controls may show values when the user intentionally edits them.
 
-### 10. Validate currency precision with real supported examples
+### 10. Validate currency precision — automated core now broad; native UI matrix remains
 
-At minimum verify representative:
+Automated coverage now explicitly exercises representative:
 
-- 0-decimal currency behavior;
-- 2-decimal currency behavior;
-- 3-decimal currency behavior;
-- any supported 4-decimal convention.
+- ✅ 0-decimal JPY behavior;
+- ✅ 2-decimal INR behavior;
+- ✅ 3-decimal KWD behavior;
+- ✅ 4-decimal CLF behavior.
 
-Exercise:
+The exact automated paths now include:
 
-- manual entry;
-- account balances;
-- transaction details;
-- CSV import/export;
-- reports;
-- budgets;
-- savings;
-- recurring items;
-- reconciliation;
-- backup round trip.
+- ✅ `Money` major-unit conversion/rounding;
+- ✅ CSV major-unit import;
+- ✅ CSV export values and preview;
+- ✅ CSV `AmountMinor` export → import into a second database without value drift;
+- ✅ account opening/current balances;
+- ✅ budget planned/actual calculations;
+- ✅ savings target/start/contribution/current values;
+- ✅ recurring rule/occurrence/generated paid transaction;
+- ✅ reconciliation preview/adjustment/final balance;
+- ✅ income/expense reports;
+- ✅ encrypted backup preview/reset/restore/integrity.
+
+Remaining native/manual validation should still exercise:
+
+- manual entry/editor controls and keyboards;
+- currency-specific display formatting on every target;
+- account/transaction edit round trips;
+- platform file-picker/share flows around CSV/backup;
+- assistive technology announcements of formatted values;
+- any supported currency metadata outside the representative precision classes.
 
 Do not introduce automatic FX conversion merely to simplify tests.
 
-### 11. Validate local-calendar behavior in multiple time zones
+### 11. Validate local-calendar behavior — deterministic automated matrix expanded; actual platform timezone QA remains
 
-Required cases should include:
+Automated shared conversion now covers:
 
-- UTC;
-- a positive non-hour-offset time zone such as India;
-- a negative offset;
-- a daylight-saving zone;
-- DST transition dates where supported by test environment.
+- ✅ UTC;
+- ✅ positive non-hour UTC+05:30;
+- ✅ negative UTC-07:00;
+- ✅ deterministic daylight-saving start;
+- ✅ deterministic daylight-saving end;
+- ✅ multi-day exclusive end boundary;
+- ✅ reversed-range rejection.
 
-Exercise:
+Automated store-level regression coverage now proves:
+
+- ✅ budget one-day local boundary in UTC+05:30;
+- ✅ legacy Dashboard one-day boundary in UTC+05:30;
+- ✅ legacy Dashboard one-day boundary in UTC-07:00;
+- ✅ legacy Dashboard DST-start boundary.
+
+Production `FinanceStore` now uses shared local-calendar `[from,toExclusive)` boundaries for budget periods and the legacy Dashboard aggregate instead of UTC-midnight construction.
+
+Native/manual validation is still required on actual target hosts/devices for:
 
 - Dashboard periods;
 - transaction date filters;
@@ -306,7 +340,9 @@ Exercise:
 - monthly reports;
 - yearly reports;
 - budget windows;
-- account trends.
+- account trends;
+- device timezone changes between launches;
+- actual OS daylight-saving behavior where applicable.
 
 ### 12. Validate notification lifecycle on native platforms
 
@@ -389,7 +425,7 @@ Apple:
 
 ### 16. Validate full local finance-data deletion
 
-Verify complete finance deletion removes all intended finance records and receipt files while preserving only intentionally retained preferences/security/schema state.
+Automated reset coverage proves finance records can be cleared while unrelated app settings remain. Native release QA should additionally verify complete finance deletion removes all intended finance records and receipt files while preserving only intentionally retained preferences/security/schema state.
 
 Then verify:
 
@@ -603,7 +639,9 @@ Potential automation targets:
 - backup password flow using synthetic files;
 - Settings destructive confirmation;
 - app lock flow;
-- report period selection.
+- report period selection;
+- currency-specific amount entry;
+- timezone/date-boundary display.
 
 ### 30. Improve accessibility continuously
 
@@ -664,7 +702,9 @@ Add multiple synthetic profiles for:
 - budget-heavy user;
 - recurring-heavy user;
 - savings-heavy user;
-- large dataset/performance testing.
+- large dataset/performance testing;
+- currency-precision matrix user;
+- local-date/timezone boundary user.
 
 ### 35. Improve contributor workflow
 
@@ -782,16 +822,16 @@ Prefer privacy-preserving diagnostics and never send finance contents by default
 
 ## Recommended execution order
 
-The completed automated source-build and data-safety regression block is now an every-commit gate rather than the next unknown. Continue in this order:
+The completed automated source-build, precision/calendar, and data-safety regression block is now an every-commit gate rather than the next unknown. Continue in this order:
 
-1. keep structural preflight + 273-test + four-target source-build + CodeQL gates green;
+1. keep structural preflight + **310-test** + four-target source-build + CodeQL gates green;
 2. execute a complete installed prior-version/schema-1→2 upgrade profile and run integrity/backup validation after migration;
 3. execute native process-interruption, low-disk, locked-file, and relaunch recovery validation;
-4. validate privacy/security/currency/time-zone behavior on native UI;
+4. validate privacy/security/currency/time-zone behavior on native UI, using JPY/INR/KWD/CLF and real target timezone settings;
 5. validate notifications/app lock/biometrics/Windows Hello and capture limitations;
 6. validate attachment/file/share/import/export flows and path confinement on native platforms;
 7. run accessibility/native UI QA;
-8. validate complete data deletion;
+8. validate complete data deletion on native hosts/devices;
 9. build signed release candidates outside source control;
 10. validate store privacy/payment-link rules, including Buy Me a Coffee placement;
 11. create synthetic screenshots/store metadata;
@@ -804,9 +844,9 @@ The completed automated source-build and data-safety regression block is now an 
 
 ## Definition of the next successful milestone
 
-The next milestone is narrower again because migration, hostile-backup, integrity-corruption, restore-link safety, source compilation, and automated tests now have concrete CI evidence:
+The next milestone is narrower again because migration, hostile-backup, integrity-corruption, restore-link safety, reset-safety, representative currency precision, local-calendar source behavior, source compilation, and automated tests now have concrete CI evidence:
 
-> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build/data-safety gates and adds complete installed-upgrade, real recovery failure-injection, native privacy/security/accessibility, signed packaging, dependency-review, and store evidence for every applicable release checklist item.**
+> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build/data-safety/precision/calendar gates and adds complete installed-upgrade, real recovery failure-injection, native privacy/security/currency/time-zone/accessibility, signed packaging, dependency-review, and store evidence for every applicable release checklist item.**
 
 After that milestone, P2 improvements can be prioritized using actual performance, accessibility, user feedback, and support data instead of guessing.
 
