@@ -1,6 +1,6 @@
 # What Changed — Finora
 
-Last continuation: **2026-08-15**  
+Last continuation: **2026-08-16**  
 Repository: https://github.com/sanskarIN/Finora  
 Current branch: **main**  
 Current source line: **Finora 0.2.0 (build 2)**  
@@ -4073,3 +4073,339 @@ Those external gates remain in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHEC
 `docs/testing/CI_EVIDENCE.md` remains the commit/run/job evidence record.
 
 This `what_changed.md` update is intentionally the final content write for the migration/backup/integrity/recovery hardening continuation.
+
+---
+
+## 133. Currency precision and local-calendar correctness continuation — 2026-08-16
+
+This continuation began from source head:
+
+`4053c5eae3d9644dd518e72b2dd8e69cc604c423`
+
+Commit message:
+
+`test(reset): preserve non-finance app settings`
+
+That starting candidate already had concrete GitHub Actions evidence for:
+
+- structural preflight;
+- 101/101 unit tests;
+- 145/145 integration tests;
+- 35/35 UI-contract tests;
+- 281/281 total tests;
+- Windows/Android/iOS/Mac Catalyst Release source builds.
+
+The repository documentation still pointed primarily to the older 273-test `f80b29d…` evidence, so this continuation addressed both the next automated correctness gap and that evidence drift.
+
+The final verified runtime/source candidate for this continuation is:
+
+`8260ac02e4f683fa9749f9371185c25d5e3043f6`
+
+It is 13 focused source/test/documentation commits ahead of `4053c5e…` before the subsequent evidence/status/roadmap/test-plan/ledger documentation-only commits.
+
+---
+
+## 134. Production local-calendar bug fixed in FinanceStore
+
+A source audit found that the shared reporting/date-filter path already used `LocalDateRange`, but `FinanceStore.GetBudgetsAsync` and the legacy `FinanceStore.GetDashboardAsync` still converted selected calendar dates by constructing UTC-midnight timestamps.
+
+That assumption is incorrect outside UTC and can misclassify transactions near a local day boundary. For example, India UTC+05:30 has a local midnight at 18:30 UTC on the previous UTC date.
+
+`src/Finora.Infrastructure/FinanceStore.cs` now:
+
+- imports the shared `Finora.Shared.LocalDateRange` policy;
+- accepts an optional `TimeZoneInfo` in its constructor;
+- defaults that value to `TimeZoneInfo.Local` for production use;
+- converts budget `StartsOn`/`EndsOn` through `LocalDateRange.ToUtc`;
+- filters budget transactions with `[FromUtc, ToExclusiveUtc)`;
+- converts Dashboard selected `start`/`end` through the same policy;
+- filters Dashboard transactions with the same exclusive-end convention.
+
+This is a production correctness fix rather than a test-only change.
+
+The optional constructor timezone exists so deterministic integration tests can prove India, negative-offset, and DST behavior without changing the production default.
+
+---
+
+## 135. LocalDateRange automated matrix expanded
+
+`tests/Finora.UnitTests/LocalDateRangeTests.cs` now directly covers:
+
+- UTC local midnight as UTC midnight;
+- UTC+05:30 fixed offset;
+- UTC-07:00 fixed offset;
+- deterministic DST-start day producing a 23-hour UTC span;
+- deterministic DST-end day producing a 25-hour UTC span;
+- multi-day exclusive end boundary;
+- reversed range rejection.
+
+This makes the intended local-calendar contract explicit rather than leaving UTC itself implicit.
+
+---
+
+## 136. FinanceStore local-calendar integration coverage added
+
+New file:
+
+`tests/Finora.IntegrationTests/LocalCalendarFinanceStoreTests.cs`
+
+It proves production store behavior with deterministic zones:
+
+- a UTC+05:30 one-day custom budget includes a transaction that falls on the selected local day even though its UTC date is the previous date;
+- a later UTC timestamp belonging to the next India local day is excluded;
+- a UTC+05:30 Dashboard day uses the same boundary;
+- a UTC-07:00 Dashboard day excludes the previous local day and includes the selected local day;
+- a deterministic DST-start Dashboard day uses the correct shortened UTC span.
+
+These automated tests do not replace testing the actual target OS timezone database and device timezone-change behavior before release.
+
+---
+
+## 137. Representative 0/2/3/4-decimal currency matrix expanded
+
+The continuation deliberately uses representative currency metadata classes rather than assuming every currency has two decimal places:
+
+- JPY — 0 decimal places;
+- INR — 2 decimal places;
+- KWD — 3 decimal places;
+- CLF — 4 decimal places.
+
+`CurrencyAwareImportTests.cs` now includes INR in addition to the existing JPY/KWD/CLF precision cases.
+
+New `CurrencyPrecisionWorkflowTests.cs` proves exact minor-unit behavior through:
+
+- account opening/current balance;
+- budget limit/planned/actual calculations;
+- savings goal target/start/contribution/current/progress;
+- recurring rule/occurrence/generated paid transaction;
+- reconciliation preview/difference/adjustment/final balance.
+
+All assertions use exact integer minor units at persistence/service boundaries.
+
+---
+
+## 138. CSV export → preview/import precision round trip added
+
+New file:
+
+`tests/Finora.IntegrationTests/ExportCurrencyPrecisionTests.cs`
+
+The suite now proves that JPY/INR/KWD/CLF rows:
+
+- are created from currency-aware values;
+- export the exact stored `AmountMinor`;
+- retain their currency and account identity in the generated CSV;
+- pass the export preview parser;
+- can be imported into a second isolated SQLite database using `AmountMinor` mode;
+- preserve exact minor-unit values after the round trip.
+
+This closes a portable-data regression gap between conversion tests and actual export/import behavior.
+
+---
+
+## 139. Encrypted backup multi-precision round trip added
+
+New file:
+
+`tests/Finora.IntegrationTests/BackupCurrencyPrecisionRoundTripTests.cs`
+
+The test builds a synthetic finance profile with JPY/INR/KWD/CLF rows, then:
+
+1. creates an encrypted backup;
+2. previews/authenticates it;
+3. deletes all finance data through `FinanceDataResetService`;
+4. proves the live profile is empty;
+5. restores the encrypted backup;
+6. proves restored account/currency relationships;
+7. proves exact restored minor-unit values;
+8. runs the normal `DataIntegrityService`;
+9. requires a healthy SQLite/foreign-key/finance result.
+
+The backup path is therefore covered for currency precision itself, not only graph validity and cryptographic hostile-input cases.
+
+---
+
+## 140. Report precision coverage added
+
+New file:
+
+`tests/Finora.IntegrationTests/ReportCurrencyPrecisionTests.cs`
+
+It creates exact JPY/INR/KWD/CLF income and expense rows and requires `AdvancedReportService.GetIncomeExpenseAsync` to return the exact stored minor-unit totals for each reporting currency.
+
+This complements the existing currency-isolation report tests by proving representative precision classes do not drift inside report aggregation.
+
+---
+
+## 141. Strict analyzer failure was caught and corrected
+
+The first combined candidate containing the new precision/calendar tests ran through Finora CI run:
+
+`31934141986`
+
+Structural preflight and the unit suite succeeded, but the integration project was blocked by warnings-as-errors because three new test assertions used an xUnit pattern rejected by analyzer:
+
+`xUnit2031`
+
+The affected assertions used:
+
+`Assert.Single(collection.Where(predicate))`
+
+They were corrected in two focused commits to use:
+
+`Assert.Single(collection, predicate)`
+
+No production rule, analyzer, or warnings-as-errors policy was weakened.
+
+The failed intermediate run is retained as useful evidence that strict analyzer findings still stop the gated pipeline.
+
+---
+
+## 142. Exact 13-commit source/test continuation trail
+
+From `4053c5eae3d9644dd518e72b2dd8e69cc604c423` through verified source candidate `8260ac02e4f683fa9749f9371185c25d5e3043f6`, the focused commits are:
+
+1. `81da3ff1992f84fa2d460955ffc68d2d633ab058` — `test(export): cover currency precision round trips`;
+2. `1b20d3817a3cb8c28c0aa629dea3951dea2944c6` — `test(backup): cover multi-precision currency round trip`;
+3. `d10d9ed11b62c9bbaa71c4cd9d64b7bca61670bd` — `test(backup): assert restored account relationship`;
+4. `9a64a6142a2df09a66ce818ee92b9d5188552fd1` — `test(time): cover explicit UTC calendar boundary`;
+5. `12abad0677060dfa167c8aaf73a95250571c5941` — `test(import): cover two-decimal currency rounding`;
+6. `1120d043a2462e08a6be53f66335759bafa22b22` — `fix(calendar): use local boundaries for budgets and dashboard`;
+7. `51fcefc215f549011f4183a9b29a92522aef9dea` — `test(calendar): cover budget and dashboard local boundaries`;
+8. `54fe404ada90fe08d371dfa51d6d739562131876` — `test(currency): cover core finance workflows across precisions`;
+9. `f6881034598e3b90290381e88caa982442a3e90f` — `test(calendar): cover negative-offset store boundary`;
+10. `6e1daa0ce2dfebc6270a565ff998de7dcf8fefb4` — `test(reports): cover currency precision classes`;
+11. `cb6cedcc50051c29e7007dea0fbc0f2e730ad283` — `test(backup): satisfy strict xunit single analyzer`;
+12. `8656733cb041bafdbf87b7993790c809fe188034` — `test(export): satisfy strict xunit single analyzer`;
+13. `8260ac02e4f683fa9749f9371185c25d5e3043f6` — `docs(testing): document precision and local-calendar regressions`.
+
+The source/test compare changes nine files. Only one production source file changed: `src/Finora.Infrastructure/FinanceStore.cs`; the remaining changes are regression tests plus `docs/testing/TESTING_GUIDE.md`.
+
+---
+
+## 143. Exact 310-test source-candidate evidence
+
+Verified source candidate:
+
+`8260ac02e4f683fa9749f9371185c25d5e3043f6`
+
+Finora CI run:
+
+`31934249592`
+
+CodeQL run:
+
+`31934249613`
+
+Finora CI passed:
+
+- Structural preflight — job `95133649345`;
+- Core tests — job `95133666510`;
+- Windows Release source build — job `95133762880`;
+- Android Release source build — job `95133762915`;
+- iOS Release source build — job `95133762871`;
+- Mac Catalyst Release source build — job `95133762913`.
+
+Exact test result:
+
+- Unit: **102/102 passed**;
+- Integration: **173/173 passed**;
+- UI-contract: **35/35 passed**;
+- Total: **310/310 passed**;
+- Failed: **0**.
+
+Retained core artifact:
+
+- `core-test-results` — artifact `9260190133`;
+- SHA-256 `c80fe9a24b40f033524121a75fdfc1f3a5eca173c607bf4a973b8c6c7cc42999`.
+
+Retained native diagnostic artifacts:
+
+- Windows — artifact `9260232838`, SHA-256 `cc753d899eac9c1ae46abfe59e15725d80ed54c2f36291650c53f335224f26b5`;
+- Android — artifact `9260279323`, SHA-256 `b6f42dce4695d85614e866faa32d0a741e9232f5eb7a87c88f29b86e998f6250`;
+- iOS — artifact `9260383176`, SHA-256 `098d737945ec4d1024be5425020d83809b22e3689deaa13c90d0026e724eb50d`;
+- Mac Catalyst — artifact `9260224740`, SHA-256 `b691cab1e5a94ac6492b3d31bbbc9d25d38cf5e5ab5c3b56db99f95c5f92b8a3`.
+
+CodeQL job `95133633181` completed successfully on the same exact source candidate.
+
+---
+
+## 144. Documentation/evidence alignment commits after the verified source candidate
+
+After `8260ac02…` was fully green, runtime source was frozen and documentation was advanced in separate commits so evidence remained anchored to one exact source candidate.
+
+Focused documentation commits before this ledger write:
+
+- `0f3cb57e64ff5b5d3edb09f3a9c0c22d7aa88f33` — `docs(evidence): record 310-test precision calendar candidate`;
+- `73a4840033a24183d645f2b23b91a3b4a35cbcdf` — `docs(status): advance verified precision and calendar coverage`;
+- `f4fee9e7ac4af8e1667e91ad730c971ecf90df95` — `docs(roadmap): mark automated precision calendar gates`;
+- `85c6bd7e690e8bcf26168ab7fdbc41705b90302f` — `docs(test): expand precision and timezone release matrix`;
+- final focused ledger commit updating `what_changed.md`.
+
+Updated documentation includes:
+
+- `docs/testing/CI_EVIDENCE.md` — exact 310-test/run/job/artifact/digest evidence plus current/historical candidate boundaries;
+- `PROJECT_STATUS.md` — current precision/calendar/reset/migration/backup/integrity status and unresolved native/store gates;
+- `docs/NEXT_STEPS.md` — automated portions of currency/timezone P0 work marked complete while native UI/device validation remains open;
+- `docs/TEST_PLAN.md` — expanded 0/2/3/4-decimal, CSV round-trip, backup round-trip, report, FinanceStore local-boundary, and native timezone/currency matrices;
+- `docs/testing/TESTING_GUIDE.md` — practical precision/local-calendar regression guidance;
+- `what_changed.md` — cumulative continuation ledger.
+
+Documentation-only commits after `8260ac02…` do not change the runtime/test source proven by run `31934249592`; the evidence document states this boundary explicitly.
+
+---
+
+## 145. Commit identity observation corrects the older connector limitation for this session
+
+Historical sections 2 and 82 remain unchanged because they accurately documented the connector capability/observability available when those continuations were written.
+
+For the 2026-08-16 verified candidate, however, GitHub Actions run metadata for head commit `8260ac02e4f683fa9749f9371185c25d5e3043f6` exposes the commit author/committer identity as:
+
+`Sanskar <sanskarin@outlook.in>`
+
+Therefore the older statement that connector-created commits in this environment could not truthfully be shown to use the requested email is superseded for this continuation by concrete GitHub commit/run metadata.
+
+This is recorded as a new historical correction rather than retroactively deleting the old limitation sections.
+
+---
+
+## 146. External/native release boundary after precision/calendar hardening
+
+The 2026-08-16 source candidate now has concrete automated evidence for:
+
+- structural preflight;
+- **310/310** automated tests;
+- strict analyzer/warnings-as-errors enforcement;
+- Windows/Android/iOS/Mac Catalyst Release source compilation;
+- CodeQL;
+- representative 0/2/3/4-decimal currency conversion and workflow precision;
+- CSV export/preview/re-import exact minor-unit round trip;
+- encrypted backup/reset/restore exact minor-unit round trip;
+- report precision;
+- UTC/+05:30/-07:00/DST local-calendar conversion;
+- production `FinanceStore` budget/Dashboard local-calendar boundaries;
+- previously verified migration, hostile-backup, integrity-corruption, receipt-checksum, restore-recovery, privacy-log, and reset-safety behavior retained in the same source line.
+
+The following remain separate release gates and are **not** relabeled complete:
+
+- signed Android AAB packaging;
+- Windows MSIX generation/publisher/signing;
+- iOS provisioning/signing/archive/TestFlight/App Store;
+- Mac Catalyst signing/notarization/distribution packaging;
+- installed prior-version upgrade testing on every applicable target;
+- actual process-kill/low-disk/locked-file restore failure injection;
+- native JPY/INR/KWD/CLF entry/edit/display and assistive-technology QA;
+- actual target-device timezone changes and OS timezone/DST behavior;
+- real notification/biometric/Windows Hello behavior;
+- real file picker/share/receipt behavior;
+- Android merged-manifest and actual backup/device-transfer behavior;
+- TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast/reduced-motion QA;
+- final exact dependency-license/vulnerability acceptance;
+- live store-policy/privacy/data-safety/external-support-link approval;
+- complete absence of undiscovered defects.
+
+Those gates remain in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHECKLIST.md`, `docs/releases/STORE_READINESS.md`, `docs/TEST_PLAN.md`, and `docs/testing/NATIVE_VALIDATION_MATRIX.md`.
+
+`docs/testing/CI_EVIDENCE.md` is the exact current source-candidate proof record.
+
+This `what_changed.md` update preserves the complete prior 132-section history and appends the 2026-08-16 precision/calendar/evidence continuation rather than replacing or shortening earlier project history.
