@@ -1,5 +1,9 @@
 # Finora
 
+[![Support Finora on Buy Me a Coffee](src/Finora.App/Resources/Images/bmc_support.svg)](https://buymeacoffee.com/sanskarIN)
+
+> **☕ Support Finora development:** [Buy Me a Coffee — sanskarIN](https://buymeacoffee.com/sanskarIN). Support is optional and never unlocks features, changes support priority, or replaces store/server-backed entitlement validation.
+
 **Finora** is an open-source, local-first personal finance application built with .NET MAUI, C#, XAML, SQLite/Entity Framework Core, and MVVM-oriented presentation architecture.
 
 > **Made by the Sanskar**
@@ -339,7 +343,7 @@ Settings includes:
 - masked backup password/PIN fields;
 - Revisit onboarding control.
 
-Onboarding explains local-first/no-account/no-automatic-upload behavior, currency/locale/financial month, optional opening balance and explicit sample-data opt-in. It exposes Privacy and Terms access and can be revisited safely when accounts already exist.
+Onboarding explains local-first/no-account/no-automatic-upload behavior, currency/locale/financial month, optional opening balance and explicit sample-data opt-in. It exposes Privacy and Terms access, highlights optional Buy Me a Coffee project support with the shared branded artwork, and can be revisited safely when accounts already exist.
 
 About uses packaged `AppInfo` version/build metadata and exposes:
 
@@ -352,7 +356,7 @@ About uses packaged `AppInfo` version/build metadata and exposes:
 - Privacy and Terms;
 - Contributing, Security and Support guides.
 
-The Buy Me a Coffee link opens `https://buymeacoffee.com/sanskarIN` as an optional external contribution page. It does not unlock Finora features, create premium entitlement, change support priority, or replace store/server-backed licensing. Packaged releases must verify the target store's current policy for external contribution/payment links.
+The Buy Me a Coffee link opens `https://buymeacoffee.com/sanskarIN` as an optional external contribution page. It does not unlock Finora features, create premium entitlement, change support priority, or replace store/server-backed licensing. Packaged releases must verify the target store's current policy for external contribution/payment links. See [`docs/features/PROJECT_SUPPORT.md`](docs/features/PROJECT_SUPPORT.md) for the support UX and trust boundary.
 
 ### Temporary share artifacts
 
@@ -404,7 +408,7 @@ Dependency-free structural check:
 python build/scripts/verify_structure.py
 ```
 
-The structural verifier checks repository/documentation structure and local links, product/support identity, XML/XAML/project wiring, version/schema drift, floating-point monetary fields, raw minor-unit user-facing labels, selected Android privacy/backup rules, masked secret fields, complete-reset handler wiring, biometric provider-text redaction, and raw exception-alert regressions.
+The structural verifier checks repository/documentation structure and local links, product/support identity including BMC discovery surfaces, XML/XAML/project wiring, version/schema drift, floating-point monetary fields, raw minor-unit user-facing labels, selected Android privacy/backup rules, masked secret fields, complete-reset handler wiring, biometric provider-text redaction, and raw exception-alert regressions.
 
 Full compiler/test verification requires a compatible .NET 10/MAUI environment and platform SDK/workloads described in [`docs/setup/BUILD.md`](docs/setup/BUILD.md).
 
@@ -439,7 +443,7 @@ Large later-version features such as remote accounts, cloud sync, collaboration,
 
 ## Testing
 
-See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Current automated/source-contract areas include money/currency, domain/persistence metadata, linked transfers, split/category behavior, recurrence payment/rule lifecycle, account/reconciliation dependencies, custom budget periods, Dashboard periods, local-date UTC conversion, complete report matrix, future-date comparison exclusion, currency-aware import/reporting, encrypted backup graph validation, crash-safe restore recovery, schema migration, expanded integrity diagnostics, privacy-safe amount surfaces, signed chart baseline, transaction sorting/incremental display, adaptive navigation, reset safety, onboarding/About controls, and platform privacy source contracts.
+See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Current automated/source-contract areas include money/currency, domain/persistence metadata, linked transfers, split/category behavior, recurrence payment/rule lifecycle, account/reconciliation dependencies, custom budget periods, Dashboard periods, local-date UTC conversion, complete report matrix, future-date comparison exclusion, currency-aware import/reporting, encrypted backup graph validation, crash-safe restore recovery, schema migration, expanded integrity diagnostics, privacy-safe amount surfaces, signed chart baseline, transaction sorting/incremental display, adaptive navigation, reset safety, onboarding/About controls, BMC support visibility/trust boundaries, and platform privacy source contracts.
 
 ## Security
 
@@ -472,7 +476,7 @@ These require new architecture, privacy, security, retention, and migration deci
 
 - Repository: https://github.com/sanskarIN/Finora
 - Creator/open-source profile: https://www.github.com/sanskarIN
-- Support development: https://buymeacoffee.com/sanskarIN
+- **☕ Support development: https://buymeacoffee.com/sanskarIN**
 - Business/security: `sanskarin@outlook.in`
 - Support: `supportramsandesh@gmail.com`
 - Attribution: **Made by the Sanskar**
