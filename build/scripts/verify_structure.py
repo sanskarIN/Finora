@@ -44,6 +44,7 @@ DOCUMENTATION_PATHS = [
     "docs/features/BUDGETS_GOALS_RECURRING.md",
     "docs/features/REPORTS_IMPORT_EXPORT.md",
     "docs/features/SETTINGS_REFERENCE.md",
+    "docs/features/PROJECT_SUPPORT.md",
     "docs/security/THREAT_MODEL.md",
     "docs/security/APP_LOCK_AND_PRIVACY.md",
     "docs/security/BACKUP_AND_RECOVERY.md",
@@ -288,8 +289,14 @@ def check_product_identity(errors: list[str]) -> None:
     constants = ROOT / "src/Finora.Shared/AppConstants.cs"
     settings_xaml = ROOT / "src/Finora.App/Pages/SettingsPage.xaml"
     about = ROOT / "src/Finora.App/Pages/SettingsPage.About.cs"
+    onboarding_xaml = ROOT / "src/Finora.App/Pages/OnboardingPage.xaml"
+    onboarding_links = ROOT / "src/Finora.App/Pages/OnboardingPage.Links.cs"
+    app_shell = ROOT / "src/Finora.App/AppShell.xaml"
+    support_artwork = ROOT / "src/Finora.App/Resources/Images/bmc_support.svg"
     docs_index = ROOT / "docs/README.md"
     roadmap = ROOT / "docs/NEXT_STEPS.md"
+    support_doc = ROOT / "SUPPORT.md"
+    support_guide = ROOT / "docs/features/PROJECT_SUPPORT.md"
 
     if constants.exists():
         text = read(constants)
@@ -301,6 +308,8 @@ def check_product_identity(errors: list[str]) -> None:
         text = read(settings_xaml)
         if 'Clicked="OnBuyMeACoffeeClicked"' not in text or "Buy Me a Coffee" not in text:
             errors.append(f"{rel(settings_xaml)}: About must expose the Buy Me a Coffee support action")
+        if "bmc_support.svg" not in text:
+            errors.append(f"{rel(settings_xaml)}: About must retain the branded Buy Me a Coffee artwork")
         if "does not unlock Finora features" not in text:
             errors.append(f"{rel(settings_xaml)}: Buy Me a Coffee must remain explicitly separate from feature entitlement")
 
@@ -309,7 +318,27 @@ def check_product_identity(errors: list[str]) -> None:
         if "AppConstants.BuyMeACoffeeUrl" not in text:
             errors.append(f"{rel(about)}: Buy Me a Coffee action must use the shared canonical URL")
 
-    for path in (docs_index, roadmap):
+    if onboarding_xaml.exists():
+        text = read(onboarding_xaml)
+        if "bmc_support.svg" not in text or 'Clicked="OnOnboardingBuyMeACoffeeClicked"' not in text:
+            errors.append(f"{rel(onboarding_xaml)}: onboarding must retain the branded Buy Me a Coffee support surface")
+        if "optional external" not in text or "never unlocks app features" not in text:
+            errors.append(f"{rel(onboarding_xaml)}: onboarding must keep Buy Me a Coffee optional and separate from entitlement")
+
+    if onboarding_links.exists() and "AppConstants.BuyMeACoffeeUrl" not in read(onboarding_links):
+        errors.append(f"{rel(onboarding_links)}: onboarding Buy Me a Coffee action must use the shared canonical URL")
+
+    if app_shell.exists():
+        text = read(app_shell)
+        if "Shell.FlyoutFooter" not in text or "bmc_support.svg" not in text:
+            errors.append(f"{rel(app_shell)}: adaptive navigation must retain the branded Buy Me a Coffee flyout artwork")
+
+    if support_artwork.exists():
+        text = read(support_artwork)
+        if "SUPPORT FINORA" not in text or "BUY ME A COFFEE" not in text:
+            errors.append(f"{rel(support_artwork)}: branded Buy Me a Coffee artwork text is missing")
+
+    for path in (docs_index, roadmap, support_doc, support_guide):
         if path.exists() and BUY_ME_A_COFFEE_URL not in read(path):
             errors.append(f"{rel(path)}: canonical Buy Me a Coffee URL is not documented")
 
