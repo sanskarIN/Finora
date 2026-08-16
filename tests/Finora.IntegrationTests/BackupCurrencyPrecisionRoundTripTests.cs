@@ -97,7 +97,7 @@ public sealed class BackupCurrencyPrecisionRoundTripTests : IAsyncLifetime
 
             var transaction = Assert.Single(transactions.Where(item => item.Currency == fixture.Currency));
             Assert.Equal(fixture.ExpectedMinor, transaction.AmountMinor);
-            Assert.Equal(account.Id, transaction.Id == Guid.Empty ? Guid.Empty : account.Id);
+            Assert.Equal(account.Name, transaction.AccountName);
         }
 
         var integrity = await new DataIntegrityService(_factory, _root).CheckAsync();
