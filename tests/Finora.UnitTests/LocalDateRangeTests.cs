@@ -5,6 +5,16 @@ namespace Finora.UnitTests;
 public sealed class LocalDateRangeTests
 {
     [Fact]
+    public void UtcZone_UsesLocalMidnightAsUtcMidnight()
+    {
+        var range = LocalDateRange.ToUtc(new DateOnly(2026, 8, 11), new DateOnly(2026, 8, 11), TimeZoneInfo.Utc);
+
+        Assert.Equal(new DateTimeOffset(2026, 8, 11, 0, 0, 0, TimeSpan.Zero), range.FromUtc);
+        Assert.Equal(new DateTimeOffset(2026, 8, 12, 0, 0, 0, TimeSpan.Zero), range.ToExclusiveUtc);
+        Assert.Equal(TimeSpan.FromDays(1), range.Duration);
+    }
+
+    [Fact]
     public void FixedOffsetZone_ConvertsLocalMidnightToUtc()
     {
         var zone = TimeZoneInfo.CreateCustomTimeZone("IST-test", TimeSpan.FromHours(5.5), "IST-test", "IST-test");
