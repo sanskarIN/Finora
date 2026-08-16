@@ -12,9 +12,11 @@ The same Finora-branded `bmc_support.svg` artwork is reused so project support h
 
 - **Settings → About** — prominent support artwork plus a clickable Buy Me a Coffee button.
 - **Onboarding** — an optional support card with the artwork, an explicit contribution disclaimer, and a browser action.
-- **Tablet/desktop adaptive flyout** — persistent support artwork so the project-support identity remains discoverable outside the About section.
+- **Tablet/desktop adaptive flyout** — persistent clickable support artwork that opens the canonical BMC page in the system browser.
+- **Project README** — prominent linked support artwork and callout.
 - **Repository support guide** — prominent linked artwork and support callout.
 - **Documentation hub** — prominent linked artwork and support callout.
+- **Contributing guide** — linked artwork plus an explicit reminder that contributions never influence code-review priority.
 
 The support artwork should remain a discovery aid, not an interruption. Finora must not place contribution prompts in transaction entry, backup/restore confirmation, app-lock prompts, error dialogs, or other sensitive finance/security workflows merely to increase visibility.
 
@@ -51,9 +53,12 @@ Project support remains voluntary. Core current-release finance behavior remains
 - the Settings support-artwork and canonical-link wiring;
 - support-artwork visibility in Settings, Onboarding, and adaptive Shell navigation;
 - onboarding use of the canonical BMC URL;
-- the optional/no-entitlement wording on the onboarding support surface.
+- the optional/no-entitlement wording on the onboarding support surface;
+- the adaptive flyout tap handler and its canonical BMC launcher wiring.
 
-When a support surface changes, update the contract test with the same commit instead of removing the guard.
+The dependency-free structural preflight also protects the required support guide, support artwork, canonical URL, onboarding support surface, Settings support surface, and adaptive flyout artwork.
+
+When a support surface changes, update the relevant regression guard with the same commit instead of removing the guard.
 
 ## Store and release review
 
