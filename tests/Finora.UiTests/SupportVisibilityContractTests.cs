@@ -27,4 +27,15 @@ public sealed class SupportVisibilityContractTests
         Assert.Contains("optional external", onboarding, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("never unlocks app features", onboarding, StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void AdaptiveFlyoutSupportArtwork_IsActionableAndUsesCanonicalBmcUrl()
+    {
+        var shell = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Contracts", "AppShell.xaml"));
+        var shellCodeBehind = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Contracts", "AppShell.xaml.cs"));
+
+        Assert.Contains("OnShellBuyMeACoffeeTapped", shell, StringComparison.Ordinal);
+        Assert.Contains("AppConstants.BuyMeACoffeeUrl", shellCodeBehind, StringComparison.Ordinal);
+        Assert.Contains("Launcher.Default.OpenAsync", shellCodeBehind, StringComparison.Ordinal);
+    }
 }
