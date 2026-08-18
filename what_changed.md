@@ -1,6 +1,6 @@
 # What Changed — Finora
 
-Last continuation: **2026-08-16**  
+Last continuation: **2026-08-18**  
 Repository: https://github.com/sanskarIN/Finora  
 Current branch: **main**  
 Current source line: **Finora 0.2.0 (build 2)**  
@@ -4409,3 +4409,303 @@ Those gates remain in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHECKLIST.md`
 `docs/testing/CI_EVIDENCE.md` is the exact current source-candidate proof record.
 
 This `what_changed.md` update preserves the complete prior 132-section history and appends the 2026-08-16 precision/calendar/evidence continuation rather than replacing or shortening earlier project history.
+
+---
+
+## 147. Database-backed transaction history paging continuation — 2026-08-18
+
+This continuation began from `main` head:
+
+`59e7876b283916eae63838ad8b552dd889532964`
+
+and moved the next code-level roadmap item from bounded in-memory presentation to true database-backed interactive history paging.
+
+Exact frozen runtime/source candidate:
+
+`d841efb8c392860b221f331b4ced9119020b849e`
+
+Runtime/test source was frozen at that SHA before the evidence/status/roadmap/changelog/ledger documentation series. The documentation-only commits after it do not change the runtime source proven by the exact candidate CI runs.
+
+The implementation intentionally preserves the current local-first product boundary, schema version 2, existing transaction workflows, all five history sort modes, shared local-calendar policy, and the legacy complete-result search API for bounded workflows that still need it.
+
+---
+
+## 148. Paged query contract and dedicated read service
+
+`src/Finora.Application/Contracts.cs` now defines:
+
+- `TransactionHistorySort` with NewestFirst, OldestFirst, AmountHighToLow, AmountLowToHigh, and MerchantAscending;
+- `TransactionHistoryQuery` carrying `SearchText`, `AccountId`, `CategoryId`, `Type`, `FromUtc`, `ToExclusiveUtc`, `Sort`, `Offset`, and `PageSize`;
+- `TransactionHistoryPage` carrying `Items`, `TotalCount`, and `HasMore`;
+- `ITransactionHistoryStore` with a dedicated paged read operation.
+
+New production source:
+
+`src/Finora.Infrastructure/TransactionHistoryStore.cs`
+
+The store:
+
+- uses the existing pooled `IDbContextFactory<FinoraDbContext>`/SQLite path;
+- excludes soft-deleted transactions before count and paging;
+- applies account/category/type/date filters before materialization;
+- preserves free-text search across merchant, note, payment method, manual location, account name, and category name;
+- validates offset >= 0;
+- validates page size 1..200;
+- validates exclusive end > start when both date bounds are present;
+- counts the filtered query without materializing all matching transaction rows;
+- applies stable supported ordering before `Skip`/`Take`;
+- returns only the requested page plus total matching count and `HasMore`.
+
+Interactive UI page size remains 50. Store maximum page size is `TransactionHistoryStore.MaximumPageSize = 200`.
+
+Merchant A–Z ordering uses SQLite `NOCASE` collation and stable secondary ordering.
+
+The ordering guarantee is deliberately scoped to a **fixed result set**. Offset paging is not represented as snapshot isolation across concurrent insert/delete mutations between page requests.
+
+`IFinanceStore.SearchTransactionsAsync` remains available for existing bounded workflows that intentionally require complete result sets.
+
+---
+
+## 149. TransactionsViewModel no longer retains the complete matching history
+
+`src/Finora.App/ViewModels/TransactionsViewModel.cs` was changed from an all-results cache plus in-memory slicing to the dedicated paged store.
+
+Removed behavior:
+
+- `_allMatches` complete matching collection in the ViewModel;
+- loading every matching row before presenting the first 50;
+- in-memory sort/slice as the interactive history scaling mechanism.
+
+Current state uses:
+
+- `_activeQuery`;
+- `_totalMatches`;
+- `_hasMore`;
+- `PageSize = 50`.
+
+Apply/search behavior now:
+
+1. builds a typed `TransactionHistoryQuery`;
+2. resolves local advanced date filters through shared `LocalDateRange.ToUtc` and exclusive UTC end semantics;
+3. snapshots that exact query as `_activeQuery`;
+4. clears the displayed rows;
+5. requests offset 0 / page size 50 from `ITransactionHistoryStore`.
+
+**Load more** requests:
+
+- the same `_activeQuery`;
+- `Offset = Transactions.Count`;
+- `PageSize = 50`.
+
+This means editing filter/sort controls without applying them cannot silently mix newly edited control state into rows appended to the last applied result set.
+
+`HistoryStatus` now reports the visible count against the store-provided total matching count.
+
+`MauiProgram.cs` registers `ITransactionHistoryStore` as the production paged history service.
+
+---
+
+## 150. Paging correctness and search regression coverage
+
+New integration test file:
+
+`tests/Finora.IntegrationTests/TransactionHistoryPagingTests.cs`
+
+Current test matrix includes:
+
+1. **120-row boundary test** — proves 50/50/20 pages, correct newest-first boundaries, 120 unique IDs, no duplicate IDs, and no missing IDs for a fixed result set;
+2. **filter-before-count/page test** — proves free-text + account + category + type + date constraints are applied before total count and page materialization;
+3. **sort test** — proves oldest-first, amount high-to-low, amount low-to-high, and case-insensitive merchant A–Z behavior while newest-first is also exercised by the boundary test;
+4. **invalid paging/date validation** — rejects negative offset, zero page size, page size above 200, and non-increasing date range;
+5. **soft-delete exclusion** — proves deleted rows are excluded from both total count and returned page;
+6. **extended search fields** — proves payment method, manual location, account name, and category name remain searchable through the new database query.
+
+`tests/Finora.UiTests/TransactionsChartOnboardingContractTests.cs` now additionally requires:
+
+- `TransactionHistoryQuery` usage;
+- `GetPageAsync` usage;
+- `Offset = Transactions.Count`;
+- absence of `_allMatches`.
+
+Existing sort picker, Load more binding, `HasMore`, page-size 50, and shared local-date boundary source contracts remain.
+
+---
+
+## 151. Strict CI caught and corrected a paging-test analyzer regression
+
+Intermediate candidate:
+
+`6617a0b6b07b4cd4befcd48ae22c476ab0b917d1`
+
+Finora CI run:
+
+`32119961474`
+
+The run proved the gating policy remained strict:
+
+- structural preflight passed;
+- unit tests passed;
+- integration project build was blocked by analyzer `CA1861` in the newly added merchant-sort assertion;
+- later native jobs were therefore not falsely interpreted as candidate proof.
+
+The assertion originally supplied a constant array to `Assert.Equal` in a form rejected by the analyzer.
+
+Correction commit:
+
+`d841efb8c392860b221f331b4ced9119020b849e` — `fix(tests): satisfy analyzer for merchant sort assertion`
+
+The correction uses `Assert.Collection` and does not suppress `CA1861`, downgrade warnings-as-errors, or weaken production behavior.
+
+---
+
+## 152. Exact 319-test source-candidate evidence
+
+Exact runtime/source candidate:
+
+`d841efb8c392860b221f331b4ced9119020b849e`
+
+Finora CI run:
+
+`32120115922`
+
+CodeQL run:
+
+`32120115965`
+
+Dependency Review run:
+
+`32120115912`
+
+Finora CI jobs on that exact candidate:
+
+- Structural preflight `95658397777` — success;
+- Core tests `95658437947` — success;
+- Android Release source build `95658684131` — success;
+- Mac Catalyst Release source build `95658684209` — success;
+- iOS Release source build `95658684277` — success;
+- Windows Release source build `95658684327` — success.
+
+Exact strict automated results:
+
+- Unit: **102/102 passed**;
+- Integration: **179/179 passed**;
+- UI-contract: **38/38 passed**;
+- Total: **319/319 passed**;
+- Failed: **0**;
+- Skipped: **0**.
+
+Core test artifact:
+
+- artifact ID `9318206622`;
+- SHA-256 `5f324ea6d3b65ab5d8dc5a52dbdd9c4c26610333086c9b2752415738761ff4a7`.
+
+All four MAUI Release source-build targets passed under the repository warnings-as-errors/strict XAML policy.
+
+CodeQL and Dependency Review also completed successfully for the exact candidate.
+
+This is source/test/build/security-workflow evidence, not signed-package/device/store evidence.
+
+---
+
+## 153. Exact focused commit trail for the database-paging continuation
+
+The runtime/test/feature-documentation source sequence from the 2026-08-18 work branch is:
+
+1. `8e5ed441e30a7a35abc94c691bbb0d25e4746969` — `feat(transactions): add paged history query contract`;
+2. `25facc4748eee217bbe45ecd58d3ce25702eaf99` — `refactor(transactions): isolate paged history store contract`;
+3. `e1d9598885250e77dc24078cd5eb62d54500b7d0` — `feat(transactions): implement database-backed history paging`;
+4. `d1f43778037e4bacb1e9b17c4b8e19aea5b5cb89` — `feat(transactions): register paged history store`;
+5. `3e719199b9115f5c74858886e9ac70676a0740d8` — `feat(transactions): page history from SQLite`;
+6. `41b747348e108c3b4d9e7b95288410c63473043e` — `test(transactions): cover paged history boundaries`;
+7. `7ebc00eed5b95c88414c4dbd1d879797fa248c17` — `fix(tests): use current category model in paging coverage`;
+8. `528255e785d5a9d4b8f901cede054a960f50087b` — `fix(transactions): keep merchant sorting analyzer-safe`;
+9. `5aac906f3987b09998358b53cb68f1a0cf2c9077` — `test(ui): enforce database-backed transaction paging contract`;
+10. `884709c9c346699778a18c41e8035bd2fac5a157` — `docs(transactions): document database-backed history paging`;
+11. `275f49ce4c768b3e2a10d4184ea8edaa388676f9` — `fix(transactions): expose paging limit for validation consumers`;
+12. `a9a8f59fba01ebe0a1f27f72ee403335c42a22f9` — `test(transactions): exclude deleted rows from paged history`;
+13. `6617a0b6b07b4cd4befcd48ae22c476ab0b917d1` — `test(transactions): preserve extended search fields in paging`;
+14. `d841efb8c392860b221f331b4ced9119020b849e` — `fix(tests): satisfy analyzer for merchant sort assertion`.
+
+The evidence/status/roadmap/changelog documentation sequence after the frozen runtime candidate is:
+
+15. `45b0a6e79049183a4d962336565e570397590bbc` — `docs(architecture): document transaction history paging service`;
+16. `45ebab7a9ac186234962539e7911245d70d3f42a` — `docs(evidence): record database paging candidate`;
+17. `888ad30a65777dc6cbd57579ab4324a401f5e195` — `docs(status): advance database paging evidence`;
+18. `cb24ebf9389c9ad759af37f12284a3749806f68e` — `docs(roadmap): mark database paging implemented`;
+19. `b5e3a362a4a7dafbb7c45fe07ea5e728b7910220` — `docs(changelog): record database paging and evidence`;
+20. final ledger commit — `docs(status): append database paging continuation ledger`.
+
+The final ledger commit SHA is intentionally not self-inserted into the content it creates. Git history remains the authoritative exact commit identity after the write.
+
+---
+
+## 154. Complete changed-file inventory for this continuation
+
+Production source/test/feature-documentation files changed by the database-paging work:
+
+- `src/Finora.Application/Contracts.cs`;
+- `src/Finora.Infrastructure/TransactionHistoryStore.cs` — new file;
+- `src/Finora.App/MauiProgram.cs`;
+- `src/Finora.App/ViewModels/TransactionsViewModel.cs`;
+- `tests/Finora.IntegrationTests/TransactionHistoryPagingTests.cs` — new file;
+- `tests/Finora.UiTests/TransactionsChartOnboardingContractTests.cs`;
+- `docs/features/ACCOUNTS_AND_TRANSACTIONS.md`.
+
+Evidence/architecture/status/roadmap/changelog/ledger files changed after runtime source was frozen:
+
+- `docs/architecture/SERVICE_CATALOG.md`;
+- `docs/testing/CI_EVIDENCE.md`;
+- `PROJECT_STATUS.md`;
+- `docs/NEXT_STEPS.md`;
+- `CHANGELOG.md`;
+- `what_changed.md`.
+
+No source/test/documentation file from this continuation's changed-file set is intentionally omitted from this ledger.
+
+---
+
+## 155. Evidence-based release boundary after database-backed paging
+
+The 2026-08-18 paging continuation now has exact automated evidence for:
+
+- the existing structural preflight;
+- **319/319** automated tests;
+- warnings-as-errors/analyzer enforcement;
+- Windows/Android/iOS/Mac Catalyst Release source builds;
+- CodeQL;
+- Dependency Review;
+- database-backed interactive transaction paging;
+- filter/search/sort application before page materialization;
+- total count and `HasMore` behavior;
+- bounded page-size validation;
+- soft-delete exclusion;
+- deterministic page boundaries for a fixed result set;
+- 120-row 50/50/20 page coverage with no duplicate/missing IDs;
+- stable last-applied-query behavior for Load more;
+- retained currency/local-calendar/migration/backup/integrity/recovery regression suites from the same source line.
+
+Roadmap item 26 is therefore implemented and automated for the current source line.
+
+Roadmap item 27 remains open. This continuation does **not** claim completion of 10k/50k/100k performance or memory benchmarks merely because the query architecture now pages at the database.
+
+The following external/release gates also remain open and are not relabeled complete:
+
+- signed Android AAB production packaging and installation;
+- Windows MSIX generation/publisher/signing and packaged installation;
+- iOS provisioning/signing/archive/TestFlight/App Store packaging;
+- Mac Catalyst signing/notarization/distribution packaging;
+- complete installed prior-version upgrade testing on applicable targets;
+- actual process-kill/low-disk/locked-file restore failure injection;
+- physical-device notification/biometric/Windows Hello behavior;
+- real file picker/share/import/export/receipt behavior;
+- Android merged-manifest and real backup/device-transfer behavior;
+- TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast/reduced-motion QA;
+- final exact dependency-license/vulnerability acceptance beyond the recorded automated Dependency Review run;
+- live store-policy/privacy/data-safety/external-support-link approval;
+- complete absence of undiscovered defects.
+
+Those gates remain tracked in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHECKLIST.md`, `docs/releases/STORE_READINESS.md`, `docs/TEST_PLAN.md`, and `docs/testing/NATIVE_VALIDATION_MATRIX.md`.
+
+`docs/testing/CI_EVIDENCE.md` is the exact current source-candidate proof record.
+
+This `what_changed.md` update preserves all previous 146 sections and appends the 2026-08-18 database-backed transaction-history paging continuation without replacing or shortening the prior project history.
