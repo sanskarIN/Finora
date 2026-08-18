@@ -49,6 +49,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 
 - [Test Plan](TEST_PLAN.md)
 - [Testing Guide](testing/TESTING_GUIDE.md)
+- [Performance Benchmarking](testing/PERFORMANCE_BENCHMARKING.md) — reproducible synthetic 10k/50k/100k performance and correctness harness guidance.
 - [CI Evidence](testing/CI_EVIDENCE.md) — dated, commit-specific GitHub Actions evidence and explicit source-build versus release-validation boundaries.
 - [Native Validation Matrix](testing/NATIVE_VALIDATION_MATRIX.md)
 - [Project Status](../PROJECT_STATUS.md)
