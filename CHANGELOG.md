@@ -4,6 +4,32 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Added — 2026-08-18 large-dataset performance tooling
+
+- Added standalone `tools/Finora.Performance` net10.0 tooling that consumes Finora's real Application/Infrastructure services without becoming part of the packaged app runtime.
+- Added batched synthetic finance-data seeding for four INR accounts, default categories, configurable transaction volumes, budgets, goals, recurrence rules, and bounded SHA-256-verified synthetic receipt files.
+- Added observational measurements for populated startup, first/deep database-backed history paging, broad/selective history search, amount sorting, income/expense/category/merchant/account/budget/recurring/savings reports, CSV export/import, PDF export, encrypted backup create/restore, integrity checking, managed heap and process working set.
+- Added correctness gates so benchmark failures remain actionable: history count/deep-page checks, non-empty export/backup output, exact isolated CSV import counts with no skips/invalid rows, expected encrypted-restore graph counts, and healthy `DataIntegrityService` output.
+- Added machine-readable JSON results with runtime/OS/architecture/processor/dataset/operation/iteration metadata and explicit timing/data/paging evidence-policy notes.
+- Added a bounded `Performance smoke (10k)` CI job that compiles the complete harness under warnings-as-errors and executes startup/history/reports/integrity using synthetic data.
+- Added an on-demand `.github/workflows/performance.yml` workflow for 10k/50k/100k datasets with selectable operations and iterations plus retained JSON artifacts.
+- Added `docs/testing/PERFORMANCE_BENCHMARKING.md` covering dataset shape, execution, interpretation, correctness checks, memory caveats, comparison hygiene, and release boundaries.
+- Updated documentation index/status, project status, roadmap, CI evidence, changelog and cumulative ledger so performance claims remain evidence-based.
+
+### Verified — 2026-08-18 performance-tooling candidate
+
+- Exact source candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` passed Finora CI run `32127759802`, CodeQL run `32127759687`, and Dependency Review run `32127759673`.
+- Structural preflight passed.
+- Unit tests passed 102/102.
+- Integration tests passed 179/179.
+- UI-contract tests passed 38/38.
+- Total automated tests passed: **319/319**, with zero failures/skips.
+- The performance project built in Release with **0 warnings and 0 errors**.
+- The bounded 10k synthetic CI smoke seeded the dataset successfully and executed startup, history, reports, and full integrity checking.
+- Retained performance artifact: `9321290557`, SHA-256 `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`.
+- Release source builds passed independently for Windows, Android, iOS, and Mac Catalyst on the same exact source candidate.
+- The recorded 10k smoke is observational evidence only; it does not claim runtime execution of CSV/PDF/backup performance operations, the complete `--operations all` profile, 50k/100k profiles, signed packages, device responsiveness, accessibility, recovery failure injection, installed prior-version upgrades, or store approval.
+
 ### Changed — 2026-08-18 database-backed transaction history paging
 
 - Replaced interactive all-results in-memory transaction history slicing with SQLite/EF Core database paging through a dedicated `ITransactionHistoryStore`.
