@@ -88,7 +88,7 @@ public sealed class TransactionHistoryPagingTests : IAsyncLifetime
         var secondary = new Account { Name = "Secondary", Type = AccountType.Bank, Currency = "INR" };
         await _finance.SaveAccountAsync(primary);
         await _finance.SaveAccountAsync(secondary);
-        var food = new Category { Name = "Food", Type = CategoryType.Expense };
+        var food = new Category { Name = "Food" };
         await _finance.SaveCategoryAsync(food);
 
         var start = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero);
