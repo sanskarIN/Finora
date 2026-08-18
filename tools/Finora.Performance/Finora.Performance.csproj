@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Finora.Application\Finora.Application.csproj" />
+    <ProjectReference Include="..\..\src\Finora.Domain\Finora.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Finora.Infrastructure\Finora.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Finora.Shared\Finora.Shared.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+</Project>
