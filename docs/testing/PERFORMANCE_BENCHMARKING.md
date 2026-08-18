@@ -4,7 +4,7 @@ Last updated: **2026-08-18**
 
 This guide documents the reproducible synthetic performance harness in `tools/Finora.Performance`.
 
-Performance measurements are **observational evidence**, not correctness guarantees. The harness fails on invalid finance state, failed operations, invalid encrypted backup output, or integrity errors. It does not fail merely because a timing is slower than an arbitrary threshold.
+Performance measurements are **observational evidence**, not correctness guarantees. The harness fails on invalid finance state, failed operations, invalid encrypted backup output, failed CSV round trips, failed encrypted restore round trips, or integrity errors. It does not fail merely because a timing is slower than an arbitrary threshold.
 
 ## Goals
 
@@ -25,8 +25,10 @@ It can measure:
 - recurring obligations;
 - savings progress;
 - full CSV export;
+- full CSV import into an isolated synthetic database;
 - full PDF export;
 - encrypted backup creation;
+- encrypted backup restore with restored graph-count verification;
 - full data-integrity checking.
 
 ## Synthetic dataset
@@ -82,6 +84,20 @@ dotnet run --project tools/Finora.Performance/Finora.Performance.csproj \
   --output artifacts/performance/local-10k.json
 ```
 
+Run a complete 10k round-trip profile, including CSV import/export, PDF export and encrypted backup create/restore:
+
+```bash
+dotnet run --project tools/Finora.Performance/Finora.Performance.csproj \
+  -c Release --no-build -- \
+  --transactions 10000 \
+  --attachments 25 \
+  --recurrences 50 \
+  --budgets 25 \
+  --goals 25 \
+  --operations all \
+  --output artifacts/performance/local-10k-all.json
+```
+
 Run a complete 50k profile:
 
 ```bash
@@ -126,7 +142,11 @@ Use `--help` for the complete option list.
 
 `all` selects every operation.
 
-`--iterations` accepts 1–20 repetitions. Expensive full export/backup runs should normally start at one iteration.
+The `csv` operation records both `export.csv.all` and `import.csv.all`. Import runs against a fresh isolated SQLite fixture created under the synthetic benchmark root, so it cannot double the primary benchmark dataset or contaminate later measurements.
+
+The `backup` operation records both `backup.create.encrypted` and `backup.restore.encrypted`. The restore uses only the synthetic benchmark database/receipt tree and verifies transaction and attachment counts after restore.
+
+`--iterations` accepts 1–20 repetitions. Expensive full export/import/backup/restore runs should normally start at one iteration.
 
 ## Output format
 
@@ -160,6 +180,8 @@ Examples of correctness gates include:
 - transaction history must report the expected visible transaction count;
 - a valid deep page must not unexpectedly become empty;
 - CSV/PDF/backup output must be non-empty;
+- CSV import must succeed into its isolated database with the exact expected transaction count and no skipped/invalid rows for the generated export;
+- encrypted backup restore must succeed and preserve the expected transaction and attachment counts;
 - the full synthetic dataset must pass `DataIntegrityService`.
 
 A failed correctness gate returns a nonzero process exit code.
@@ -192,6 +214,20 @@ Measured history scenarios include:
 
 Offset paging is measured against a **fixed synthetic dataset** with no concurrent inserts/deletes. These numbers do not claim snapshot-isolated pagination across concurrent mutations.
 
+## CSV round-trip interpretation
+
+CSV export is measured against the primary synthetic benchmark database. For import measurement, the already-generated CSV is fed to a freshly initialized isolated database containing matching synthetic accounts and the normal default categories.
+
+The import measurement includes CSV parsing, mapping validation, transaction creation, database transaction work and a final transaction-count correctness query. Fixture creation and the preparatory export used as import input are outside the import stopwatch so the result represents the import path rather than setup.
+
+The generated benchmark data intentionally contains no transfer rows or user-supplied files, so this is a large-volume import benchmark, not a substitute for the broader CSV import correctness test suite.
+
+## Backup round-trip interpretation
+
+The backup measurement writes the encrypted synthetic backup to a temporary file under the benchmark root, then measures production restore against the same synthetic finance graph. Restore correctness verifies the expected transaction and attachment counts before later operations continue.
+
+This exercises the real encrypted backup serialization/encryption and restore graph replacement path. It does not emulate process interruption, storage exhaustion, removable-media failure, mobile document-provider behavior, or signed-package filesystem constraints; those remain separate recovery/native validation work.
+
 ## CI smoke gate
 
 `.github/workflows/ci.yml` includes `Performance smoke (10k)`.
@@ -203,6 +239,8 @@ It:
 3. seeds 10,000 synthetic transactions plus bounded supporting records;
 4. runs startup/history/report/integrity scenarios;
 5. uploads the JSON result as `performance-smoke-10k`.
+
+The smoke build compiles the full harness, including CSV import and encrypted backup restore benchmark paths. The current CI smoke command deliberately keeps its executed operation list bounded; use an `all` profile for runtime round-trip evidence covering those heavier paths.
 
 The smoke job is a correctness/reproducibility gate. It deliberately does not fail on an arbitrary elapsed-time limit other than the overall CI job timeout.
 
@@ -218,7 +256,7 @@ The smoke job is a correctness/reproducibility gate. It deliberately does not fa
 
 The workflow uses synthetic data and uploads JSON evidence for 30 days.
 
-A complete release/performance review should run comparable 10k, 50k and 100k profiles on the same runner class before claiming a trend or regression.
+A complete release/performance review should run comparable 10k, 50k and 100k `all` profiles on the same runner class before claiming a trend or regression.
 
 ## Benchmark hygiene
 
@@ -231,7 +269,7 @@ For meaningful comparison:
 5. avoid unrelated heavy workloads on local machines;
 6. record the exact Finora commit SHA with the JSON artifact;
 7. retain multiple runs when investigating noise;
-8. distinguish seeding duration from product-operation measurements;
+8. distinguish seeding/fixture preparation duration from product-operation measurements;
 9. never insert real finance data into benchmark fixtures.
 
 ## Performance change policy
