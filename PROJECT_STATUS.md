@@ -11,14 +11,14 @@ Repository: https://github.com/sanskarIN/Finora
 - ✅ **Implemented in source** — concrete code/resources are present.
 - 🧪 **Implemented + automated coverage** — source plus unit/integration/UI-contract coverage exists.
 - ✅ **Verified automated evidence** — executed GitHub Actions evidence exists for the exact referenced commit.
-- ⚠️ **External validation required** — needs emulator/simulator/device, packaging/signing, recovery-failure injection, accessibility, or store-console evidence beyond a source build.
+- ⚠️ **External validation required** — needs emulator/simulator/device, packaging/signing, recovery-failure injection, accessibility, store-console, or explicitly unexecuted large-performance-profile evidence beyond a source build.
 - 🧭 **Later-version scope** — intentionally outside current local-first release.
 
-Source presence is not the same as native release validation. Current commit-specific automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
+Source presence is not the same as native release validation. Current commit-specific automated evidence is retained in `docs/testing/CI_EVIDENCE.md`; performance methodology/evidence boundaries are retained in `docs/testing/PERFORMANCE_BENCHMARKING.md`.
 
 ## Verified automated validation — 2026-08-18
 
-✅ Current release-hardening source candidate `d841efb8c392860b221f331b4ced9119020b849e` passed Finora CI run `32120115922`, CodeQL run `32120115965`, and Dependency Review run `32120115912`.
+✅ Current release-hardening source candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` passed Finora CI run `32127759802`, CodeQL run `32127759687`, and Dependency Review run `32127759673`.
 
 ✅ Structural preflight passed.
 
@@ -37,7 +37,15 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ✅ CodeQL and Dependency Review completed successfully on the same exact source candidate.
 
-✅ Interactive transaction history now uses database-backed 50-row paging through `ITransactionHistoryStore`, with search/filter/sort/count applied in SQLite/EF Core before materialization, soft-deleted rows excluded before count/page, deterministic page boundaries for a fixed result set, total match count/`HasMore`, and a stable last-applied-query snapshot for **Load more**.
+✅ The new `tools/Finora.Performance` project compiled in Release with **0 warnings and 0 errors** under the repository warnings-as-errors policy.
+
+✅ The normal CI performance smoke seeded **10,000 synthetic transactions** and executed startup, database-backed history paging/search/sort, long-range reports, and a full integrity scan successfully. Retained JSON evidence is artifact `9321290557`, SHA-256 `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`.
+
+✅ The harness also implements CSV export/import round-trip measurement, PDF export, encrypted backup creation/restoration, managed/process memory observations, configurable iterations, and an on-demand 10k/50k/100k workflow. Those heavier paths compile in the exact verified candidate.
+
+⚠️ The recorded normal CI smoke deliberately did **not** execute the complete `--operations all` profile, CSV/PDF/backup runtime measurements, or 50k/100k profiles. Those remain explicit on-demand evidence tasks; compile-only support is not represented as executed benchmark evidence.
+
+✅ Interactive transaction history continues to use database-backed 50-row paging through `ITransactionHistoryStore`, with search/filter/sort/count applied in SQLite/EF Core before materialization, soft-deleted rows excluded before count/page, deterministic page boundaries for a fixed result set, total match count/`HasMore`, and a stable last-applied-query snapshot for **Load more**.
 
 ✅ Paging integration coverage proves a 120-row history is returned as 50/50/20 pages without duplicate/missing IDs for a fixed result set, preserves all supported filters/sorts/search fields, rejects invalid offsets/page sizes/date ranges, and excludes soft-deleted rows. UI-contract coverage rejects regression back to `_allMatches` in-memory history slicing.
 
@@ -55,7 +63,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ✅ Restore-recovery tests directly prove fail-closed behavior for linked recovery journals and linked rollback copies while preserving live receipt state/recovery evidence.
 
-⚠️ These source-build results are not evidence of Windows MSIX signing, signed Android AAB production packaging, Apple provisioning/signing/notarization, physical-device behavior, accessibility QA, actual process-kill/low-disk recovery testing, installed prior-version upgrades on every target, or store approval.
+⚠️ These source-build results are not evidence of Windows MSIX signing, signed Android AAB production packaging, Apple provisioning/signing/notarization, physical-device behavior, accessibility QA, actual process-kill/low-disk recovery testing, installed prior-version upgrades on every target, full 10k/50k/100k `all` benchmark execution, or store approval.
 
 ## Architecture
 
@@ -70,7 +78,11 @@ Source presence is not the same as native release validation. Current commit-spe
 - `Finora.IntegrationTests`
 - `Finora.UiTests`
 
-✅ Dependency direction remains App → Application/Infrastructure → Domain → Shared.
+✅ Developer/performance tooling:
+
+- `Finora.Performance` — standalone synthetic large-dataset performance/correctness harness in `tools/`.
+
+✅ Dependency direction remains App → Application/Infrastructure → Domain → Shared. The performance tool consumes production Application/Infrastructure contracts but is not part of the packaged app runtime.
 
 ## Persistence and money safety
 
@@ -127,6 +139,8 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Transaction/history/tools/detail split displays honor privacy and currency formatting; transaction/tool date filters use shared local-calendar boundaries.
 
+✅ The synthetic 10k performance smoke exercises first-page, deep-page, broad/selective search, and amount-sort history queries against the production `ITransactionHistoryStore` without materializing the entire matching set in the ViewModel.
+
 ## Categories and tags
 
 🧪 Parent/subcategory create/update, cycle prevention, reorder, archive/restore, merge/reassign, tag management and currency-scoped tag reporting are present.
@@ -146,6 +160,8 @@ Source presence is not the same as native release validation. Current commit-spe
 🧪 Failed explicit-period replacement is covered for transactional rollback.
 
 🧪 Passive budget planned/actual amounts use currency-aware privacy display.
+
+✅ The 10k performance smoke exercises budget-performance reporting as an observational workload while retaining all finance-correctness tests as the source of truth.
 
 ## Savings goals
 
@@ -197,6 +213,8 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Signed chart renderer uses a true zero baseline; negative net values render below zero. Quantitative charts are hidden while privacy mode hides amounts, while textual/list monetary values are masked.
 
+✅ The 10k synthetic smoke executes income/expense, category, merchant, account-trend, budget, recurring, and savings report families and retains the observed result artifact.
+
 ## Import/export
 
 🧪 Mapped CSV import with preview/limits/validation/duplicate protection/transfer validation and transactional persistence is present.
@@ -209,6 +227,10 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Generated share copies live in cache; startup best-effort cleanup removes only known Finora export/backup/integrity files older than 24 hours while preserving fresh, unrelated and diagnostic files.
 
+✅ Performance tooling includes full CSV export, isolated CSV import, and PDF export measurements. CSV benchmark selection refuses datasets above the production 100,000-row import ceiling.
+
+⚠️ The exact verified normal CI smoke compiled those benchmark paths but did not execute them; use the on-demand `all` workflow for runtime evidence.
+
 ## Attachments and private filesystem safety
 
 🧪 Receipt storage is app-private with MIME/size limits, generated internal names, required SHA-256 metadata, list/open/delete/storage usage/orphan cleanup.
@@ -218,6 +240,8 @@ Source presence is not the same as native release validation. Current commit-spe
 🧪 No-link policy is reused by attachment open/write/cleanup, encrypted backup validation/staging, crash-safe restore rollback copy, restore recovery journal/directories and integrity checking.
 
 🧪 Optional symlink regression tests run where host permits link creation; linked recovery journal and rollback-copy failure paths are directly covered.
+
+✅ Performance fixtures can create bounded synthetic receipt files with matching SHA-256 metadata; no user receipt files are read by the harness.
 
 ## Backup and restore
 
@@ -239,7 +263,9 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Internal restore settings are not imported from backup snapshots.
 
-⚠️ Real process termination, low-disk, locked-file, and native filesystem recovery injection still require release-candidate device/host validation.
+✅ Performance tooling includes encrypted backup creation and restoration with expected transaction/attachment count verification.
+
+⚠️ The exact current CI smoke compiles but does not execute that performance operation. Real process termination, low-disk, locked-file, native filesystem recovery injection, and the on-demand full benchmark remain separate evidence tasks.
 
 ## Notifications
 
@@ -301,6 +327,8 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Deliberate-corruption tests directly verify split-total, account-currency, receipt file/size/hash/checksum, category-cycle, and foreign-key issue detection without changing production data to make diagnostics pass.
 
+✅ The 10k synthetic CI performance smoke executes the full integrity service and fails the benchmark if the synthetic graph is unhealthy.
+
 ## Android privacy packaging
 
 ✅ Android manifest keeps `android:allowBackup="false"` and `android:usesCleartextTraffic="false"`.
@@ -325,11 +353,33 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ⚠️ TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast testing still requires native validation.
 
+## Performance and large-dataset tooling
+
+✅ `tools/Finora.Performance` is wired into the solution as a standalone non-packaged developer tool.
+
+✅ Synthetic dataset seeding is batched and supports the documented 10k/50k/100k comparison sizes without reading real user finance data.
+
+✅ Supported operations include startup, history, reports, CSV export/import, PDF export, encrypted backup create/restore, and integrity checking.
+
+✅ JSON output records dataset/runtime/runner metadata, elapsed times, memory observations, output sizes/item counts, and evidence-policy notes.
+
+✅ `.github/workflows/ci.yml` includes a bounded 10k correctness/performance smoke.
+
+✅ `.github/workflows/performance.yml` provides an on-demand 10k/50k/100k workflow with selectable operations/iterations and retained JSON artifacts.
+
+✅ `docs/testing/PERFORMANCE_BENCHMARKING.md` documents execution, interpretation, correctness checks, benchmark hygiene, and release boundaries.
+
+✅ Exact current 10k bounded smoke evidence is recorded in both the performance guide and `docs/testing/CI_EVIDENCE.md`.
+
+⚠️ Full `all` profile runtime evidence and 50k/100k comparison artifacts are still unexecuted in the recorded current evidence set.
+
 ## Documentation
 
 ✅ A complete documentation hub exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
 
-✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and records the **319-test** database-paging source candidate while retaining earlier precision/calendar, migration/backup/integrity/recovery history.
+✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and records the **319-test + 10k bounded performance-smoke** source candidate while retaining earlier paging, precision/calendar, migration/backup/integrity/recovery history.
+
+✅ Performance methodology and exact bounded-smoke evidence are documented at `docs/testing/PERFORMANCE_BENCHMARKING.md`.
 
 ✅ A prioritized execution roadmap exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
 
@@ -341,7 +391,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ✅ Security/operations documentation covers threat model, app lock/privacy, encrypted backup/crash recovery, data lifecycle, diagnostics/integrity, and reset/sample data.
 
-✅ Developer/testing documentation covers build/run, troubleshooting, developer workflow, safe feature changes, test-layer selection, native platform validation matrix, and exact CI evidence.
+✅ Developer/testing documentation covers build/run, troubleshooting, developer workflow, safe feature changes, test-layer selection, native platform validation matrix, exact CI evidence, and performance benchmarking.
 
 ✅ Platform documentation covers Android, Windows, iOS, and Mac Catalyst target frameworks, minimum platform metadata, native APIs, privacy boundaries, accessibility, packaging, and release QA.
 

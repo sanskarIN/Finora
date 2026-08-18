@@ -9,7 +9,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Public project overview | `README.md` | Current |
 | Documentation index | `docs/README.md` | Current |
 | Documentation completeness | `docs/DOCUMENTATION_STATUS.md` | Current |
-| Prioritized next steps | `docs/NEXT_STEPS.md` | Current |
+| Prioritized next steps | `docs/NEXT_STEPS.md` | Current — performance tooling implemented; remaining release/native/full-profile evidence separated |
 | End-user workflows | `docs/USER_GUIDE.md` | Current |
 | Architecture overview | `docs/architecture/OVERVIEW.md` | Current |
 | Database/schema | `docs/architecture/DATABASE_SCHEMA.md` | Current |
@@ -34,7 +34,8 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Feature-change procedure | `docs/development/ADDING_A_FEATURE.md` | Current |
 | Test plan | `docs/TEST_PLAN.md` | Current |
 | Practical testing guide | `docs/testing/TESTING_GUIDE.md` | Current |
-| Dated CI/check-run evidence | `docs/testing/CI_EVIDENCE.md` | Current — strict 2026-08-15 candidate recorded |
+| Performance benchmarking | `docs/testing/PERFORMANCE_BENCHMARKING.md` | Current — synthetic harness + exact verified bounded 10k smoke + full-profile evidence boundary documented |
+| Dated CI/check-run evidence | `docs/testing/CI_EVIDENCE.md` | Current — strict 2026-08-18 performance-tooling candidate recorded with 319 tests, four native source builds, CodeQL, Dependency Review and bounded 10k smoke |
 | Native validation matrix | `docs/testing/NATIVE_VALIDATION_MATRIX.md` | Current |
 | Android | `docs/platforms/ANDROID.md` | Current |
 | Windows | `docs/platforms/WINDOWS.md` | Current |
@@ -44,7 +45,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Versioning/migrations | `docs/releases/VERSIONING_AND_MIGRATIONS.md` | Current |
 | Store metadata template | `docs/releases/STORE_METADATA_TEMPLATE.md` | Current |
 | Engineering decisions | `DECISIONS.md` | Current |
-| Project implementation status | `PROJECT_STATUS.md` | Current |
+| Project implementation status | `PROJECT_STATUS.md` | Current — verified performance tooling/smoke and remaining runtime/native gates recorded |
 | Detailed change ledger | `what_changed.md` | Current after final continuation ledger commit |
 | Changelog | `CHANGELOG.md` | Current source history |
 | Privacy policy | `PRIVACY.md` | Current |
@@ -81,7 +82,7 @@ Documentation and UI must not describe that link as premium entitlement, subscri
 
 `build/scripts/verify_structure.py` treats the core documentation tree as required repository structure and validates repository-relative Markdown file links without network access.
 
-The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md`, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
+The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md` and `docs/testing/PERFORMANCE_BENCHMARKING.md`, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
 
 The link check deliberately does not prove:
 
@@ -94,7 +95,11 @@ The link check deliberately does not prove:
 
 A platform document describes intended/current source behavior and required QA. It does not convert unexecuted native validation into a passing result.
 
-As of 2026-08-15, `docs/testing/CI_EVIDENCE.md` records actual structural, automated-test, four-target MAUI Release source-build, and CodeQL evidence for strict candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`.
+As of 2026-08-18, `docs/testing/CI_EVIDENCE.md` records actual structural, **319-test**, four-target MAUI Release source-build, CodeQL, Dependency Review, performance-project build, and bounded 10k startup/history/reports/integrity smoke evidence for exact source candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`.
+
+The retained smoke artifact is `9321290557` with SHA-256 `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`.
+
+Performance timing remains a separate evidence class. The benchmark harness records synthetic observational measurements and correctness/integrity failures; arbitrary elapsed-time thresholds are not treated as finance correctness. The current evidence does not claim runtime completion of CSV/PDF/backup performance operations, the full 10k `all` profile, or 50k/100k comparisons.
 
 The remaining release decision must still retain real evidence for:
 
@@ -102,18 +107,19 @@ The remaining release decision must still retain real evidence for:
 - Android device/emulator behavior;
 - Windows packaged behavior;
 - iOS/Mac Catalyst provisioning/signing/device behavior;
-- migration and process-interrupted backup/restore recovery;
+- installed prior-version migration and process-interrupted backup/restore recovery;
 - accessibility;
-- store declarations and policy review.
+- store declarations and policy review;
+- full comparable performance-profile evidence when making performance claims.
 
 ## Next-step priority rule
 
 `docs/NEXT_STEPS.md` is the current execution roadmap. The preferred order is:
 
-1. keep the proven structural/test/four-target source-build/CodeQL gates green;
+1. keep the proven structural/test/bounded-10k/four-target source-build/CodeQL/Dependency Review gates green;
 2. P0 migration, backup/recovery, privacy/security, native behavior and accessibility validation;
 3. P1 release-candidate packaging/store/security/license evidence;
-4. P2 quality/performance/localization/product polish;
+4. P2 full 10k/50k/100k performance comparison evidence plus localization/product polish;
 5. P3 later-version cloud/account/collaboration/entitlement/FX/telemetry architecture.
 
 Do not prioritize cosmetic expansion above an unresolved P0 data-corruption, migration, backup, privacy, native-behavior, accessibility, or packaging failure.
@@ -178,6 +184,14 @@ Update:
 - Settings reference;
 - store metadata/release gates;
 - current target-store policy review.
+
+### New performance benchmark or evidence
+
+Update:
+
+- `docs/testing/PERFORMANCE_BENCHMARKING.md` with dataset shape, operations, runner interpretation, and correctness policy;
+- benchmark workflow/CI smoke coverage as applicable;
+- roadmap, project status, changelog, and detailed ledger only for evidence actually obtained.
 
 ### New CI/release evidence
 

@@ -15,7 +15,7 @@ The roadmap distinguishes:
 
 Buy Me a Coffee support is optional and external. It must not unlock Finora features, change finance behavior, bypass store entitlement rules, or be treated as a secure premium-license mechanism.
 
-Concrete automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
+Concrete automated evidence is retained in `docs/testing/CI_EVIDENCE.md`. Large-dataset benchmark methodology and current runtime evidence are retained in `docs/testing/PERFORMANCE_BENCHMARKING.md`.
 
 ---
 
@@ -25,19 +25,19 @@ Concrete automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
 
 The current verified source candidate is:
 
-`d841efb8c392860b221f331b4ced9119020b849e`
+`8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`
 
 Verified Finora CI run:
 
-`32120115922`
+`32127759802`
 
 Verified CodeQL run:
 
-`32120115965`
+`32127759687`
 
 Verified Dependency Review run:
 
-`32120115912`
+`32127759673`
 
 The following source-validation work is no longer an unknown for that exact candidate:
 
@@ -54,8 +54,11 @@ The following source-validation work is no longer an unknown for that exact cand
 - ✅ CodeQL passed;
 - ✅ Dependency Review passed;
 - ✅ XAML compiled-binding diagnostics `XC0022`, `XC0023`, and `XC0025` remain enforced as errors and all four native source builds passed under that policy;
-- ✅ interactive transaction history now performs search/filter/sort/count/offset/page-size work in SQLite/EF Core through `ITransactionHistoryStore`, with 50-row UI pages, a 200-row store maximum, soft-delete exclusion, deterministic page boundaries for a fixed result set, total count/`HasMore`, and stable last-applied-query Load more behavior;
+- ✅ interactive transaction history performs search/filter/sort/count/offset/page-size work in SQLite/EF Core through `ITransactionHistoryStore`, with 50-row UI pages, a 200-row store maximum, soft-delete exclusion, deterministic page boundaries for a fixed result set, total count/`HasMore`, and stable last-applied-query Load more behavior;
 - ✅ paging regression coverage proves a 120-row 50/50/20 boundary without duplicates/missing IDs for a fixed result set, filter-before-count/page behavior, all supported sorts, invalid page/range rejection, soft-delete exclusion, and payment/location/account/category free-text search;
+- ✅ a dedicated `Finora.Performance` Release harness builds with **0 warnings and 0 errors** under the repository warnings-as-errors policy;
+- ✅ a bounded 10k synthetic CI performance smoke runs startup, history, reports, and integrity against production services and retains JSON evidence;
+- ✅ an on-demand workflow supports 10k/50k/100k datasets, selectable operations and iterations, while keeping real finance data out of benchmark fixtures;
 - ✅ schema 1 → schema 2 migration source coverage includes target-schema validation, schema-version guards, fresh initialization/reopen, data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection;
 - ✅ encrypted-backup hostile-input coverage includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated semantic corruption, and receipt path/size/hash corruption;
 - ✅ receipt SHA-256 metadata is required by backup validation and missing checksum metadata has direct regression coverage;
@@ -69,9 +72,11 @@ The following source-validation work is no longer an unknown for that exact cand
 - ✅ `FinanceStore` budget and legacy Dashboard windows use shared local-calendar `[from,toExclusive)` UTC boundaries instead of UTC-midnight assumptions, with deterministic UTC+05:30, UTC-07:00 and DST integration coverage;
 - ✅ primary CI action majors run on the Node-24-compatible versions introduced by commit `6ba519bf69174c68b67f8595872546a259c783dc`.
 
-This evidence proves source/test/build correctness only for the recorded candidate. It does not prove signed packaging, installed prior-version upgrade behavior on every target, real process-kill/low-disk recovery, physical-device behavior, accessibility, or store approval.
+The bounded 10k performance smoke is observational evidence, not a universal timing guarantee. The current exact evidence does **not** include runtime execution of the performance harness's complete `--operations all` profile, CSV/PDF/backup performance operations, or 50k/100k comparison profiles. Those remain explicit P2 evidence tasks even though the complete harness compiles.
 
-Documentation-only commits after the exact source candidate may advance `main`; runtime source evidence remains anchored to `d841efb8c392860b221f331b4ced9119020b849e` until a newer exact runtime/source candidate is recorded.
+This source/test/build evidence does not prove signed packaging, installed prior-version upgrade behavior on every target, real process-kill/low-disk recovery, physical-device behavior, accessibility, or store approval.
+
+Documentation-only commits after the exact source candidate may advance the branch or `main`; runtime source evidence remains anchored to `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` until a newer exact runtime/source candidate is recorded.
 
 ### 1. Structural preflight — completed automated evidence, keep as every-commit gate
 
@@ -254,7 +259,8 @@ Automated tests directly inject and detect representative corruption including:
 - ✅ changed receipt bytes/SHA-256 drift;
 - ✅ invalid/missing receipt checksum metadata;
 - ✅ unsafe attachment path/link behavior through existing regression coverage;
-- ✅ healthy integrity state after multi-precision encrypted backup/reset/restore.
+- ✅ healthy integrity state after multi-precision encrypted backup/reset/restore;
+- ✅ healthy full integrity scan on the current 10k synthetic performance smoke profile.
 
 Still required before store-ready status:
 
@@ -582,7 +588,7 @@ Do not claim guaranteed data-loss prevention, guaranteed notification delivery, 
 
 ### 26. Database-level transaction history paging — implemented and automated
 
-Interactive transaction history now uses `ITransactionHistoryStore` to apply search/filter/sort/count/offset/page-size in SQLite/EF Core before materialization.
+Interactive transaction history uses `ITransactionHistoryStore` to apply search/filter/sort/count/offset/page-size in SQLite/EF Core before materialization.
 
 Current behavior:
 
@@ -597,30 +603,41 @@ Current behavior:
 
 Automated integration coverage proves a 120-row 50/50/20 boundary with no duplicates/missing rows for a fixed result set, filter-before-count/page behavior, all supported sorts, invalid range/page rejection, soft-delete exclusion, and extended search fields.
 
-The architecture work is complete for the current source line. Performance/large-dataset benchmarking remains item 27.
+### 27. Performance and large-dataset tooling — implemented; full comparison evidence remains
 
-### 27. Add performance and large-dataset benchmarks
+Implemented source/tooling now includes:
 
-Create synthetic datasets covering:
+- ✅ standalone `tools/Finora.Performance` net10.0 harness using production Application/Infrastructure services;
+- ✅ batched synthetic seeding for transactions plus bounded accounts, budgets, goals, recurrences, and SHA-256-verified receipt files;
+- ✅ startup measurement;
+- ✅ first/deep history paging, broad/selective search, and amount-sort measurement;
+- ✅ long-range report measurement;
+- ✅ CSV export plus isolated CSV import round-trip measurement with exact-count/no-skip/no-invalid correctness checks;
+- ✅ PDF export measurement;
+- ✅ encrypted backup creation and restore measurement with restored transaction/attachment count checks;
+- ✅ full `DataIntegrityService` measurement that fails on unhealthy synthetic state;
+- ✅ managed-heap and process working-set observations;
+- ✅ machine-readable JSON output with dataset/runtime/runner/evidence-policy metadata;
+- ✅ normal CI 10k bounded smoke;
+- ✅ on-demand 10k/50k/100k workflow with selectable operations and 1–3 iterations;
+- ✅ documentation in `docs/testing/PERFORMANCE_BENCHMARKING.md`.
 
-- 10k transactions;
-- 50k transactions;
-- 100k transactions where practical;
-- large receipt counts;
-- many recurrence rules;
-- many budgets/goals;
-- long report ranges.
+Exact current executed evidence:
 
-Measure:
+- ✅ 10,000 synthetic transactions seeded successfully in Finora CI run `32127759802`;
+- ✅ startup/history/reports/integrity smoke completed successfully;
+- ✅ performance artifact `9321290557`, SHA-256 `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`;
+- ✅ complete performance project compiled with zero warnings/errors.
 
-- startup;
-- transaction search;
-- report generation;
-- CSV import;
-- PDF export;
-- backup create/restore;
-- integrity scan;
-- memory pressure.
+Still required before claiming complete large-dataset comparison evidence:
+
+- ⏳ execute a 10k `--operations all` profile so CSV/PDF/backup performance paths have runtime evidence in the harness itself;
+- ⏳ execute 50k `--operations all` on a comparable runner;
+- ⏳ execute 100k `--operations all` on a comparable runner;
+- ⏳ retain JSON artifacts/digests and compare trends on the same runner class;
+- ⏳ investigate any outlier with profiling/query inspection before changing finance architecture.
+
+Timing remains observational. Do not introduce a release-breaking arbitrary millisecond threshold without a separately approved and reproducible performance SLO.
 
 ### 28. Expand localization coverage
 
@@ -834,9 +851,9 @@ Prefer privacy-preserving diagnostics and never send finance contents by default
 
 ## Recommended execution order
 
-The completed automated source-build, database-paging, precision/calendar, and data-safety regression block is now an every-commit gate rather than the next unknown. Continue in this order:
+The completed automated source-build, database-paging, bounded-10k performance smoke, precision/calendar, and data-safety regression block is now an every-commit gate rather than the next unknown. Continue in this order:
 
-1. keep structural preflight + **319-test** + four-target source-build + CodeQL + Dependency Review gates green;
+1. keep structural preflight + **319-test** + bounded 10k performance smoke + four-target source-build + CodeQL + Dependency Review gates green;
 2. execute a complete installed prior-version/schema-1→2 upgrade profile and run integrity/backup validation after migration;
 3. execute native process-interruption, low-disk, locked-file, and relaunch recovery validation;
 4. validate privacy/security/currency/time-zone behavior on native UI, using JPY/INR/KWD/CLF and real target timezone settings;
@@ -850,17 +867,22 @@ The completed automated source-build, database-paging, precision/calendar, and d
 12. complete exact dependency/license/security review;
 13. final release checklist/store readiness review;
 14. tag/release only after evidence exists;
-15. then begin P2 product polish, with performance/large-dataset benchmarking as the next code-level P2 item.
+15. run the full 10k/50k/100k comparable `all` performance matrix and use the results to prioritize any P2 optimization rather than guessing;
+16. then continue localization, native UI automation, accessibility polish, import/export UX, backup usability, sample data, and contributor workflow work.
 
 ---
 
 ## Definition of the next successful milestone
 
-The next milestone is narrower again because database-backed transaction paging, migration, hostile-backup, integrity-corruption, restore-link safety, reset-safety, representative currency precision, local-calendar source behavior, source compilation, and automated tests now have concrete CI evidence:
+The next release milestone remains evidence-focused because database-backed transaction paging, performance tooling, bounded 10k performance smoke, migration, hostile-backup, integrity-corruption, restore-link safety, reset-safety, representative currency precision, local-calendar source behavior, source compilation, and automated tests now have concrete CI evidence:
 
-> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build/data-safety/paging/precision/calendar gates and adds complete installed-upgrade, real recovery failure-injection, native privacy/security/currency/time-zone/accessibility, signed packaging, dependency-review, and store evidence for every applicable release checklist item.**
+> **A fully reproducible Finora 0.2.0 release candidate that preserves the current green automated/source-build/data-safety/paging/performance-tooling/precision/calendar gates and adds complete installed-upgrade, real recovery failure-injection, native privacy/security/currency/time-zone/accessibility, signed packaging, dependency-review, and store evidence for every applicable release checklist item.**
 
-After that milestone, P2 improvements can be prioritized using actual performance, accessibility, user feedback, and support data instead of guessing.
+The next performance-evidence milestone is separate and explicit:
+
+> **Comparable retained 10k, 50k and 100k `--operations all` JSON results on the same runner class, with correctness gates passing and any optimization justified by measured evidence.**
+
+After the release milestone, P2 improvements can be prioritized using actual performance, accessibility, user feedback, and support data instead of guessing.
 
 ---
 

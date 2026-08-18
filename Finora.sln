@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finora.IntegrationTests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finora.UiTests", "tests\Finora.UiTests\Finora.UiTests.csproj", "{AE494AF8-D2B8-409E-8DB7-6D3900524A20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finora.Performance", "tools\Finora.Performance\Finora.Performance.csproj", "{A4E4239D-38D7-41DA-A7A5-EED7E99C2068}"
+EndProject
 Global
   GlobalSection(SolutionConfigurationPlatforms) = preSolution
     Debug|Any CPU = Debug|Any CPU
@@ -56,5 +58,9 @@ Global
     {AE494AF8-D2B8-409E-8DB7-6D3900524A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
     {AE494AF8-D2B8-409E-8DB7-6D3900524A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
     {AE494AF8-D2B8-409E-8DB7-6D3900524A20}.Release|Any CPU.Build.0 = Release|Any CPU
+    {A4E4239D-38D7-41DA-A7A5-EED7E99C2068}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+    {A4E4239D-38D7-41DA-A7A5-EED7E99C2068}.Debug|Any CPU.Build.0 = Debug|Any CPU
+    {A4E4239D-38D7-41DA-A7A5-EED7E99C2068}.Release|Any CPU.ActiveCfg = Release|Any CPU
+    {A4E4239D-38D7-41DA-A7A5-EED7E99C2068}.Release|Any CPU.Build.0 = Release|Any CPU
   EndGlobalSection
 EndGlobal
