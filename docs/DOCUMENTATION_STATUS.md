@@ -34,7 +34,8 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Feature-change procedure | `docs/development/ADDING_A_FEATURE.md` | Current |
 | Test plan | `docs/TEST_PLAN.md` | Current |
 | Practical testing guide | `docs/testing/TESTING_GUIDE.md` | Current |
-| Dated CI/check-run evidence | `docs/testing/CI_EVIDENCE.md` | Current — strict 2026-08-15 candidate recorded |
+| Performance benchmarking | `docs/testing/PERFORMANCE_BENCHMARKING.md` | Current — synthetic 10k/50k/100k harness and evidence policy documented |
+| Dated CI/check-run evidence | `docs/testing/CI_EVIDENCE.md` | Current — strict 2026-08-18 paging candidate recorded |
 | Native validation matrix | `docs/testing/NATIVE_VALIDATION_MATRIX.md` | Current |
 | Android | `docs/platforms/ANDROID.md` | Current |
 | Windows | `docs/platforms/WINDOWS.md` | Current |
@@ -81,7 +82,7 @@ Documentation and UI must not describe that link as premium entitlement, subscri
 
 `build/scripts/verify_structure.py` treats the core documentation tree as required repository structure and validates repository-relative Markdown file links without network access.
 
-The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md`, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
+The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md` and `docs/testing/PERFORMANCE_BENCHMARKING.md`, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
 
 The link check deliberately does not prove:
 
@@ -94,7 +95,9 @@ The link check deliberately does not prove:
 
 A platform document describes intended/current source behavior and required QA. It does not convert unexecuted native validation into a passing result.
 
-As of 2026-08-15, `docs/testing/CI_EVIDENCE.md` records actual structural, automated-test, four-target MAUI Release source-build, and CodeQL evidence for strict candidate `f7dbfbb8691edc79cee559101f284ccd90a44cf7`.
+As of 2026-08-18, `docs/testing/CI_EVIDENCE.md` records actual structural, automated-test, four-target MAUI Release source-build, CodeQL, and Dependency Review evidence for the strict database-paging candidate `d841efb8c392860b221f331b4ced9119020b849e`.
+
+Performance timing remains a separate evidence class. The benchmark harness records synthetic observational measurements and correctness/integrity failures; arbitrary elapsed-time thresholds are not treated as finance correctness.
 
 The remaining release decision must still retain real evidence for:
 
@@ -178,6 +181,14 @@ Update:
 - Settings reference;
 - store metadata/release gates;
 - current target-store policy review.
+
+### New performance benchmark or evidence
+
+Update:
+
+- `docs/testing/PERFORMANCE_BENCHMARKING.md` with dataset shape, operations, runner interpretation, and correctness policy;
+- benchmark workflow/CI smoke coverage as applicable;
+- roadmap, project status, changelog, and detailed ledger only for evidence actually obtained.
 
 ### New CI/release evidence
 
