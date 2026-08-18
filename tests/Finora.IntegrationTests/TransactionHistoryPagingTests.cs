@@ -166,6 +166,33 @@ public sealed class TransactionHistoryPagingTests : IAsyncLifetime
         Assert.False(page.HasMore);
     }
 
+    [Fact]
+    public async Task SearchesPaymentLocationAccountAndCategoryBeforePaging()
+    {
+        var primary = new Account { Name = "Primary Ledger", Type = AccountType.Bank, Currency = "INR" };
+        var secondary = new Account { Name = "Secondary Ledger", Type = AccountType.Bank, Currency = "INR" };
+        await _finance.SaveAccountAsync(primary);
+        await _finance.SaveAccountAsync(secondary);
+        var dining = new Category { Name = "Dining Out" };
+        await _finance.SaveCategoryAsync(dining);
+        var occurredAt = new DateTimeOffset(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
+
+        var target = TransactionFactory.Create(TransactionType.Expense, 750, "INR", primary.Id, occurredAt, dining.Id, "Target merchant");
+        target.PaymentMethod = "UPI Special";
+        target.ManualLocation = "Lucknow Center";
+        await _finance.SaveTransactionAsync(target);
+        await SaveAsync(TransactionType.Expense, secondary.Id, occurredAt.AddMinutes(1), 500, "Decoy merchant");
+
+        foreach (var searchText in new[] { "UPI Special", "Lucknow Center", "Primary Ledger", "Dining Out" })
+        {
+            var page = await _history.GetPageAsync(new TransactionHistoryQuery(SearchText: searchText, PageSize: 10));
+            var item = Assert.Single(page.Items);
+            Assert.Equal(target.Id, item.Id);
+            Assert.Equal(1, page.TotalCount);
+            Assert.False(page.HasMore);
+        }
+    }
+
     private async Task SaveAsync(TransactionType type, Guid accountId, DateTimeOffset occurredAtUtc, long amountMinor, string merchant, Guid? categoryId = null)
     {
         var transaction = TransactionFactory.Create(type, amountMinor, "INR", accountId, occurredAtUtc, categoryId, merchant);
