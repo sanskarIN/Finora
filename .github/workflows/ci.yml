@@ -51,12 +51,16 @@ jobs:
         run: dotnet restore tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj
       - name: Restore UI-contract tests
         run: dotnet restore tests/Finora.UiTests/Finora.UiTests.csproj
+      - name: Restore performance lab
+        run: dotnet restore tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj
       - name: Run unit tests with warnings as errors
         run: dotnet test tests/Finora.UnitTests/Finora.UnitTests.csproj -c Release --no-restore --logger "trx;LogFileName=unit.trx"
       - name: Run integration tests with warnings as errors
         run: dotnet test tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj -c Release --no-restore --logger "trx;LogFileName=integration.trx"
       - name: Run UI-contract tests with warnings as errors
         run: dotnet test tests/Finora.UiTests/Finora.UiTests.csproj -c Release --no-restore --logger "trx;LogFileName=ui-contract.trx"
+      - name: Build performance lab with warnings as errors
+        run: dotnet build tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj -c Release --no-restore
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
