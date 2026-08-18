@@ -204,7 +204,7 @@ internal sealed class PerformanceSeeder(PerformanceDbFactory factory, string roo
         }
     }
 
-    private async Task<long> SeedAttachmentsAsync(IReadOnlyList<Guid> transactionIds, CancellationToken cancellationToken)
+    private async Task<long> SeedAttachmentsAsync(List<Guid> transactionIds, CancellationToken cancellationToken)
     {
         if (transactionIds.Count == 0) return 0;
 
