@@ -1,0 +1,68 @@
+name: Finora Performance Benchmarks
+
+on:
+  workflow_dispatch:
+    inputs:
+      transactions:
+        description: Synthetic transaction count
+        required: true
+        default: '10000'
+        type: choice
+        options:
+          - '10000'
+          - '50000'
+          - '100000'
+      operations:
+        description: Comma-separated operations or all
+        required: true
+        default: all
+        type: string
+      iterations:
+        description: Measurement repetitions
+        required: true
+        default: '1'
+        type: choice
+        options:
+          - '1'
+          - '2'
+          - '3'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-${{ github.ref }}-${{ inputs.transactions }}
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore performance harness
+        run: dotnet restore tools/Finora.Performance/Finora.Performance.csproj
+      - name: Build performance harness
+        run: dotnet build tools/Finora.Performance/Finora.Performance.csproj -c Release --no-restore
+      - name: Run synthetic benchmark
+        run: >-
+          dotnet run --project tools/Finora.Performance/Finora.Performance.csproj
+          -c Release --no-build --
+          --transactions ${{ inputs.transactions }}
+          --attachments 100
+          --recurrences 250
+          --budgets 100
+          --goals 100
+          --iterations ${{ inputs.iterations }}
+          --operations "${{ inputs.operations }}"
+          --output "artifacts/performance/performance-${{ inputs.transactions }}.json"
+      - name: Upload benchmark evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: performance-${{ inputs.transactions }}
+          path: artifacts/performance/*.json
+          if-no-files-found: error
+          retention-days: 30
