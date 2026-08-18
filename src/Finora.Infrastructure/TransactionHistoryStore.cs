@@ -87,7 +87,7 @@ public sealed class TransactionHistoryStore(IDbContextFactory<FinoraDbContext> f
                 .ThenByDescending(transaction => transaction.OccurredAtUtc)
                 .ThenByDescending(transaction => transaction.Id),
             TransactionHistorySort.MerchantAscending => rows
-                .OrderBy(transaction => (transaction.Merchant ?? string.Empty).ToUpper())
+                .OrderBy(transaction => EF.Functions.Collate(transaction.Merchant ?? string.Empty, "NOCASE"))
                 .ThenByDescending(transaction => transaction.OccurredAtUtc)
                 .ThenByDescending(transaction => transaction.Id),
             _ => throw new ArgumentOutOfRangeException(nameof(sort), sort, "Unsupported transaction history sort order.")
