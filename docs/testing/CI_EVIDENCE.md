@@ -2,9 +2,97 @@
 
 Last verified source-build evidence: **2026-08-18**
 
-This document records concrete GitHub Actions evidence for the current Finora 0.2.0 source line. It separates compiler/test evidence from device, packaging, signing, accessibility, recovery-failure-injection, and store evidence.
+This document records concrete GitHub Actions evidence for the current Finora 0.2.0 source line. It separates compiler/test evidence from device, packaging, signing, accessibility, recovery-failure-injection, store evidence, and observational performance evidence.
 
-## Current verified source candidate — database-backed transaction history paging
+## Current verified source candidate — large-dataset performance tooling
+
+Candidate commit:
+
+`8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`
+
+Automated runs:
+
+- Finora CI `32127759802` — success;
+- CodeQL `32127759687` — success;
+- Dependency Review `32127759673` — success.
+
+Finora CI jobs for this exact source candidate:
+
+- Structural preflight `95682010091` — success;
+- Core tests `95683208566` — success;
+- Performance smoke (10k) `95683208597` — success;
+- Windows Release source build `95684553116` — success;
+- Android Release source build `95684553130` — success;
+- iOS Release source build `95684553150` — success;
+- Mac Catalyst Release source build `95684553224` — success.
+
+Exact strict core results:
+
+| Test project | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Finora.UnitTests | 102 | 0 | 0 |
+| Finora.IntegrationTests | 179 | 0 | 0 |
+| Finora.UiTests | 38 | 0 | 0 |
+| **Total** | **319** | **0** | **0** |
+
+Core test artifact:
+
+- artifact `9321292681`;
+- SHA-256 digest: `c70c959ee19352cd67bbdb0330e99c2ba1ea8dd349c281fd517be9e67b3435f0`.
+
+The performance project compiled in Release with **0 warnings and 0 errors**. The normal CI smoke seeded 10,000 synthetic transactions in 4.15 seconds and executed the bounded `startup,history,reports,integrity` operation set successfully.
+
+Performance smoke artifact:
+
+- artifact `9321290557` (`performance-smoke-10k`);
+- SHA-256 digest: `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`.
+
+One-iteration observational timings recorded by that exact smoke run:
+
+| Measurement | Elapsed ms |
+| --- | ---: |
+| `startup.initialize` | 34.049 |
+| `history.first-page` | 49.127 |
+| `history.deep-page` | 13.435 |
+| `history.search-common` | 33.475 |
+| `history.search-selective` | 18.104 |
+| `history.amount-sort` | 10.651 |
+| `reports.income-expense` | 44.270 |
+| `reports.category-spending` | 270.318 |
+| `reports.merchant` | 46.875 |
+| `reports.account-trends` | 51.281 |
+| `reports.budgets` | 914.281 |
+| `reports.recurring` | 13.804 |
+| `reports.savings` | 18.984 |
+| `integrity.full` | 262.725 |
+
+Retained native diagnostic artifacts for this exact source candidate:
+
+- Windows — artifact `9321588237`, SHA-256 `1efc14f54404fc0ae0747a462c5a4bdfa91be12413b0abc9a287e8b600c04525`;
+- Android — artifact `9321676747`, SHA-256 `43be11c2ea1abf2f7968d3df687e6ed5b83903759cb089e4833550b4b16668d6`;
+- Mac Catalyst — artifact `9321864012`, SHA-256 `7588a9d80ceace999e590118f5da87822dc303c25d4ea5778a82e8cb8267db25`;
+- iOS — artifact `9322174945`, SHA-256 `fefa32db111ce35be90f56e7ea1d0f1ab0da8b24805c348bb06b1f0a8a32dd49`.
+
+This candidate adds a reproducible synthetic large-dataset harness and manual 10k/50k/100k workflow while retaining the previously verified database-backed paging, precision, local-calendar, migration, hostile-backup, data-integrity, receipt, privacy, reset, and restore-recovery behavior.
+
+### Performance evidence boundary
+
+The recorded 10k timings are observations from one GitHub-hosted runner. They are not universal guarantees and are not correctness thresholds.
+
+The normal CI smoke deliberately does **not** execute the complete heavy profile. Runtime evidence remains outstanding for:
+
+- CSV export/import round trip through the performance harness;
+- PDF export through the performance harness;
+- encrypted backup create/restore through the performance harness;
+- complete `--operations all` execution;
+- 50,000-row comparison profile;
+- 100,000-row comparison profile.
+
+Those paths are compiled by the strict performance-project build and include explicit correctness guards, but compile-only evidence must not be relabeled as runtime evidence. The on-demand workflow exists specifically to produce those later artifacts.
+
+All source-build results remain distinct from signed AAB/MSIX/Apple packaging, installation, physical-device behavior, accessibility QA, recovery failure injection, installed prior-version upgrade evidence, and store approval.
+
+## Immediately preceding verified source candidate — database-backed transaction history paging
 
 Candidate commit:
 
@@ -312,27 +400,29 @@ updated the primary workflow to Node-24-compatible current action majors used by
 - `actions/setup-dotnet@v6`;
 - `actions/upload-artifact@v7`.
 
-The current verified `d841efb8…` run executed through those updated action majors.
+The current performance candidate run executed through those updated action majors.
 
-## What this evidence does prove
+## What the current evidence does prove
 
-For exact source candidate `d841efb8c392860b221f331b4ced9119020b849e`, it proves:
+For exact source candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`, it proves:
 
 - repository structural preflight passes;
 - all **319** current automated tests pass with zero failures/skips;
+- the new performance harness compiles in Release with zero warnings/errors under the repository policy;
+- the bounded 10k startup/history/reports/integrity smoke executes successfully and produces retained JSON evidence;
 - warnings-as-errors source compilation passes all four MAUI targets;
 - the strict compiled-binding warning classes remain cleared on those builds;
 - CodeQL analysis completes successfully;
 - Dependency Review completes successfully;
-- interactive transaction history applies its new paged query through SQLite/EF Core rather than retaining all matching rows in the ViewModel;
-- the new paging regression suite covering fixed-result-set boundaries, filters, sorts, soft deletes, extended search, invalid ranges, and page limits compiles and passes;
-- the retained JPY/INR/KWD/CLF currency-precision, CSV round-trip, encrypted-backup round-trip, report, budget, savings, recurrence, reconciliation, UTC/+05:30/-07:00/DST, and FinanceStore local-calendar regressions compile and pass;
-- the previously verified migration, hostile-backup, receipt-integrity, corruption-detection, logger synchronization, reset-safety, and restore-link regressions remain part of the same source line.
+- interactive transaction history applies its paged query through SQLite/EF Core rather than retaining all matching rows in the ViewModel;
+- the retained paging, JPY/INR/KWD/CLF precision, CSV round-trip, encrypted-backup round-trip, report, budget, savings, recurrence, reconciliation, UTC/+05:30/-07:00/DST, migration, hostile-backup, receipt-integrity, corruption-detection, logger synchronization, reset-safety, and restore-link regressions remain part of the same source line.
 
 ## What this evidence does not prove
 
 It does **not** mark the following release gates complete:
 
+- full performance-harness `--operations all` runtime execution;
+- 50,000-row or 100,000-row benchmark execution;
 - signed Android AAB production packaging;
 - Windows MSIX generation, publisher identity, or signing;
 - iOS provisioning, signing, archive, TestFlight, or App Store submission;
@@ -363,4 +453,13 @@ Future release-candidate evidence should be appended with:
 7. migration/backup/recovery profiles exercised;
 8. unresolved failures or external gates.
 
-A green source build must never be relabeled as signed package, device, accessibility, recovery-injection, or store evidence without executing that separate gate.
+Performance evidence should additionally record:
+
+9. dataset shape/count;
+10. selected operations;
+11. iteration count;
+12. runner/runtime metadata;
+13. JSON artifact/digest;
+14. whether the value is compile-only, executed smoke, or executed full-profile evidence.
+
+A green source build must never be relabeled as signed package, device, accessibility, recovery-injection, store, or unexecuted performance evidence without executing that separate gate.
