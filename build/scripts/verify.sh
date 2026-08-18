@@ -16,6 +16,9 @@ do
   dotnet test "$project" -c Release --no-restore
 done
 
+dotnet restore tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj
+dotnet build tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj -c Release --no-restore
+
 if [[ "${FINORA_SKIP_MAUI:-0}" == "1" ]]; then
   echo "FINORA_SKIP_MAUI=1: skipped native MAUI builds after core verification."
   exit 0
