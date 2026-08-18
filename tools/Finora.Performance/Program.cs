@@ -8,6 +8,8 @@ namespace Finora.Performance;
 
 internal static class Program
 {
+    private static readonly JsonSerializerOptions ReportJsonOptions = new() { WriteIndented = true };
+
     public static async Task<int> Main(string[] args)
     {
         PerformanceOptions options;
@@ -76,7 +78,7 @@ internal static class Program
 
             await using (var stream = File.Create(outputPath))
             {
-                await JsonSerializer.SerializeAsync(stream, report, new JsonSerializerOptions { WriteIndented = true }, cancellation.Token).ConfigureAwait(false);
+                await JsonSerializer.SerializeAsync(stream, report, ReportJsonOptions, cancellation.Token).ConfigureAwait(false);
             }
 
             foreach (var measurement in measurements)
