@@ -132,7 +132,11 @@ public sealed class TransactionHistoryPagingTests : IAsyncLifetime
         Assert.Equal(start.AddDays(1), oldest.Items[0].OccurredAtUtc);
         Assert.Equal(500, high.Items[0].AmountMinor);
         Assert.Equal(100, low.Items[0].AmountMinor);
-        Assert.Equal(new[] { "Alpha", "beta", "zeta" }, merchant.Items.Select(item => item.Merchant).ToArray());
+        Assert.Collection(
+            merchant.Items,
+            item => Assert.Equal("Alpha", item.Merchant),
+            item => Assert.Equal("beta", item.Merchant),
+            item => Assert.Equal("zeta", item.Merchant));
     }
 
     [Fact]
