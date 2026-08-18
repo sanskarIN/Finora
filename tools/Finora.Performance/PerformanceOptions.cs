@@ -14,6 +14,7 @@ internal sealed record PerformanceOptions(
     string? RootPath,
     bool KeepData)
 {
+    private const int MaximumCsvImportRows = 100_000;
     internal static readonly string[] SupportedOperations = ["startup", "history", "reports", "csv", "pdf", "backup", "integrity"];
 
     public static PerformanceOptions Parse(string[] args)
@@ -75,6 +76,8 @@ internal sealed record PerformanceOptions(
 
         if (attachmentCount > transactionCount)
             throw new PerformanceUsageException("--attachments cannot exceed --transactions.");
+        if (operations.Contains("csv") && transactionCount > MaximumCsvImportRows)
+            throw new PerformanceUsageException($"The CSV round-trip benchmark supports at most {MaximumCsvImportRows:N0} transactions, matching Finora's CSV import safety limit.");
 
         return new PerformanceOptions(
             transactionCount,
@@ -108,6 +111,7 @@ Options:
   --keep-data                   Preserve the generated database/files after the run
   --help, -h                    Show this help
 
+The CSV round-trip operation is limited to 100,000 transactions, matching Finora's production CSV import limit.
 Timing values are observational evidence only. The harness fails on correctness errors, not arbitrary timing thresholds.
 """;
 
