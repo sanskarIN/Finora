@@ -77,7 +77,7 @@ internal sealed record PerformanceOptions(
         if (attachmentCount > transactionCount)
             throw new PerformanceUsageException("--attachments cannot exceed --transactions.");
         if (operations.Contains("csv") && transactionCount > MaximumCsvImportRows)
-            throw new PerformanceUsageException($"The CSV round-trip benchmark supports at most {MaximumCsvImportRows:N0} transactions, matching Finora's CSV import safety limit.");
+            throw new PerformanceUsageException($"The CSV round-trip benchmark supports at most {MaximumCsvImportRows.ToString("N0", CultureInfo.InvariantCulture)} transactions, matching Finora's CSV import safety limit.");
 
         return new PerformanceOptions(
             transactionCount,
