@@ -85,10 +85,16 @@ Transaction history supports:
 - type filter;
 - local date range;
 - explicit sort choice;
-- 50-row display pages;
+- 50-row database pages;
 - Load more for additional results.
 
-The store currently returns matching rows and the presentation layer applies the supported sort/page presentation. Incremental display prevents an unbounded visual list even when the result set is larger.
+`ITransactionHistoryStore` applies search, account/category/type/date filters, sort order, offset, and page size in the SQLite/EF Core query before materializing rows. The result returns the requested page, the total matching count, and whether another page exists.
+
+The first UI request loads at most 50 matching rows. **Load more transactions** asks the store for the next offset rather than retaining the complete result set in the ViewModel. The ViewModel also snapshots the last applied query, so editing filter controls without applying them cannot mix rows from different query states.
+
+Supported history sort modes remain newest first, oldest first, amount high-to-low, amount low-to-high, and merchant A–Z. Stable secondary ordering is applied so page boundaries remain deterministic when primary sort values tie.
+
+The legacy `IFinanceStore.SearchTransactionsAsync` API remains available for existing bounded workflows that intentionally need complete result sets; interactive transaction history uses the paged read service.
 
 ## Transaction editing and revisions
 
