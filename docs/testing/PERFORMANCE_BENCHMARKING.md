@@ -310,3 +310,57 @@ A fast benchmark does not prove:
 - absence of undiscovered defects.
 
 Performance artifacts complement, rather than replace, the release evidence in `CI_EVIDENCE.md`, `NATIVE_VALIDATION_MATRIX.md`, `../NEXT_STEPS.md`, and `../releases/RELEASE_CHECKLIST.md`.
+
+## Verified 10k CI smoke — exact source candidate
+
+Exact source candidate:
+
+`8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`
+
+Required checks for that candidate completed successfully:
+
+- Finora CI `32127759802`;
+- CodeQL `32127759687`;
+- Dependency Review `32127759673`.
+
+The normal CI smoke job was `95683208597`. The performance project built in Release with **0 warnings and 0 errors**, seeded 10,000 synthetic transactions in 4.15 seconds, and executed the bounded `startup,history,reports,integrity` profile successfully.
+
+Observed one-iteration timings on that GitHub-hosted runner were:
+
+| Measurement | Elapsed ms |
+| --- | ---: |
+| `startup.initialize` | 34.049 |
+| `history.first-page` | 49.127 |
+| `history.deep-page` | 13.435 |
+| `history.search-common` | 33.475 |
+| `history.search-selective` | 18.104 |
+| `history.amount-sort` | 10.651 |
+| `reports.income-expense` | 44.270 |
+| `reports.category-spending` | 270.318 |
+| `reports.merchant` | 46.875 |
+| `reports.account-trends` | 51.281 |
+| `reports.budgets` | 914.281 |
+| `reports.recurring` | 13.804 |
+| `reports.savings` | 18.984 |
+| `integrity.full` | 262.725 |
+
+Retained JSON evidence:
+
+- artifact `9321290557` (`performance-smoke-10k`);
+- SHA-256 `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`.
+
+The same exact source candidate also retained **319/319** passing core tests (102 unit, 179 integration, 38 UI-contract), all four MAUI Release source builds, CodeQL, and Dependency Review.
+
+### Evidence boundary for the recorded smoke
+
+These timings are observations from one GitHub-hosted runner and are **not** universal performance guarantees or release thresholds.
+
+The recorded smoke did **not** execute:
+
+- CSV export/import runtime round trip;
+- PDF export runtime measurement;
+- encrypted backup create/restore runtime round trip;
+- the complete `--operations all` profile;
+- 50,000-row or 100,000-row profiles.
+
+Those paths compile as part of the strict performance-project build and contain explicit correctness guards, but runtime evidence for them must come from the on-demand benchmark workflow or an equivalent documented Release run. Do not mark them complete from compile-only evidence.
