@@ -38,7 +38,6 @@ public interface IFinanceStore
     Task<Guid> SaveAccountAsync(Account account, CancellationToken cancellationToken = default);
     Task ArchiveAccountAsync(Guid accountId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<TransactionListItem>> SearchTransactionsAsync(string? query = null, Guid? accountId = null, Guid? categoryId = null, DateTimeOffset? from = null, DateTimeOffset? to = null, CancellationToken cancellationToken = default);
-    Task<TransactionHistoryPage> GetTransactionHistoryPageAsync(TransactionHistoryQuery query, CancellationToken cancellationToken = default);
     Task<Guid> SaveTransactionAsync(FinanceTransaction transaction, CancellationToken cancellationToken = default);
     Task<(Guid SourceTransactionId, Guid DestinationTransactionId)> RecordTransferAsync(Guid sourceAccountId, Guid destinationAccountId, long amountMinor, DateTimeOffset occurredAtUtc, string? note, CancellationToken cancellationToken = default);
     Task SoftDeleteTransactionAsync(Guid transactionId, CancellationToken cancellationToken = default);
@@ -55,6 +54,11 @@ public interface IFinanceStore
     Task<int> ProcessDueRecurrencesAsync(DateOnly throughDate, CancellationToken cancellationToken = default);
     Task<DashboardSnapshot> GetDashboardAsync(DateOnly start, DateOnly end, CancellationToken cancellationToken = default);
     Task DeleteAllDataAsync(CancellationToken cancellationToken = default);
+}
+
+public interface ITransactionHistoryStore
+{
+    Task<TransactionHistoryPage> GetPageAsync(TransactionHistoryQuery query, CancellationToken cancellationToken = default);
 }
 
 public interface IBackupService
