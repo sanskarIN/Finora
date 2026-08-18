@@ -6,7 +6,7 @@ namespace Finora.Infrastructure;
 
 public sealed class TransactionHistoryStore(IDbContextFactory<FinoraDbContext> factory) : ITransactionHistoryStore
 {
-    internal const int MaximumPageSize = 200;
+    public const int MaximumPageSize = 200;
     private readonly IDbContextFactory<FinoraDbContext> _factory = factory;
 
     public async Task<TransactionHistoryPage> GetPageAsync(TransactionHistoryQuery query, CancellationToken cancellationToken = default)
