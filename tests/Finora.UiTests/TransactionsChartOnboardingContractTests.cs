@@ -3,7 +3,7 @@ namespace Finora.UiTests;
 public sealed class TransactionsChartOnboardingContractTests
 {
     [Fact]
-    public void TransactionHistory_ExposesSortAndBoundedLoadMoreBehavior()
+    public void TransactionHistory_ExposesSortAndDatabaseBackedLoadMoreBehavior()
     {
         var xaml = ReadContract("TransactionsPage.xaml");
         var viewModel = ReadContract("TransactionsViewModel.cs");
@@ -14,7 +14,10 @@ public sealed class TransactionsChartOnboardingContractTests
         Assert.Contains("IsVisible=\"{Binding HasMore}\"", xaml, StringComparison.Ordinal);
         Assert.Contains("const int PageSize = 50", viewModel, StringComparison.Ordinal);
         Assert.Contains("LocalDateRange.ToUtc", viewModel, StringComparison.Ordinal);
-        Assert.Contains("Take(PageSize)", viewModel, StringComparison.Ordinal);
+        Assert.Contains("TransactionHistoryQuery", viewModel, StringComparison.Ordinal);
+        Assert.Contains("GetPageAsync", viewModel, StringComparison.Ordinal);
+        Assert.Contains("Offset = Transactions.Count", viewModel, StringComparison.Ordinal);
+        Assert.DoesNotContain("_allMatches", viewModel, StringComparison.Ordinal);
     }
 
     [Fact]
