@@ -66,6 +66,43 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  performance-smoke:
+    name: Performance smoke (10k)
+    needs: structural-preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore performance harness
+        run: dotnet restore tools/Finora.Performance/Finora.Performance.csproj
+      - name: Build performance harness with warnings as errors
+        run: dotnet build tools/Finora.Performance/Finora.Performance.csproj -c Release --no-restore
+      - name: Run 10k synthetic correctness and performance smoke
+        run: >-
+          dotnet run --project tools/Finora.Performance/Finora.Performance.csproj
+          -c Release --no-build --
+          --transactions 10000
+          --attachments 25
+          --recurrences 50
+          --budgets 25
+          --goals 25
+          --iterations 1
+          --operations startup,history,reports,integrity
+          --output artifacts/performance/ci-10k.json
+      - name: Upload performance smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: performance-smoke-10k
+          path: artifacts/performance/*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
   maui-windows:
     name: MAUI Windows
     needs: core-tests
