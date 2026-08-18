@@ -1,0 +1,63 @@
+name: Finora Performance Lab
+
+on:
+  workflow_dispatch:
+    inputs:
+      rows:
+        description: Synthetic transaction rows
+        required: true
+        default: '10000'
+        type: choice
+        options:
+          - '10000'
+          - '50000'
+          - '100000'
+      iterations:
+        description: Iterations for repeatable read/export measurements
+        required: true
+        default: '3'
+        type: choice
+        options:
+          - '1'
+          - '3'
+          - '5'
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+jobs:
+  benchmark:
+    name: ${{ inputs.rows }}-row performance lab
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore performance lab
+        run: dotnet restore tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj
+      - name: Build performance lab
+        run: dotnet build tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj -c Release --no-restore
+      - name: Run performance lab
+        run: >-
+          dotnet run --project tools/Finora.PerformanceLab/Finora.PerformanceLab.csproj
+          -c Release --no-build --
+          --rows ${{ inputs.rows }}
+          --iterations ${{ inputs.iterations }}
+          --output "${{ github.workspace }}/artifacts/performance/finora-${{ inputs.rows }}.json"
+      - name: Upload benchmark report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: performance-${{ inputs.rows }}-${{ github.run_id }}
+          path: artifacts/performance/*.json
+          if-no-files-found: warn
+          retention-days: 30
