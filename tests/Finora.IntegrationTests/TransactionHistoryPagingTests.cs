@@ -146,6 +146,26 @@ public sealed class TransactionHistoryPagingTests : IAsyncLifetime
         await Assert.ThrowsAsync<ArgumentException>(() => _history.GetPageAsync(new TransactionHistoryQuery(FromUtc: instant, ToExclusiveUtc: instant)));
     }
 
+    [Fact]
+    public async Task ExcludesSoftDeletedRowsFromTotalsAndPages()
+    {
+        var account = new Account { Name = "Primary", Type = AccountType.Bank, Currency = "INR" };
+        await _finance.SaveAccountAsync(account);
+        var occurredAt = new DateTimeOffset(2026, 5, 1, 12, 0, 0, TimeSpan.Zero);
+        var deleted = TransactionFactory.Create(TransactionType.Expense, 100, "INR", account.Id, occurredAt, merchant: "Deleted merchant");
+        var visible = TransactionFactory.Create(TransactionType.Expense, 200, "INR", account.Id, occurredAt.AddMinutes(1), merchant: "Visible merchant");
+        await _finance.SaveTransactionAsync(deleted);
+        await _finance.SaveTransactionAsync(visible);
+        await _finance.SoftDeleteTransactionAsync(deleted.Id);
+
+        var page = await _history.GetPageAsync(new TransactionHistoryQuery(PageSize: 10));
+
+        var item = Assert.Single(page.Items);
+        Assert.Equal(visible.Id, item.Id);
+        Assert.Equal(1, page.TotalCount);
+        Assert.False(page.HasMore);
+    }
+
     private async Task SaveAsync(TransactionType type, Guid accountId, DateTimeOffset occurredAtUtc, long amountMinor, string merchant, Guid? categoryId = null)
     {
         var transaction = TransactionFactory.Create(type, amountMinor, "INR", accountId, occurredAtUtc, categoryId, merchant);
