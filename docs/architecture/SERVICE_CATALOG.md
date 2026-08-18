@@ -37,6 +37,23 @@ Responsibilities include current account/transaction/category/budget/goal/recurr
 
 Important boundary: linked transfer creation/edit/delete/restore must preserve both halves. Do not use a generic one-row path for a transfer half.
 
+## `ITransactionHistoryStore` / `TransactionHistoryStore`
+
+Dedicated interactive transaction-history read model.
+
+Responsibilities:
+
+- apply free-text, account, category, type and UTC date-boundary filters in SQLite/EF Core;
+- exclude soft-deleted rows before counting/paging;
+- produce deterministic supported sort orders with stable secondary keys;
+- count matches without materializing every matching transaction;
+- enforce bounded offset/page-size queries (UI default 50, store maximum 200);
+- return page items, total match count and `HasMore`.
+
+`TransactionsViewModel` snapshots the last applied query before loading its first page so later **Load more** requests do not mix rows with un-applied UI control changes.
+
+`IFinanceStore.SearchTransactionsAsync` remains available for existing bounded workflows that intentionally need complete result sets; interactive history should use this paged service.
+
 ## `IFinanceDataResetService` / `FinanceDataResetService`
 
 Dedicated destructive finance-data reset.

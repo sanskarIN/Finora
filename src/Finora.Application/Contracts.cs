@@ -5,6 +5,25 @@ namespace Finora.Application;
 
 public sealed record AccountSummary(Guid Id, string Name, AccountType Type, string Currency, long BalanceMinor, AccountState State);
 public sealed record TransactionListItem(Guid Id, TransactionType Type, long AmountMinor, string Currency, DateTimeOffset OccurredAtUtc, string AccountName, string? CategoryName, string? Merchant, string? Note);
+public enum TransactionHistorySort
+{
+    NewestFirst,
+    OldestFirst,
+    AmountHighToLow,
+    AmountLowToHigh,
+    MerchantAscending
+}
+public sealed record TransactionHistoryQuery(
+    string? SearchText = null,
+    Guid? AccountId = null,
+    Guid? CategoryId = null,
+    TransactionType? Type = null,
+    DateTimeOffset? FromUtc = null,
+    DateTimeOffset? ToExclusiveUtc = null,
+    TransactionHistorySort Sort = TransactionHistorySort.NewestFirst,
+    int Offset = 0,
+    int PageSize = 50);
+public sealed record TransactionHistoryPage(IReadOnlyList<TransactionListItem> Items, int TotalCount, bool HasMore);
 public sealed record DashboardSnapshot(long TotalBalanceMinor, long IncomeMinor, long ExpenseMinor, long NetChangeMinor, long RemainingBudgetMinor, IReadOnlyList<TransactionListItem> RecentTransactions, IReadOnlyList<CategorySpend> TopCategories);
 public sealed record CategorySpend(string CategoryName, long AmountMinor);
 public sealed record BudgetSnapshot(Guid Id, string Name, long PlannedMinor, long ActualMinor, string Currency, int WarningThresholdPercent);
@@ -35,6 +54,11 @@ public interface IFinanceStore
     Task<int> ProcessDueRecurrencesAsync(DateOnly throughDate, CancellationToken cancellationToken = default);
     Task<DashboardSnapshot> GetDashboardAsync(DateOnly start, DateOnly end, CancellationToken cancellationToken = default);
     Task DeleteAllDataAsync(CancellationToken cancellationToken = default);
+}
+
+public interface ITransactionHistoryStore
+{
+    Task<TransactionHistoryPage> GetPageAsync(TransactionHistoryQuery query, CancellationToken cancellationToken = default);
 }
 
 public interface IBackupService

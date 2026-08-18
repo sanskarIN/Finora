@@ -4,6 +4,29 @@ All notable Finora changes are documented here. The project follows semantic-ver
 
 ## [Unreleased]
 
+### Changed — 2026-08-18 database-backed transaction history paging
+
+- Replaced interactive all-results in-memory transaction history slicing with SQLite/EF Core database paging through a dedicated `ITransactionHistoryStore`.
+- Added a typed paged query/result contract carrying search text, account/category/type filters, exclusive UTC date boundaries, sort order, offset, page size, total count and `HasMore`.
+- Preserved all existing transaction-history sort choices and free-text fields while applying filters/count/sort before `Skip`/`Take`.
+- Added deterministic secondary ordering across page boundaries for a fixed result set and case-insensitive SQLite merchant sorting.
+- Kept the last applied query stable for **Load more** requests so un-applied filter-control edits cannot mix query states.
+- Added validation for negative offsets, invalid page sizes and invalid date ranges; maximum store page size is 200 and UI page size remains 50.
+- Expanded integration coverage for 120-row paging boundaries, filters, sorts, soft-delete exclusion and payment/location/account/category search; updated UI source-contract coverage so regressions back to `_allMatches` are rejected.
+- Updated transaction feature/service documentation and marked the previous P2 paging roadmap item implemented.
+
+### Verified — 2026-08-18 database paging candidate
+
+- Source candidate `d841efb8c392860b221f331b4ced9119020b849e` passed Finora CI run `32120115922`, CodeQL run `32120115965`, and Dependency Review run `32120115912`.
+- Structural preflight passed.
+- Unit tests passed 102/102.
+- Integration tests passed 179/179.
+- UI-contract tests passed 38/38.
+- Total automated tests passed: 319/319, with zero failures/skips.
+- Release source builds passed independently for Windows, Android, iOS, and Mac Catalyst.
+- Intermediate candidate `6617a0b6b07b4cd4befcd48ae22c476ab0b917d1` was blocked by strict analyzer `CA1861` in a new test assertion; the assertion was corrected without weakening analyzers or warnings-as-errors.
+- Signed packaging, installed prior-version migration, native failure-injection/device/accessibility QA, dependency-license acceptance, and store approval remain separate release gates.
+
 ### Changed — 2026-08-15 migration, backup, integrity and recovery hardening
 
 - Hardened schema migration so the version marker advances only after required target-column validation plus SQLite foreign-key/integrity validation succeeds inside the migration transaction.

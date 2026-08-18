@@ -1,10 +1,65 @@
 # Finora CI Evidence
 
-Last verified source-build evidence: **2026-08-16**
+Last verified source-build evidence: **2026-08-18**
 
 This document records concrete GitHub Actions evidence for the current Finora 0.2.0 source line. It separates compiler/test evidence from device, packaging, signing, accessibility, recovery-failure-injection, and store evidence.
 
-## Current verified source candidate
+## Current verified source candidate — database-backed transaction history paging
+
+Candidate commit:
+
+`d841efb8c392860b221f331b4ced9119020b849e`
+
+Commit message:
+
+`fix(tests): satisfy analyzer for merchant sort assertion`
+
+Automated runs:
+
+- Finora CI `32120115922` — success;
+- CodeQL `32120115965` — success;
+- Dependency Review `32120115912` — success.
+
+Finora CI jobs for this exact source candidate:
+
+- Structural preflight `95658397777` — success;
+- Core tests `95658437947` — success;
+- Android Release source build `95658684131` — success;
+- Mac Catalyst Release source build `95658684209` — success;
+- iOS Release source build `95658684277` — success;
+- Windows Release source build `95658684327` — success.
+
+Exact strict core results:
+
+| Test project | Passed | Failed | Skipped |
+| --- | ---: | ---: | ---: |
+| Finora.UnitTests | 102 | 0 | 0 |
+| Finora.IntegrationTests | 179 | 0 | 0 |
+| Finora.UiTests | 38 | 0 | 0 |
+| **Total** | **319** | **0** | **0** |
+
+Core test artifact:
+
+- artifact `9318206622`;
+- SHA-256 digest: `5f324ea6d3b65ab5d8dc5a52dbdd9c4c26610333086c9b2752415738761ff4a7`.
+
+This candidate adds true database-backed interactive transaction-history paging while retaining all previously verified precision, local-calendar, migration, hostile-backup, data-integrity, receipt, privacy, reset, and restore-recovery work.
+
+The paging evidence covers a 120-row 50/50/20 page boundary with no duplicate/missing IDs for a fixed result set, filter-before-count/page behavior, all supported sort modes, invalid paging/date-range rejection, soft-delete exclusion, extended free-text search fields, and UI source-contract protection against regressing to `_allMatches` in-memory history slicing.
+
+Documentation-only commits after this exact source candidate may advance the working branch or `main`; compiler/test/native-build evidence remains anchored to the exact source candidate above unless a newer runtime/source candidate is explicitly recorded.
+
+### Strict analyzer catch during the paging continuation
+
+Intermediate candidate `6617a0b6b07b4cd4befcd48ae22c476ab0b917d1` triggered the warnings-as-errors policy in Finora CI run `32119961474`. Structural preflight and unit tests passed, but the integration build was blocked by analyzer `CA1861` in the new merchant-sort test assertion.
+
+The test was corrected in candidate `d841efb8c392860b221f331b4ced9119020b849e` by using `Assert.Collection`. No analyzer suppression, warning downgrade, or production-behavior weakening was used.
+
+### Paging source-build evidence boundary
+
+All four Release source-build jobs succeeded for the exact candidate, but source compilation does not prove signed AAB/MSIX/IPA/distribution packaging, package installation, physical-device behavior, accessibility QA, or store submission acceptance. Those remain separate release gates.
+
+## Immediately preceding verified precision/calendar source candidate
 
 Candidate commit:
 
@@ -24,9 +79,9 @@ CodeQL run:
 
 This candidate contains all previously verified cross-platform/XAML stabilization, migration-safety, hostile-backup, data-integrity, receipt-checksum, privacy-logger synchronization, reset-safety, and restore-recovery work, plus the currency-precision and local-calendar correctness pass completed on 2026-08-16.
 
-Documentation-only commits after this exact candidate may advance `main`; the compiler/test/native-build evidence in this file remains anchored to the exact source candidate above unless a newer exact candidate is explicitly recorded.
+Documentation-only commits after this exact candidate may advance `main`; the compiler/test/native-build evidence in this section remains anchored to the exact source candidate above.
 
-## Structural and automated test evidence
+## Structural and automated test evidence for the preceding precision/calendar candidate
 
 Finora CI run `31934249592` completed the following successfully:
 
@@ -49,7 +104,7 @@ Core test artifact:
 - `core-test-results` — artifact `9260190133`;
 - SHA-256 digest: `c80fe9a24b40f033524121a75fdfc1f3a5eca173c607bf4a973b8c6c7cc42999`.
 
-## Native Release source-build evidence
+## Native Release source-build evidence for the preceding precision/calendar candidate
 
 The same exact candidate commit passed all four independent native source-build jobs:
 
@@ -69,22 +124,22 @@ Retained native diagnostic artifacts for this exact candidate:
 
 These jobs are intentionally independent. Failure of one target does not cancel another target before its diagnostic can be collected.
 
-## CodeQL evidence
+## CodeQL evidence for the preceding precision/calendar candidate
 
 CodeQL run `31934249613`, job `95133633181`, completed successfully for candidate `8260ac02e4f683fa9749f9371185c25d5e3043f6`.
 
 The CodeQL job initialized analysis, installed the MAUI workload, restored the app, completed the Android analysis build, and completed the CodeQL analysis step successfully.
 
-## Currency precision and exact round-trip evidence represented by this candidate
+## Currency precision and exact round-trip evidence represented by this source line
 
-The current candidate adds explicit automated coverage for the supported precision classes represented by:
+The current source line retains explicit automated coverage for the supported precision classes represented by:
 
 - JPY — 0 decimal places;
 - INR — 2 decimal places;
 - KWD — 3 decimal places;
 - CLF — 4 decimal places.
 
-Regression coverage now proves exact signed minor-unit behavior through multiple paths rather than only testing isolated conversion helpers:
+Regression coverage proves exact signed minor-unit behavior through multiple paths rather than only testing isolated conversion helpers:
 
 - major-unit conversion and rounding;
 - CSV major-unit import;
@@ -101,9 +156,9 @@ Regression coverage now proves exact signed minor-unit behavior through multiple
 
 This evidence does not replace native UI editing/display validation for each precision class on every platform, but it closes the automated persistence/service/round-trip gap for representative 0-, 2-, 3-, and 4-decimal currencies.
 
-## Local-calendar and timezone evidence represented by this candidate
+## Local-calendar and timezone evidence represented by this source line
 
-The shared `LocalDateRange` test matrix now directly covers:
+The shared `LocalDateRange` test matrix directly covers:
 
 - UTC local-midnight boundaries;
 - positive non-hour offset UTC+05:30;
@@ -113,7 +168,7 @@ The shared `LocalDateRange` test matrix now directly covers:
 - multi-day exclusive end boundaries;
 - reversed-range rejection.
 
-The production `FinanceStore` now accepts an optional local timezone, defaults it to `TimeZoneInfo.Local`, and uses shared `LocalDateRange` `[from,toExclusive)` conversion for budget-period and legacy Dashboard date windows instead of treating local calendar dates as UTC midnight.
+The production `FinanceStore` accepts an optional local timezone, defaults it to `TimeZoneInfo.Local`, and uses shared `LocalDateRange` `[from,toExclusive)` conversion for budget-period and legacy Dashboard date windows instead of treating local calendar dates as UTC midnight.
 
 Integration regression coverage proves the store behavior with:
 
@@ -124,7 +179,7 @@ Integration regression coverage proves the store behavior with:
 
 Actual device/host timezone behavior is still part of native release QA; deterministic automated zones do not replace platform/device testing.
 
-## Strict analyzer failure caught during this continuation
+## Strict analyzer failure caught during the precision/calendar continuation
 
 An intermediate candidate triggered the repository's warnings-as-errors policy in Finora CI run `31934141986` because three new integration assertions used an xUnit pattern rejected by analyzer `xUnit2031`.
 
@@ -180,7 +235,7 @@ The integration suite directly exercises corruption classes including:
 - category parent cycles;
 - SQLite foreign-key violations.
 
-This supplements the existing transfer, budget, savings, recurrence, reconciliation, attachment-path, privacy-safe integrity coverage, and the new post-restore multi-precision integrity check.
+This supplements the existing transfer, budget, savings, recurrence, reconciliation, attachment-path, privacy-safe integrity coverage, and the post-restore multi-precision integrity check.
 
 ## Privacy-logger regression correction retained by this candidate
 
@@ -198,7 +253,7 @@ Finora CI run:
 
 `31880138196`
 
-That candidate passed structural preflight, **281/281** automated tests (101 unit, 145 integration, 35 UI-contract), and all four MAUI Release source-build jobs. It added reset-safety coverage proving that complete finance-data deletion preserves unrelated app settings. The newer `8260ac02…` candidate supersedes it as the current source-build evidence while retaining that source behavior.
+That candidate passed structural preflight, **281/281** automated tests (101 unit, 145 integration, 35 UI-contract), and all four MAUI Release source-build jobs. It added reset-safety coverage proving that complete finance-data deletion preserves unrelated app settings. The newer paging candidate supersedes it as current source-build evidence while retaining that source behavior.
 
 ## Earlier migration/backup/integrity candidate retained for history
 
@@ -257,18 +312,21 @@ updated the primary workflow to Node-24-compatible current action majors used by
 - `actions/setup-dotnet@v6`;
 - `actions/upload-artifact@v7`.
 
-The current verified `8260ac02…` run executed through those updated action majors.
+The current verified `d841efb8…` run executed through those updated action majors.
 
 ## What this evidence does prove
 
-For exact source candidate `8260ac02e4f683fa9749f9371185c25d5e3043f6`, it proves:
+For exact source candidate `d841efb8c392860b221f331b4ced9119020b849e`, it proves:
 
 - repository structural preflight passes;
-- all **310** current automated tests pass;
+- all **319** current automated tests pass with zero failures/skips;
 - warnings-as-errors source compilation passes all four MAUI targets;
 - the strict compiled-binding warning classes remain cleared on those builds;
 - CodeQL analysis completes successfully;
-- the added JPY/INR/KWD/CLF currency-precision, CSV round-trip, encrypted-backup round-trip, report, budget, savings, recurrence, reconciliation, UTC/+05:30/-07:00/DST, and FinanceStore local-calendar regressions compile and pass;
+- Dependency Review completes successfully;
+- interactive transaction history applies its new paged query through SQLite/EF Core rather than retaining all matching rows in the ViewModel;
+- the new paging regression suite covering fixed-result-set boundaries, filters, sorts, soft deletes, extended search, invalid ranges, and page limits compiles and passes;
+- the retained JPY/INR/KWD/CLF currency-precision, CSV round-trip, encrypted-backup round-trip, report, budget, savings, recurrence, reconciliation, UTC/+05:30/-07:00/DST, and FinanceStore local-calendar regressions compile and pass;
 - the previously verified migration, hostile-backup, receipt-integrity, corruption-detection, logger synchronization, reset-safety, and restore-link regressions remain part of the same source line.
 
 ## What this evidence does not prove

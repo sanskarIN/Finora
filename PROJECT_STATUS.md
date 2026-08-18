@@ -1,6 +1,6 @@
 # Finora Project Status
 
-Last source review: **2026-08-16**
+Last source review: **2026-08-18**
 
 Current source line: **Finora 0.2.0 (build 2)**  
 Current database schema: **2**  
@@ -16,17 +16,17 @@ Repository: https://github.com/sanskarIN/Finora
 
 Source presence is not the same as native release validation. Current commit-specific automated evidence is retained in `docs/testing/CI_EVIDENCE.md`.
 
-## Verified automated validation — 2026-08-16
+## Verified automated validation — 2026-08-18
 
-✅ Current release-hardening source candidate `8260ac02e4f683fa9749f9371185c25d5e3043f6` passed Finora CI run `31934249592` and CodeQL run `31934249613`.
+✅ Current release-hardening source candidate `d841efb8c392860b221f331b4ced9119020b849e` passed Finora CI run `32120115922`, CodeQL run `32120115965`, and Dependency Review run `32120115912`.
 
 ✅ Structural preflight passed.
 
-✅ Exact automated test result: **310/310 passed, 0 failed**:
+✅ Exact automated test result: **319/319 passed, 0 failed, 0 skipped**:
 
 - Unit: 102/102;
-- Integration: 173/173;
-- UI-contract: 35/35.
+- Integration: 179/179;
+- UI-contract: 38/38.
 
 ✅ Independent Release source builds passed for:
 
@@ -35,13 +35,17 @@ Source presence is not the same as native release validation. Current commit-spe
 - iOS `net10.0-ios` on a GitHub macOS runner;
 - Mac Catalyst `net10.0-maccatalyst` on a GitHub macOS runner.
 
-✅ CodeQL analysis completed successfully on the same exact candidate.
+✅ CodeQL and Dependency Review completed successfully on the same exact source candidate.
 
-✅ The current candidate retains the earlier strict XAML compiled-binding, migration-safety, hostile-backup, receipt-checksum, deliberate-integrity-corruption, privacy-log synchronization, reset-safety, and linked restore-recovery coverage and adds a focused currency-precision/local-calendar correctness pass.
+✅ Interactive transaction history now uses database-backed 50-row paging through `ITransactionHistoryStore`, with search/filter/sort/count applied in SQLite/EF Core before materialization, soft-deleted rows excluded before count/page, deterministic page boundaries for a fixed result set, total match count/`HasMore`, and a stable last-applied-query snapshot for **Load more**.
 
-✅ Representative 0-, 2-, 3-, and 4-decimal currency classes are now exercised with JPY, INR, KWD, and CLF through conversion/import/export/report/account/budget/savings/recurring/reconciliation/encrypted-backup workflows with exact minor-unit assertions.
+✅ Paging integration coverage proves a 120-row history is returned as 50/50/20 pages without duplicate/missing IDs for a fixed result set, preserves all supported filters/sorts/search fields, rejects invalid offsets/page sizes/date ranges, and excludes soft-deleted rows. UI-contract coverage rejects regression back to `_allMatches` in-memory history slicing.
 
-✅ `FinanceStore` budget and legacy Dashboard date windows now use the shared local-calendar `[from,toExclusive)` conversion instead of UTC-midnight assumptions. Automated store coverage includes UTC+05:30, UTC-07:00, and deterministic DST boundaries, while the shared `LocalDateRange` unit suite includes UTC, positive/negative offsets, DST start/end, multi-day and reversed-range behavior.
+✅ The current candidate retains the earlier strict XAML compiled-binding, migration-safety, hostile-backup, receipt-checksum, deliberate-integrity-corruption, privacy-log synchronization, reset-safety, linked restore-recovery, currency-precision, and local-calendar correctness coverage.
+
+✅ Representative 0-, 2-, 3-, and 4-decimal currency classes are exercised with JPY, INR, KWD, and CLF through conversion/import/export/report/account/budget/savings/recurring/reconciliation/encrypted-backup workflows with exact minor-unit assertions.
+
+✅ `FinanceStore` budget and legacy Dashboard date windows use the shared local-calendar `[from,toExclusive)` conversion instead of UTC-midnight assumptions. Automated store coverage includes UTC+05:30, UTC-07:00, and deterministic DST boundaries, while the shared `LocalDateRange` unit suite includes UTC, positive/negative offsets, DST start/end, multi-day and reversed-range behavior.
 
 ✅ Migration production code validates the target schema and SQLite foreign-key/integrity state before advancing `schema.version`; automated coverage includes fresh initialization/reopen, schema-version guards, v1→v2 data preservation/idempotence, malformed-target rollback, and legacy foreign-key corruption rejection.
 
@@ -74,7 +78,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Money is signed 64-bit minor units; major-unit conversion uses `decimal` with currency-aware precision.
 
-🧪 Automated money coverage now spans representative 0-decimal JPY, 2-decimal INR, 3-decimal KWD, and 4-decimal CLF behavior, including half-unit rounding and exact minor-unit preservation across finance workflows and portable data paths.
+🧪 Automated money coverage spans representative 0-decimal JPY, 2-decimal INR, 3-decimal KWD, and 4-decimal CLF behavior, including half-unit rounding and exact minor-unit preservation across finance workflows and portable data paths.
 
 🧪 Domain/EF persistence boundary validates Added/Modified schema-v2 entities, including:
 
@@ -109,7 +113,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Account list/detail/history monetary display honors privacy/hide-on-launch; credit/opening edit formatting uses currency precision and billing-day UI/domain range is consistently 1–31.
 
-🧪 Account balance and reconciliation regression tests now carry exact JPY/INR/KWD/CLF minor units through opening balances, adjustments, previews, and final balances.
+🧪 Account balance and reconciliation regression tests carry exact JPY/INR/KWD/CLF minor units through opening balances, adjustments, previews, and final balances.
 
 ## Transactions
 
@@ -117,7 +121,9 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Direct transaction persistence rejects zero/`long.MinValue`, invalid signs, transfer linkage, currency shape, and inconsistent deletion metadata.
 
-🧪 Transaction history includes deterministic sort choices and a bounded 50-row incremental display with explicit Load more behavior.
+✅ Interactive transaction history uses database-backed 50-row paging through `ITransactionHistoryStore`, with search/filter/sort/count applied in SQLite, deterministic page boundaries for a fixed result set, soft-delete exclusion, total match count/`HasMore`, and a stable last-applied-query snapshot for **Load more**.
+
+🧪 Paging coverage verifies 120-row 50/50/20 boundaries with no duplicate/missing IDs for a fixed result set, filter-before-count/page behavior, all five sort modes, invalid boundary rejection, soft-delete exclusion, and free-text matching across merchant/note/payment method/location/account/category fields.
 
 🧪 Transaction/history/tools/detail split displays honor privacy and currency formatting; transaction/tool date filters use shared local-calendar boundaries.
 
@@ -179,13 +185,13 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Local-calendar date selections use shared `LocalDateRange` conversion to UTC `[from,toExclusive)` boundaries rather than UTC-midnight assumptions.
 
-🧪 The legacy `FinanceStore.GetDashboardAsync` path now also uses that shared local boundary, with deterministic UTC+05:30, UTC-07:00, and DST-start integration regressions.
+🧪 The legacy `FinanceStore.GetDashboardAsync` path also uses that shared local boundary, with deterministic UTC+05:30, UTC-07:00, and DST-start integration regressions.
 
 🧪 Current balance uses direct current account summaries; period-sensitive cards use the selected Dashboard date range.
 
 🧪 Reports include category spending, income/expense, account trend, budget performance, merchant/payee, monthly comparison, yearly comparison, recurring obligations, savings progress and tag data; category/budget reporting is split-aware and descendant-aware.
 
-🧪 Income/expense reporting now has explicit exact-minor-unit regression coverage for JPY/INR/KWD/CLF precision classes.
+🧪 Income/expense reporting has explicit exact-minor-unit regression coverage for JPY/INR/KWD/CLF precision classes.
 
 🧪 Monthly/yearly comparisons group by local calendar and stop at today, excluding future-dated imported rows until their date arrives.
 
@@ -195,7 +201,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Mapped CSV import with preview/limits/validation/duplicate protection/transfer validation and transactional persistence is present.
 
-🧪 Major-unit CSV import now has explicit JPY/INR/KWD/CLF precision regression coverage.
+🧪 Major-unit CSV import has explicit JPY/INR/KWD/CLF precision regression coverage.
 
 🧪 CSV export is verified to preserve exact stored `AmountMinor`; exported data is previewed and imported into a second SQLite database with exact minor-unit equality across the four precision classes.
 
@@ -223,7 +229,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 🧪 Hostile-input regression coverage includes wrong password, ciphertext tamper, truncation, authenticated unsupported schema, authenticated relation corruption, receipt path escape, receipt size drift, and receipt hash drift.
 
-🧪 Encrypted backup precision regression now writes JPY/INR/KWD/CLF finance rows, previews the encrypted archive, completely resets finance data, restores the archive, checks exact restored minor values/account relations, and completes a healthy integrity check.
+🧪 Encrypted backup precision regression writes JPY/INR/KWD/CLF finance rows, previews the encrypted archive, completely resets finance data, restores the archive, checks exact restored minor values/account relations, and completes a healthy integrity check.
 
 🧪 Receipt/plaintext buffers are cleared as early as managed-memory APIs permit on success and failure paths, including accumulated receipt buffers if a later file/query/validation step fails.
 
@@ -323,7 +329,7 @@ Source presence is not the same as native release validation. Current commit-spe
 
 ✅ A complete documentation hub exists at `docs/README.md`, with a coverage matrix at `docs/DOCUMENTATION_STATUS.md`.
 
-✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and records the **310-test** currency-precision/local-calendar source candidate while retaining earlier migration/backup/integrity/recovery history.
+✅ Current dated GitHub Actions evidence exists at `docs/testing/CI_EVIDENCE.md` and records the **319-test** database-paging source candidate while retaining earlier precision/calendar, migration/backup/integrity/recovery history.
 
 ✅ A prioritized execution roadmap exists at `docs/NEXT_STEPS.md`, split into P0 release blockers, P1 release-candidate work, P2 quality/product polish, and P3 later-version architecture.
 

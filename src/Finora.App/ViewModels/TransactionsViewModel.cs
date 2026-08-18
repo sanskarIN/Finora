@@ -10,8 +10,11 @@ public sealed class TransactionsViewModel : ViewModelBase
 {
     private const int PageSize = 50;
     private readonly IFinanceStore _store;
+    private readonly ITransactionHistoryStore _historyStore;
     private readonly IAppSettingsService _settings;
-    private TransactionListItem[] _allMatches = [];
+    private TransactionHistoryQuery _activeQuery = new(PageSize: PageSize);
+    private int _totalMatches;
+    private bool _hasMore;
     private string _searchText = string.Empty;
     private TransactionType _type;
     private AccountSummary? _selectedAccount;
@@ -33,9 +36,15 @@ public sealed class TransactionsViewModel : ViewModelBase
     private string _sortOrder = "Newest first";
 
     public TransactionsViewModel(IFinanceStore store, IAppSettingsService settings)
+        : this(store, settings, ServiceHelper.Get<ITransactionHistoryStore>())
+    {
+    }
+
+    public TransactionsViewModel(IFinanceStore store, IAppSettingsService settings, ITransactionHistoryStore historyStore)
     {
         _store = store;
         _settings = settings;
+        _historyStore = historyStore;
         _type = settings.DefaultTransactionType;
         RefreshCommand = new AsyncCommand(LoadAsync);
         SearchCommand = new AsyncCommand(SearchAsync);
@@ -70,8 +79,8 @@ public sealed class TransactionsViewModel : ViewModelBase
     public DateTime FilterFromDate { get => _filterFromDate; set => SetProperty(ref _filterFromDate, value); }
     public DateTime FilterToDate { get => _filterToDate; set => SetProperty(ref _filterToDate, value); }
     public string SortOrder { get => _sortOrder; set => SetProperty(ref _sortOrder, value); }
-    public bool HasMore => Transactions.Count < _allMatches.Length;
-    public string HistoryStatus => _allMatches.Length == 0 ? "No matching transactions." : $"Showing {Transactions.Count} of {_allMatches.Length} matching transaction(s).";
+    public bool HasMore => _hasMore;
+    public string HistoryStatus => _totalMatches == 0 ? "No matching transactions." : $"Showing {Transactions.Count} of {_totalMatches} matching transaction(s).";
     public System.Windows.Input.ICommand RefreshCommand { get; }
     public System.Windows.Input.ICommand SearchCommand { get; }
     public System.Windows.Input.ICommand AddCommand { get; }
@@ -100,11 +109,7 @@ public sealed class TransactionsViewModel : ViewModelBase
         await SearchCoreAsync();
     });
 
-    private Task LoadMoreAsync()
-    {
-        AppendNextPage();
-        return Task.CompletedTask;
-    }
+    private Task LoadMoreAsync() => RunAsync(AppendNextPageAsync);
 
     private Task AddAsync() => RunAsync(async () =>
     {
@@ -178,46 +183,62 @@ public sealed class TransactionsViewModel : ViewModelBase
 
     private async Task SearchCoreAsync()
     {
+        _activeQuery = BuildHistoryQuery();
+        Transactions.Clear();
+        _totalMatches = 0;
+        _hasMore = false;
+        await AppendNextPageAsync();
+    }
+
+    private TransactionHistoryQuery BuildHistoryQuery()
+    {
         DateTimeOffset? from = null;
-        DateTimeOffset? to = null;
+        DateTimeOffset? toExclusive = null;
         if (ShowAdvancedFilters)
         {
             if (FilterToDate.Date < FilterFromDate.Date) throw new InvalidOperationException("Filter end date cannot be before start date.");
             var range = LocalDateRange.ToUtc(DateOnly.FromDateTime(FilterFromDate), DateOnly.FromDateTime(FilterToDate), TimeZoneInfo.Local);
             from = range.FromUtc;
-            to = range.ToExclusiveUtc.AddTicks(-1);
+            toExclusive = range.ToExclusiveUtc;
         }
 
-        var items = await _store.SearchTransactionsAsync(
+        TransactionType? filterType = null;
+        if (ShowAdvancedFilters && !string.Equals(FilterType, "All", StringComparison.OrdinalIgnoreCase) &&
+            Enum.TryParse<TransactionType>(FilterType, true, out var parsed))
+            filterType = parsed;
+
+        return new TransactionHistoryQuery(
             string.IsNullOrWhiteSpace(SearchText) ? null : SearchText.Trim(),
             ShowAdvancedFilters ? FilterAccount?.Id : null,
             ShowAdvancedFilters ? FilterCategory?.Id : null,
+            filterType,
             from,
-            to);
-
-        if (ShowAdvancedFilters && !string.Equals(FilterType, "All", StringComparison.OrdinalIgnoreCase) && Enum.TryParse<TransactionType>(FilterType, true, out var parsed))
-            items = items.Where(x => x.Type == parsed).ToArray();
-
-        _allMatches = Sort(items).ToArray();
-        Transactions.Clear();
-        AppendNextPage();
+            toExclusive,
+            ResolveSortOrder(),
+            0,
+            PageSize);
     }
 
-    private IEnumerable<TransactionListItem> Sort(IEnumerable<TransactionListItem> items) => SortOrder switch
+    private async Task AppendNextPageAsync()
     {
-        "Oldest first" => items.OrderBy(x => x.OccurredAtUtc).ThenBy(x => x.Id),
-        "Amount high to low" => items.OrderByDescending(x => x.AmountMinor).ThenByDescending(x => x.OccurredAtUtc),
-        "Amount low to high" => items.OrderBy(x => x.AmountMinor).ThenByDescending(x => x.OccurredAtUtc),
-        "Merchant A–Z" => items.OrderBy(x => x.Merchant ?? string.Empty, StringComparer.CurrentCultureIgnoreCase).ThenByDescending(x => x.OccurredAtUtc),
-        _ => items.OrderByDescending(x => x.OccurredAtUtc).ThenByDescending(x => x.Id)
-    };
+        if (Transactions.Count > 0 && !_hasMore) return;
 
-    private void AppendNextPage()
-    {
-        foreach (var item in _allMatches.Skip(Transactions.Count).Take(PageSize)) Transactions.Add(item);
+        var page = await _historyStore.GetPageAsync(_activeQuery with { Offset = Transactions.Count, PageSize = PageSize });
+        foreach (var item in page.Items) Transactions.Add(item);
+        _totalMatches = page.TotalCount;
+        _hasMore = page.HasMore;
         OnPropertyChanged(nameof(HasMore));
         OnPropertyChanged(nameof(HistoryStatus));
     }
+
+    private TransactionHistorySort ResolveSortOrder() => SortOrder switch
+    {
+        "Oldest first" => TransactionHistorySort.OldestFirst,
+        "Amount high to low" => TransactionHistorySort.AmountHighToLow,
+        "Amount low to high" => TransactionHistorySort.AmountLowToHigh,
+        "Merchant A–Z" => TransactionHistorySort.MerchantAscending,
+        _ => TransactionHistorySort.NewestFirst
+    };
 
     private static string? NullIfBlank(string value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }
