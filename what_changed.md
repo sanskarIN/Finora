@@ -4709,3 +4709,365 @@ Those gates remain tracked in `docs/NEXT_STEPS.md`, `docs/releases/RELEASE_CHECK
 `docs/testing/CI_EVIDENCE.md` is the exact current source-candidate proof record.
 
 This `what_changed.md` update preserves all previous 146 sections and appends the 2026-08-18 database-backed transaction-history paging continuation without replacing or shortening the prior project history.
+
+---
+
+## 156. Large-dataset performance tooling continuation — 2026-08-18
+
+After database-backed transaction history paging was merged into the current source line, the next repository-level P2 gap was measurable large-dataset behavior rather than another unverified feature family.
+
+The performance work is carried by pull request **#17**, branch:
+
+`work/performance-benchmarks-20260818`
+
+against `main`.
+
+The exact frozen runtime/source candidate used for the first retained performance evidence is:
+
+`8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`
+
+Runtime/test/tool source was frozen at that SHA before the final evidence/status/roadmap/changelog/ledger documentation series. Documentation-only commits after it do not change the runtime source proven by the exact candidate CI runs.
+
+The work deliberately does not alter Finora's local-first product architecture, database schema, finance-domain rules, money representation, backup format, or transaction semantics merely to obtain smaller timing numbers.
+
+---
+
+## 157. Standalone synthetic performance harness added
+
+New developer tooling lives under:
+
+`tools/Finora.Performance`
+
+The tool is a standalone `net10.0` executable and is not part of the packaged MAUI application runtime.
+
+It uses the same production Application/Infrastructure services being measured rather than reimplementing finance logic inside the benchmark.
+
+The harness can generate deterministic synthetic finance data including:
+
+- four INR accounts;
+- normal initialized categories;
+- configurable transactions;
+- budgets;
+- savings goals;
+- recurrence rules;
+- optional bounded synthetic receipt files;
+- matching SHA-256 attachment metadata.
+
+Transaction seeding is batched so 100,000-row profiles do not require constructing the entire transaction graph in memory before persistence.
+
+No real user finance data is read or imported by the benchmark harness.
+
+Supported measurement families include:
+
+- populated database startup initialization;
+- first-page transaction history paging;
+- deep offset transaction paging;
+- common and selective free-text history search;
+- amount-sorted history paging;
+- income/expense reporting;
+- category spending;
+- merchant/payee reporting;
+- account balance trends;
+- budget performance;
+- recurring obligations;
+- savings progress;
+- full CSV export;
+- isolated CSV import round trip;
+- full PDF export;
+- encrypted backup creation;
+- encrypted backup restore;
+- full data-integrity checking;
+- managed-heap observations;
+- process working-set observations.
+
+The CLI supports explicit operation selection and repeatable iterations. The documented primary dataset sizes are 10,000, 50,000, and 100,000 transactions.
+
+---
+
+## 158. Benchmark correctness gates and evidence policy
+
+The benchmark is not designed as a stopwatch-only demo.
+
+Correctness gates include:
+
+- transaction history must report the expected visible transaction count;
+- a valid deep page must not unexpectedly become empty;
+- CSV/PDF/encrypted backup output must be non-empty when those operations are selected;
+- CSV import runs against a fresh isolated benchmark database and must reproduce the exact expected transaction count;
+- synthetic CSV import must report zero skipped duplicates and zero invalid/error rows;
+- encrypted backup restore must succeed;
+- restored transaction and attachment counts must match the expected synthetic graph;
+- `DataIntegrityService` must report a healthy benchmark graph.
+
+A correctness failure returns a nonzero process result.
+
+Timing values are explicitly observational. Finora does not fail correctness or release CI merely because one GitHub-hosted runner is slower than an arbitrary millisecond threshold.
+
+The harness emits machine-readable JSON containing:
+
+- product/harness identity;
+- .NET runtime description;
+- OS description;
+- process architecture;
+- processor count;
+- UTC timestamps;
+- dataset counts;
+- database/attachment sizes where available;
+- selected operations;
+- iteration count;
+- elapsed milliseconds;
+- managed-heap observations;
+- process working-set observations;
+- output sizes/item counts;
+- timing/data/paging evidence-policy notes.
+
+---
+
+## 159. CI smoke and on-demand large-profile workflow added
+
+`.github/workflows/ci.yml` now includes a bounded:
+
+`Performance smoke (10k)`
+
+job.
+
+The normal pull-request smoke:
+
+- restores the performance project;
+- builds the complete harness in Release under repository warnings-as-errors policy;
+- seeds 10,000 synthetic transactions plus bounded supporting records;
+- executes `startup,history,reports,integrity`;
+- uploads the JSON result.
+
+The normal CI job intentionally does not execute the heaviest complete export/import/backup round trips on every pull request.
+
+A separate manual workflow was added:
+
+`.github/workflows/performance.yml`
+
+It supports:
+
+- 10,000 transactions;
+- 50,000 transactions;
+- 100,000 transactions;
+- selectable operation list;
+- 1, 2, or 3 iterations;
+- retained JSON artifacts.
+
+The complete `all` profile includes CSV export/import, PDF export, encrypted backup creation/restoration, startup/history/report/integrity work.
+
+CSV benchmark selection refuses datasets above the production CSV import ceiling of 100,000 rows so tooling does not pretend the product accepts an unsupported import size.
+
+---
+
+## 160. Exact 319-test + 10k smoke candidate evidence
+
+Exact source candidate:
+
+`8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b`
+
+Required GitHub Actions runs all completed successfully:
+
+- Finora CI `32127759802`;
+- CodeQL `32127759687`;
+- Dependency Review `32127759673`.
+
+Finora CI jobs:
+
+- Structural preflight `95682010091` — success;
+- Core tests `95683208566` — success;
+- Performance smoke (10k) `95683208597` — success;
+- Windows Release source build `95684553116` — success;
+- Android Release source build `95684553130` — success;
+- iOS Release source build `95684553150` — success;
+- Mac Catalyst Release source build `95684553224` — success.
+
+Exact core results:
+
+- Unit: **102/102 passed**;
+- Integration: **179/179 passed**;
+- UI-contract: **38/38 passed**;
+- Total: **319/319 passed**;
+- Failed: **0**;
+- Skipped: **0**.
+
+Core-test artifact:
+
+- artifact `9321292681`;
+- SHA-256 `c70c959ee19352cd67bbdb0330e99c2ba1ea8dd349c281fd517be9e67b3435f0`.
+
+The performance project Release build completed with:
+
+- **0 warnings**;
+- **0 errors**.
+
+The 10k smoke seeded 10,000 synthetic transactions successfully in approximately 4.15 seconds on the recorded GitHub-hosted runner.
+
+The bounded smoke retained these one-iteration observational timings:
+
+- `startup.initialize` — 34.049 ms;
+- `history.first-page` — 49.127 ms;
+- `history.deep-page` — 13.435 ms;
+- `history.search-common` — 33.475 ms;
+- `history.search-selective` — 18.104 ms;
+- `history.amount-sort` — 10.651 ms;
+- `reports.income-expense` — 44.270 ms;
+- `reports.category-spending` — 270.318 ms;
+- `reports.merchant` — 46.875 ms;
+- `reports.account-trends` — 51.281 ms;
+- `reports.budgets` — 914.281 ms;
+- `reports.recurring` — 13.804 ms;
+- `reports.savings` — 18.984 ms;
+- `integrity.full` — 262.725 ms.
+
+Performance JSON artifact:
+
+- artifact `9321290557` (`performance-smoke-10k`);
+- SHA-256 `97eb07bf963491e8d89d45798b21aa99d0da312b931c3ea25b17e2dae5accb46`.
+
+Retained native diagnostic artifacts for the same exact source candidate:
+
+- Windows `9321588237` — SHA-256 `1efc14f54404fc0ae0747a462c5a4bdfa91be12413b0abc9a287e8b600c04525`;
+- Android `9321676747` — SHA-256 `43be11c2ea1abf2f7968d3df687e6ed5b83903759cb089e4833550b4b16668d6`;
+- Mac Catalyst `9321864012` — SHA-256 `7588a9d80ceace999e590118f5da87822dc303c25d4ea5778a82e8cb8267db25`;
+- iOS `9322174945` — SHA-256 `fefa32db111ce35be90f56e7ea1d0f1ab0da8b24805c348bb06b1f0a8a32dd49`.
+
+These measurements are retained runner observations and are not universal performance guarantees.
+
+---
+
+## 161. Final source audit found no additional production-finance defect
+
+The final source audit for this continuation rechecked whether apparently “missing” core transaction capabilities still required implementation.
+
+The current source line already contains:
+
+- expense/income/refund/adjustment quick add and edit;
+- paired same-currency transfers;
+- advanced transaction search/filter/sort;
+- database-backed history paging;
+- revision history;
+- bulk categorization;
+- duplicate review;
+- transaction splits;
+- tags;
+- receipt attachments;
+- soft delete and restore;
+- selected/all CSV export;
+- selected/all PDF export;
+- linked transfer editing;
+- mapped CSV import;
+- reconciliation;
+- budgets;
+- goals;
+- recurring workflows;
+- reports;
+- encrypted backup/restore;
+- app lock/privacy/notifications/integrity tooling.
+
+No new production-finance defect was identified in the final audit that justified changing core finance behavior merely to increase commit count or feature count.
+
+The repository-level gap that could be completed safely was measurable large-dataset tooling and evidence, which is what this continuation implements.
+
+This is not a claim that undiscovered defects cannot exist.
+
+---
+
+## 162. Documentation and evidence alignment after the frozen source candidate
+
+After `8a8e7e51…` completed the required runtime/source checks, documentation-only evidence commits advanced the repository records while keeping the source evidence anchored to the exact tested candidate.
+
+Updated files include:
+
+- `docs/testing/PERFORMANCE_BENCHMARKING.md` — benchmark methodology, operations, correctness gates, exact 10k smoke evidence, artifact/digest, and unexecuted-profile boundary;
+- `docs/testing/CI_EVIDENCE.md` — current exact source candidate, run/job IDs, 319-test counts, native artifacts, performance artifact, observed timings, and evidence policy;
+- `PROJECT_STATUS.md` — performance tool/build/smoke status plus remaining full-profile/native/store gates;
+- `docs/NEXT_STEPS.md` — roadmap item 27 changed from missing tooling to implemented tooling with remaining full comparison evidence;
+- `docs/DOCUMENTATION_STATUS.md` — documentation coverage aligned to the new performance/evidence state;
+- `CHANGELOG.md` — performance harness and exact evidence recorded under Unreleased;
+- `what_changed.md` — this cumulative continuation ledger.
+
+Focused documentation commits created in this final alignment include:
+
+- `a494036e49bd938b2aff3dd577afc2a3a6510985` — `docs(perf): record verified 10k smoke evidence`;
+- `661a00532b3ca5e6b41c98df0d93bcdb3e0dadc2` — `docs(evidence): record performance harness candidate`;
+- `0e874944fbe5b6016842b3140bb90d87476b4f40` — `docs(status): advance verified performance tooling`;
+- `614dc12209f3f7554ca961714d5d918db279fa55` — `docs(roadmap): mark performance tooling implemented`;
+- `8df4f58bcdabb4c2d53d80ab32777d670ec2d80b` — `docs(status): align performance evidence coverage`;
+- `2a857a319dbe7bf91e181296e8e2de0010781e92` — `docs(changelog): record performance harness and evidence`;
+- final focused ledger commit updating this file.
+
+The PR body was also expanded with the exact source candidate, runs/jobs, artifacts/digests, test counts, bounded smoke timings, correctness policy, and explicit evidence boundary.
+
+---
+
+## 163. Complete continuation changed-file inventory and remaining boundary
+
+The performance workstream includes these benchmark/source/CI/documentation files:
+
+### Performance tooling
+
+- `tools/Finora.Performance/Finora.Performance.csproj`;
+- `tools/Finora.Performance/PerformanceDbFactory.cs`;
+- `tools/Finora.Performance/PerformanceModels.cs`;
+- `tools/Finora.Performance/PerformanceOptions.cs`;
+- `tools/Finora.Performance/PerformanceRunner.cs`;
+- `tools/Finora.Performance/PerformanceSeeder.cs`;
+- `tools/Finora.Performance/Program.cs`.
+
+### Solution/automation
+
+- `Finora.sln`;
+- `.github/workflows/ci.yml`;
+- `.github/workflows/performance.yml`.
+
+### Performance/documentation system
+
+- `docs/testing/PERFORMANCE_BENCHMARKING.md`;
+- `docs/README.md`;
+- `docs/DOCUMENTATION_STATUS.md`;
+- `docs/testing/CI_EVIDENCE.md`;
+- `PROJECT_STATUS.md`;
+- `docs/NEXT_STEPS.md`;
+- `CHANGELOG.md`;
+- `what_changed.md`.
+
+The exact PR/Git history is authoritative for every focused commit and final ordering.
+
+The current exact executed evidence proves:
+
+- structural preflight;
+- 319/319 current automated tests;
+- performance project Release compilation with zero warnings/errors;
+- bounded 10k synthetic startup/history/reports/integrity smoke;
+- Windows/Android/iOS/Mac Catalyst Release source builds;
+- CodeQL;
+- Dependency Review;
+- retained finance safety/paging/precision/calendar/migration/backup/integrity/recovery suites from the same source line.
+
+The following are still intentionally **not** claimed complete:
+
+- runtime 10k `--operations all` performance profile;
+- runtime CSV import/export performance round trip inside the harness;
+- runtime PDF-export performance measurement inside the harness;
+- runtime encrypted-backup create/restore performance round trip inside the harness;
+- 50k `all` comparison profile;
+- 100k `all` comparison profile;
+- signed Android AAB production package/installation;
+- Windows MSIX publisher/signing/package installation;
+- iOS provisioning/signing/archive/TestFlight/App Store package;
+- Mac Catalyst signing/notarization/distribution package;
+- physical-device UI responsiveness/battery/thermal/low-memory behavior;
+- installed prior-version upgrade evidence on every applicable target;
+- process-kill/low-disk/locked-file recovery failure injection;
+- native notification/biometric/Windows Hello/file-picker/share behavior;
+- Android real backup/device-transfer behavior;
+- TalkBack/VoiceOver/Narrator/keyboard/large-text/high-contrast/reduced-motion QA;
+- final live store-policy/privacy/data-safety/external-support-link approval;
+- absence of every undiscovered defect.
+
+The current execution environment still does not provide a local .NET SDK, so the unexecuted full benchmark profiles could not be honestly converted into runtime evidence from this session. The dedicated on-demand GitHub workflow is the correct mechanism for those later runs.
+
+Roadmap item 27 is now **implemented as tooling** with the bounded 10k smoke executed; the complete comparable 10k/50k/100k `all` evidence matrix remains the next performance-evidence task.
+
+This update preserves the entire previous 155-section ledger and appends the performance-hardening continuation without replacing, summarizing, or shortening the earlier history.
