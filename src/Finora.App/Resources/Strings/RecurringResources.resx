@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="RecurringItems" xml:space="preserve"><value>Recurring items</value></data>
+  <data name="RecurringWorkflowNotice" xml:space="preserve"><value>Recurring rules prepare due occurrences. Money is recorded only when you mark an occurrence paid or partially paid.</value></data>
+  <data name="RecurringPrepareNow" xml:space="preserve"><value>Prepare due occurrences now</value></data>
+  <data name="RecurringRules" xml:space="preserve"><value>Rules</value></data>
+  <data name="RecurringChooseRule" xml:space="preserve"><value>Choose recurring rule</value></data>
+  <data name="RecurringChooseRuleDescription" xml:space="preserve"><value>Choose a recurring rule to pause, resume, or archive</value></data>
+  <data name="RecurringStatus" xml:space="preserve"><value>Status:</value></data>
+  <data name="RecurringType" xml:space="preserve"><value>Type:</value></data>
+  <data name="RecurringFrequency" xml:space="preserve"><value>Frequency:</value></data>
+  <data name="RecurringScheduledAmount" xml:space="preserve"><value>Scheduled amount:</value></data>
+  <data name="RecurringNextDue" xml:space="preserve"><value>Next due:</value></data>
+  <data name="RecurringPause" xml:space="preserve"><value>Pause</value></data>
+  <data name="RecurringPauseDescription" xml:space="preserve"><value>Pause the selected recurring rule without deleting its history</value></data>
+  <data name="RecurringResume" xml:space="preserve"><value>Resume</value></data>
+  <data name="RecurringResumeDescription" xml:space="preserve"><value>Resume the selected paused recurring rule</value></data>
+  <data name="RecurringArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="RecurringArchiveDescription" xml:space="preserve"><value>Archive the selected recurring rule while keeping its occurrence history</value></data>
+  <data name="RecurringNoItems" xml:space="preserve"><value>No recurring items.</value></data>
+  <data name="RecurringNext" xml:space="preserve"><value>Next:</value></data>
+  <data name="RecurringOccurrenceWorkflow" xml:space="preserve"><value>Occurrence workflow</value></data>
+  <data name="RecurringChooseOccurrence" xml:space="preserve"><value>Choose occurrence</value></data>
+  <data name="RecurringDue" xml:space="preserve"><value>Due:</value></data>
+  <data name="RecurringPostponedTo" xml:space="preserve"><value>Postponed to:</value></data>
+  <data name="RecurringScheduled" xml:space="preserve"><value>Scheduled:</value></data>
+  <data name="RecurringPaid" xml:space="preserve"><value>Paid:</value></data>
+  <data name="RecurringPaidAmount" xml:space="preserve"><value>Paid amount (full or partial)</value></data>
+  <data name="RecurringMarkPaidPartial" xml:space="preserve"><value>Mark paid / partial</value></data>
+  <data name="RecurringSkip" xml:space="preserve"><value>Skip</value></data>
+  <data name="RecurringReopen" xml:space="preserve"><value>Reopen</value></data>
+  <data name="RecurringReopenDescription" xml:space="preserve"><value>Reopen the selected skipped recurring occurrence as pending</value></data>
+  <data name="RecurringPostponeSelectedDate" xml:space="preserve"><value>Postpone to selected date</value></data>
+  <data name="RecurringCreateItem" xml:space="preserve"><value>Create recurring item</value></data>
+  <data name="RecurringName" xml:space="preserve"><value>Name</value></data>
+  <data name="RecurringFrequencyTitle" xml:space="preserve"><value>Frequency</value></data>
+  <data name="RecurringRepeatInterval" xml:space="preserve"><value>Repeat every N frequency units</value></data>
+  <data name="RecurringDestinationAccount" xml:space="preserve"><value>Destination account</value></data>
+  <data name="RecurringCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="RecurringAmountDescription" xml:space="preserve"><value>Recurring amount in major currency units</value></data>
+  <data name="RecurringMerchantPayee" xml:space="preserve"><value>Merchant / payee</value></data>
+  <data name="RecurringStartDate" xml:space="preserve"><value>Start date</value></data>
+  <data name="RecurringUseEndDate" xml:space="preserve"><value>Use end date</value></data>
+  <data name="RecurringGracePeriodDays" xml:space="preserve"><value>Grace period (days)</value></data>
+  <data name="RecurringReminderLeadMinutes" xml:space="preserve"><value>Reminder lead time (minutes)</value></data>
+  <data name="RecurringSaveItem" xml:space="preserve"><value>Save recurring item</value></data>
+  <data name="RecurringChooseAccountError" xml:space="preserve"><value>Choose an account.</value></data>
+  <data name="RecurringRuleNameRequired" xml:space="preserve"><value>Rule name is required.</value></data>
+  <data name="RecurringPositiveAmountError" xml:space="preserve"><value>Enter a positive amount.</value></data>
+  <data name="RecurringEndBeforeStartError" xml:space="preserve"><value>End date cannot be earlier than the start date.</value></data>
+  <data name="RecurringDestinationAccountError" xml:space="preserve"><value>Choose a different destination account for the transfer.</value></data>
+  <data name="RecurringCurrencyMatchError" xml:space="preserve"><value>Recurring transfers currently require matching account currencies.</value></data>
+  <data name="RecurringItemSaved" xml:space="preserve"><value>Recurring item saved.</value></data>
+  <data name="RecurringPreparedFormat" xml:space="preserve"><value>Prepared {0} due occurrence(s). No transaction is created until you mark an occurrence paid.</value></data>
+  <data name="RecurringRulePaused" xml:space="preserve"><value>Recurring rule paused.</value></data>
+  <data name="RecurringRuleResumed" xml:space="preserve"><value>Recurring rule resumed.</value></data>
+  <data name="RecurringRuleArchived" xml:space="preserve"><value>Recurring rule archived. Existing occurrence history was preserved.</value></data>
+  <data name="RecurringChooseRuleError" xml:space="preserve"><value>Choose a recurring rule.</value></data>
+  <data name="RecurringChooseDueOccurrence" xml:space="preserve"><value>Choose a due occurrence.</value></data>
+  <data name="RecurringPositivePaidAmount" xml:space="preserve"><value>Enter a positive paid amount.</value></data>
+  <data name="RecurringOccurrencePaid" xml:space="preserve"><value>Occurrence marked paid.</value></data>
+  <data name="RecurringPartialPayment" xml:space="preserve"><value>Partial payment recorded.</value></data>
+  <data name="RecurringOccurrenceSkipped" xml:space="preserve"><value>Occurrence skipped without creating a transaction.</value></data>
+  <data name="RecurringPostponedFormat" xml:space="preserve"><value>Occurrence postponed to {0:d}.</value></data>
+  <data name="RecurringChooseSkippedOccurrence" xml:space="preserve"><value>Choose a skipped occurrence.</value></data>
+  <data name="RecurringOccurrenceReopened" xml:space="preserve"><value>Skipped occurrence reopened as pending.</value></data>
+</root>
