@@ -47,6 +47,23 @@ class ReleaseReadinessGuardTests(unittest.TestCase):
         self.assertTrue(report.passed)
         self.assertEqual((), report.findings)
 
+    def test_governance_contract_requires_sdk_funding_security_and_performance(self) -> None:
+        for path in (
+            "global.json",
+            "Directory.Build.props",
+            "scripts/README.md",
+            ".github/FUNDING.yml",
+        ):
+            self.assertIn(path, checker.REQUIRED_FILES)
+
+        for path in (
+            ".github/workflows/codeql.yml",
+            ".github/workflows/dependency-review.yml",
+            ".github/workflows/performance.yml",
+            ".github/workflows/release-readiness.yml",
+        ):
+            self.assertIn(path, checker.REQUIRED_WORKFLOWS)
+
     def test_missing_required_file_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
