@@ -10,6 +10,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Documentation index | `docs/README.md` | Current |
 | Documentation completeness | `docs/DOCUMENTATION_STATUS.md` | Current |
 | Tracked-file responsibility reference | `docs/development/REPOSITORY_FILE_REFERENCE.md` | Current — mechanically checked against `git ls-files` by repository QA/CI |
+| Final correctness/governance hardening audit | `docs/FINAL_HARDENING_2026-08-19.md` | Current — records source/test/restore/governance hardening while keeping native/store evidence separate |
 | Final repository closure | `docs/FINAL_REPOSITORY_CLOSURE.md` | Current — repository engineering closure and external release-evidence boundary recorded 2026-08-19 |
 | Prioritized next steps | `docs/NEXT_STEPS.md` | Current — repository backlog closed; remaining release/native/full-profile items are external evidence, optional polish, or later-version scope |
 | End-user workflows | `docs/USER_GUIDE.md` | Current |
