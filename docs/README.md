@@ -11,8 +11,9 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 ## Start here
 
 - [Project README](../README.md) — product overview, current capabilities, privacy boundary, build entry points, contacts, and release status.
+- [Final Repository Closure](FINAL_REPOSITORY_CLOSURE.md) — final 2026-08-19 repository-engineering closure statement and the boundary between completed source work and external release evidence.
 - [Documentation Status](DOCUMENTATION_STATUS.md) — coverage/completeness matrix and documentation update policy.
-- [Next Steps](NEXT_STEPS.md) — prioritized P0–P3 execution roadmap from native release blockers through later-version architecture.
+- [Next Steps](NEXT_STEPS.md) — prioritized P0–P3 release-evidence and future-version roadmap; remaining external evidence is not treated as missing current-scope repository functionality.
 - [User Guide](USER_GUIDE.md) — complete end-user workflow guide.
 - [Architecture Overview](architecture/OVERVIEW.md) — solution layering and major design decisions.
 - [Database Schema](architecture/DATABASE_SCHEMA.md) — current schema 2 model and migration notes.
@@ -82,6 +83,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - [Store Readiness](releases/STORE_READINESS.md)
 - [Versioning and Migration Policy](releases/VERSIONING_AND_MIGRATIONS.md)
 - [Store Metadata Template](releases/STORE_METADATA_TEMPLATE.md)
+- [Structural Release Readiness](testing/RELEASE_READINESS.md)
 - [Changelog](../CHANGELOG.md)
 
 ## Community and legal
