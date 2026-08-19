@@ -4,7 +4,7 @@
 
 > **☕ Optional project support:** [Buy Me a Coffee — sanskarIN](https://buymeacoffee.com/sanskarIN). Contributions never affect code-review priority, feature access, product support, or security-report handling.
 
-Thanks for contributing to Finora. This repository contains a local-first personal-finance application, so correctness, privacy, migration safety, and accessibility are part of the definition of done—not optional cleanup.
+Thanks for contributing to Finora. This repository contains a local-first personal-finance application, so correctness, privacy, migration safety, accessibility, and documentation ownership are part of the definition of done—not optional cleanup.
 
 ## Product boundaries
 
@@ -25,12 +25,15 @@ Read `docs/setup/BUILD.md` and run:
 
 ```bash
 python build/scripts/verify_structure.py
+python scripts/run_repo_qa.py
 dotnet workload restore
 dotnet restore Finora.sln
 dotnet format Finora.sln --verify-no-changes --no-restore
 dotnet build Finora.sln -c Release --no-restore
 dotnet test Finora.sln -c Release --no-build
 ```
+
+`scripts/run_repo_qa.py` runs dependency-free developer-tool tests, tracked-file documentation coverage, and localization validation. Use `--include-dotnet` when you want the same runner to continue into the .NET suite.
 
 Use platform-appropriate MAUI tooling for native builds. Apple archive/device validation requires a compatible Mac/Xcode host.
 
@@ -189,6 +192,18 @@ User-visible/architecture/release-impacting changes should update the relevant f
 - database/threat/privacy docs;
 - test/release checklists;
 - `what_changed.md` for major implementation sessions.
+
+Every tracked file must also remain represented by `docs/development/REPOSITORY_FILE_REFERENCE.md`. The first table column in that reference provides the coverage declarations checked against `git ls-files`.
+
+For a new, moved, or deleted tracked file:
+
+1. put it in the narrowest correct repository area;
+2. update the file reference if the area's responsibility text is no longer accurate;
+3. run `python scripts/check_documentation_coverage.py`;
+4. run `python scripts/run_repo_qa.py`;
+5. update the focused behavioral/manual documentation when behavior changed.
+
+The coverage gate proves repository documentation ownership, not native runtime execution. Keep target-platform evidence in the relevant testing/release documents.
 
 ## Code of conduct and license
 
