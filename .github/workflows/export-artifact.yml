@@ -1,0 +1,56 @@
+name: Export artifact validation
+
+on:
+  push:
+    paths:
+      - "scripts/verify_export_artifact.py"
+      - "scripts/tests/test_verify_export_artifact.py"
+      - "scripts/generate_sample_finance_csv.py"
+      - ".github/workflows/export-artifact.yml"
+  pull_request:
+    paths:
+      - "scripts/verify_export_artifact.py"
+      - "scripts/tests/test_verify_export_artifact.py"
+      - "scripts/generate_sample_finance_csv.py"
+      - ".github/workflows/export-artifact.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run export verifier tests
+        run: python -m unittest discover -s scripts/tests -p "test_verify_export_artifact.py" -v
+
+      - name: Generate and verify representative CSV export fixture
+        run: |
+          python scripts/generate_sample_finance_csv.py artifacts/export_fixture.csv --rows 1000 --seed 20260819
+          python scripts/verify_export_artifact.py artifacts/export_fixture.csv \
+            --min-rows 1000 \
+            --require-column Date \
+            --require-column Type \
+            --require-column Amount \
+            --require-column Account \
+            --require-column Currency
+
+      - name: Verify representative PDF envelope fixture
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          Path('artifacts').mkdir(exist_ok=True)
+          Path('artifacts/export_fixture.pdf').write_bytes(
+              b'%PDF-1.7\n% synthetic Finora export fixture\n1 0 obj\n<<>>\nendobj\n%%EOF\n'
+          )
+          PY
+          python scripts/verify_export_artifact.py artifacts/export_fixture.pdf --min-size 16
