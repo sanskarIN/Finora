@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SettingsPreferences" xml:space="preserve"><value>Preferences</value></data>
+  <data name="SettingsTheme" xml:space="preserve"><value>Theme</value></data>
+  <data name="SettingsThemes" xml:space="preserve"><value>Themes</value></data>
+  <data name="SettingsFormattingLocale" xml:space="preserve"><value>Formatting locale</value></data>
+  <data name="SettingsNumberDatePreview" xml:space="preserve"><value>Number/date preview</value></data>
+  <data name="SettingsFinancialMonthStartDay" xml:space="preserve"><value>Financial month start day</value></data>
+  <data name="SettingsDefaultEntryBehavior" xml:space="preserve"><value>Default entry behavior</value></data>
+  <data name="SettingsDefaultAccount" xml:space="preserve"><value>Default account</value></data>
+  <data name="SettingsDefaultTransactionType" xml:space="preserve"><value>Default transaction type</value></data>
+  <data name="SettingsReceiptImageQuality" xml:space="preserve"><value>Receipt image quality</value></data>
+  <data name="SettingsReceiptImageQualityPlaceholder" xml:space="preserve"><value>Receipt image quality (40-100)</value></data>
+  <data name="SettingsReceiptImageQualityDescription" xml:space="preserve"><value>JPEG receipt image quality between 40 and 100</value></data>
+  <data name="SettingsAccessibility" xml:space="preserve"><value>Accessibility</value></data>
+  <data name="SettingsLargerInterface" xml:space="preserve"><value>Larger interface</value></data>
+  <data name="SettingsLargerInterfaceDescription" xml:space="preserve"><value>Increase text and control sizes</value></data>
+  <data name="SettingsReducedMotion" xml:space="preserve"><value>Reduced motion</value></data>
+  <data name="SettingsReducedMotionDescription" xml:space="preserve"><value>Reduce non-essential animations</value></data>
+  <data name="SettingsPrivacySecurity" xml:space="preserve"><value>Privacy &amp; security</value></data>
+  <data name="SettingsPrivacyMode" xml:space="preserve"><value>Privacy mode</value></data>
+  <data name="SettingsPrivacyModeDescription" xml:space="preserve"><value>Hide dashboard and report amounts</value></data>
+  <data name="SettingsHideAmountsLaunch" xml:space="preserve"><value>Hide amounts on launch</value></data>
+  <data name="SettingsHideAmountsLaunchDescription" xml:space="preserve"><value>Start each session with amounts masked</value></data>
+  <data name="SettingsEnablePinLock" xml:space="preserve"><value>Enable PIN lock</value></data>
+  <data name="SettingsPinLockDescription" xml:space="preserve"><value>Set up or remove a 4–12 digit Finora PIN</value></data>
+  <data name="SettingsBiometricUnlock" xml:space="preserve"><value>Biometric / Windows Hello unlock</value></data>
+  <data name="SettingsBiometricUnlockDescription" xml:space="preserve"><value>Use device authentication when available; PIN remains the fallback</value></data>
+  <data name="SettingsAutoLockMinutes" xml:space="preserve"><value>Auto-lock minutes</value></data>
+  <data name="SettingsAutoLockDescription" xml:space="preserve"><value>Auto-lock after this many inactive minutes</value></data>
+  <data name="SettingsSensitiveScreenProtection" xml:space="preserve"><value>Block sensitive screen capture / task previews</value></data>
+  <data name="SettingsSensitiveScreenProtectionDescription" xml:space="preserve"><value>Apply OS-level screenshot/task-preview protection where supported</value></data>
+  <data name="SettingsBackupExport" xml:space="preserve"><value>Backup &amp; export</value></data>
+  <data name="SettingsCreateBackup" xml:space="preserve"><value>Create backup</value></data>
+  <data name="SettingsCreateBackupDescription" xml:space="preserve"><value>Export encrypted backup now</value></data>
+  <data name="SettingsRestoreBackup" xml:space="preserve"><value>Restore backup</value></data>
+  <data name="SettingsRestoreBackupDescription" xml:space="preserve"><value>Restore a Finora backup using an atomic replacement</value></data>
+  <data name="SettingsAutomaticBackupReminders" xml:space="preserve"><value>Automatic backup reminders</value></data>
+  <data name="SettingsBackupReminderDescription" xml:space="preserve"><value>Show local notifications when a backup is due</value></data>
+  <data name="SettingsBackupReminderTimeFormat" xml:space="preserve"><value>Backup reminder time {0}</value></data>
+  <data name="SettingsNotifications" xml:space="preserve"><value>Notifications</value></data>
+  <data name="SettingsNotificationsDescription" xml:space="preserve"><value>Allow local reminder notifications</value></data>
+  <data name="SettingsImportExport" xml:space="preserve"><value>Import / export</value></data>
+  <data name="SettingsImportCsv" xml:space="preserve"><value>Import CSV</value></data>
+  <data name="SettingsExportCsv" xml:space="preserve"><value>Export CSV</value></data>
+  <data name="SettingsExportPdf" xml:space="preserve"><value>Export PDF</value></data>
+  <data name="SettingsImportExportNotice" xml:space="preserve"><value>Imports are validated locally. Exports stay on this device unless you explicitly share them.</value></data>
+  <data name="SettingsSupportDevelopment" xml:space="preserve"><value>Support Finora development</value></data>
+  <data name="SettingsLegalSupport" xml:space="preserve"><value>Legal &amp; support</value></data>
+  <data name="SettingsLicensesNotices" xml:space="preserve"><value>Licenses / notices</value></data>
+  <data name="SettingsLicenses" xml:space="preserve"><value>Licenses</value></data>
+  <data name="SettingsOpenSupportRepository" xml:space="preserve"><value>Open support repository</value></data>
+  <data name="SettingsAboutFinora" xml:space="preserve"><value>About Finora</value></data>
+  <data name="SettingsRestartOnboarding" xml:space="preserve"><value>Restart onboarding</value></data>
+  <data name="SettingsRestartOnboardingDescription" xml:space="preserve"><value>Reset onboarding completion and open the privacy/local-first setup again</value></data>
+  <data name="SettingsLocalPremiumDemo" xml:space="preserve"><value>Local premium demo mode (no store dependency)</value></data>
+  <data name="SettingsLocalPremiumDemoDescription" xml:space="preserve"><value>Enable deterministic local entitlement demo behavior</value></data>
+  <data name="SettingsWipeAllData" xml:space="preserve"><value>Wipe all local data</value></data>
+  <data name="SettingsWipeAllDataDescription" xml:space="preserve"><value>Permanently clear all transactions, accounts, budgets, goals, recurring rules, history, attachments, and settings</value></data>
+  <data name="SettingsAbout" xml:space="preserve"><value>About</value></data>
+  <data name="SettingsFooterNotice" xml:space="preserve"><value>Finora is local-first. No account is required and financial records stay on this device unless you explicitly export or share them.</value></data>
+  <data name="SettingsSetPinTitle" xml:space="preserve"><value>Set Finora PIN</value></data>
+  <data name="SettingsSetPinMessage" xml:space="preserve"><value>Choose a 4–12 digit numeric PIN. It is stored only as a salted hash.</value></data>
+  <data name="SettingsSetPinAction" xml:space="preserve"><value>Set PIN</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="SettingsPinNotSetTitle" xml:space="preserve"><value>PIN not set</value></data>
+  <data name="SettingsPinDigitsError" xml:space="preserve"><value>Use 4 to 12 digits.</value></data>
+  <data name="SettingsOk" xml:space="preserve"><value>OK</value></data>
+  <data name="SettingsPinLockTitle" xml:space="preserve"><value>PIN lock</value></data>
+  <data name="SettingsPinEnabled" xml:space="preserve"><value>PIN lock enabled.</value></data>
+  <data name="SettingsDisablePinTitle" xml:space="preserve"><value>Disable PIN lock</value></data>
+  <data name="SettingsDisablePinMessage" xml:space="preserve"><value>Remove the local PIN lock? Your financial data will stay on this device.</value></data>
+  <data name="SettingsDisable" xml:space="preserve"><value>Disable</value></data>
+  <data name="SettingsKeep" xml:space="preserve"><value>Keep</value></data>
+  <data name="SettingsPinDisabled" xml:space="preserve"><value>PIN lock disabled.</value></data>
+  <data name="SettingsBiometricTitle" xml:space="preserve"><value>Biometric unlock</value></data>
+  <data name="SettingsBiometricUnavailableNow" xml:space="preserve"><value>Device authentication is not available right now.</value></data>
+  <data name="SettingsBiometricNeedsPin" xml:space="preserve"><value>Set a Finora PIN first. Biometrics always keep PIN fallback.</value></data>
+  <data name="SettingsBiometricAvailabilityFormat" xml:space="preserve"><value>Device authentication is not available ({0}).</value></data>
+  <data name="SettingsVerificationFailed" xml:space="preserve"><value>Verification failed.</value></data>
+  <data name="SettingsBiometricEnabled" xml:space="preserve"><value>Biometric unlock enabled.</value></data>
+  <data name="SettingsDisableBiometricTitle" xml:space="preserve"><value>Disable biometric unlock</value></data>
+  <data name="SettingsDisableBiometricMessage" xml:space="preserve"><value>Stop using device authentication for Finora unlock? PIN fallback will stay enabled.</value></data>
+  <data name="SettingsBiometricDisabled" xml:space="preserve"><value>Biometric unlock disabled.</value></data>
+  <data name="SettingsSensitiveScreenTitle" xml:space="preserve"><value>Sensitive screen protection</value></data>
+  <data name="SettingsSensitiveScreenUnsupported" xml:space="preserve"><value>This platform does not expose a supported screenshot / task-preview protection API.</value></data>
+  <data name="SettingsSensitiveScreenUpdateFailed" xml:space="preserve"><value>Could not update sensitive screen protection.</value></data>
+  <data name="SettingsAutoLockPromptMessage" xml:space="preserve"><value>Enter a value from 1 to 60.</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>Save</value></data>
+  <data name="SettingsAutoLockTitle" xml:space="preserve"><value>Auto-lock</value></data>
+  <data name="SettingsAutoLockInvalid" xml:space="preserve"><value>Use a whole number from 1 to 60.</value></data>
+  <data name="SettingsWipeConfirmMessage" xml:space="preserve"><value>This permanently deletes all local finance data, backups stored inside the app container, attachments, security settings, and preferences on this device. This cannot be undone.</value></data>
+  <data name="SettingsWipeEverything" xml:space="preserve"><value>Wipe everything</value></data>
+  <data name="SettingsTypeWipeTitle" xml:space="preserve"><value>Type WIPE to confirm</value></data>
+  <data name="SettingsTypeWipeMessage" xml:space="preserve"><value>Type WIPE exactly to continue.</value></data>
+  <data name="SettingsContinue" xml:space="preserve"><value>Continue</value></data>
+  <data name="SettingsCancelledTitle" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="SettingsWipeMismatch" xml:space="preserve"><value>Confirmation text did not match. Nothing was deleted.</value></data>
+  <data name="SettingsResetTitle" xml:space="preserve"><value>Finora reset</value></data>
+  <data name="SettingsResetComplete" xml:space="preserve"><value>All local finance data and preferences were removed. Finora will return to onboarding.</value></data>
+  <data name="SettingsRestartOnboardingMessage" xml:space="preserve"><value>Open the privacy/local-first setup again? Existing finance data stays on this device.</value></data>
+  <data name="SettingsRestart" xml:space="preserve"><value>Restart</value></data>
+  <data name="SettingsLicensesMessage" xml:space="preserve"><value>Finora uses open-source .NET, .NET MAUI, EF Core, and SQLite-related components under their respective licenses. See the repository NOTICES file for full dependency notices.</value></data>
+  <data name="SettingsAboutMessageFormat" xml:space="preserve"><value>{0}\n\nLocal-first personal finance tracking with no required account. Financial records stay on this device unless you explicitly share an export or backup.\n\nMade by the Sanskar</value></data>
+  <data name="SettingsOpenLinkTitle" xml:space="preserve"><value>Open link</value></data>
+  <data name="SettingsOpenLinkFailed" xml:space="preserve"><value>This link could not be opened on this device.</value></data>
+  <data name="SettingsBmcLinkFailed" xml:space="preserve"><value>The Buy Me a Coffee support link could not be opened on this device.</value></data>
+  <data name="SettingsPrivacyLinkFailed" xml:space="preserve"><value>The privacy document could not be opened on this device.</value></data>
+  <data name="SettingsTermsLinkFailed" xml:space="preserve"><value>The terms document could not be opened on this device.</value></data>
+  <data name="SettingsSupportRepoLinkFailed" xml:space="preserve"><value>The support repository could not be opened on this device.</value></data>
+  <data name="SettingsBackupReminderTimeTitle" xml:space="preserve"><value>Backup reminder time</value></data>
+  <data name="SettingsBackupReminderTimePrompt" xml:space="preserve"><value>Enter local time in HH:mm (for example 18:30).</value></data>
+  <data name="SettingsBackupReminderTimeInvalid" xml:space="preserve"><value>Use a 24-hour value like 18:30.</value></data>
+</root>
