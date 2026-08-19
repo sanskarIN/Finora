@@ -108,7 +108,7 @@ public sealed class TransactionDetailViewModel : ViewModelBase
             var amountMajor = FormatEditableMagnitude(split.AmountMinor, detail.Currency);
             Splits.Add(new SplitEditorItem(
                 split.CategoryId,
-                Categories.FirstOrDefault(x => x.Id == split.CategoryId)?.Name ?? "Uncategorized",
+                Categories.FirstOrDefault(x => x.Id == split.CategoryId)?.Name ?? L("TransactionDetailUncategorized"),
                 amountMajor,
                 DisplayMagnitude(split.AmountMinor, detail.Currency),
                 split.Note));
@@ -129,13 +129,13 @@ public sealed class TransactionDetailViewModel : ViewModelBase
 
     private Task SaveAsync() => RunAsync(async () =>
     {
-        if (Account is null) throw new InvalidOperationException("Choose an account.");
-        if (!TryParseDecimal(Amount, out var major) || major == 0) throw new InvalidOperationException("Enter a non-zero amount.");
+        if (Account is null) throw new InvalidOperationException(L("TransactionDetailChooseAccount"));
+        if (!TryParseDecimal(Amount, out var major) || major == 0) throw new InvalidOperationException(L("TransactionDetailNonZeroAmount"));
         var converted = Money.FromMajorUnits(major, Account.Currency).MinorUnits;
-        if (converted == long.MinValue) throw new OverflowException("Transaction amount is outside the supported range.");
+        if (converted == long.MinValue) throw new OverflowException(L("TransactionDetailAmountOutOfRange"));
         var unsignedMinor = converted < 0 ? -converted : converted;
         var occurredLocal = DateTime.SpecifyKind(TransactionDate.Date + TransactionTime, DateTimeKind.Local);
-        if (occurredLocal > DateTime.Now.AddMinutes(5)) throw new InvalidOperationException("Transaction time cannot be in the future.");
+        if (occurredLocal > DateTime.Now.AddMinutes(5)) throw new InvalidOperationException(L("TransactionDetailFutureTime"));
         var occurredAt = new DateTimeOffset(occurredLocal).ToUniversalTime();
 
         if (IsTransfer)
@@ -154,9 +154,9 @@ public sealed class TransactionDetailViewModel : ViewModelBase
             };
             var splitInputs = Splits.Select(x =>
             {
-                if (!TryParseDecimal(x.AmountMajor, out var splitMajor) || splitMajor <= 0) throw new InvalidOperationException("Each split must have a positive amount.");
+                if (!TryParseDecimal(x.AmountMajor, out var splitMajor) || splitMajor <= 0) throw new InvalidOperationException(L("TransactionDetailEachSplitPositive"));
                 var convertedSplit = Money.FromMajorUnits(splitMajor, Account.Currency).MinorUnits;
-                if (convertedSplit <= 0) throw new InvalidOperationException("Each split must have a positive representable amount.");
+                if (convertedSplit <= 0) throw new InvalidOperationException(L("TransactionDetailEachSplitRepresentable"));
                 var splitMinor = amountMinor < 0 ? -convertedSplit : convertedSplit;
                 return new TransactionSplitInput(x.CategoryId, splitMinor, x.Note);
             }).ToList();
@@ -164,19 +164,19 @@ public sealed class TransactionDetailViewModel : ViewModelBase
             var result = await _maintenance.UpdateTransactionAsync(request);
             if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
         }
-        Status = "Transaction saved with revision history.";
+        Status = L("TransactionDetailSavedRevision");
         await ReloadCoreAsync();
     });
 
     private Task AddSplitAsync() => RunAsync(() =>
     {
-        if (Account is null) throw new InvalidOperationException("Choose an account first.");
-        if (!TryParseDecimal(NewSplitAmount, out var amount) || amount <= 0) throw new InvalidOperationException("Enter a positive split amount.");
+        if (Account is null) throw new InvalidOperationException(L("TransactionDetailChooseAccountFirst"));
+        if (!TryParseDecimal(NewSplitAmount, out var amount) || amount <= 0) throw new InvalidOperationException(L("TransactionDetailPositiveSplit"));
         var money = Money.FromMajorUnits(amount, Account.Currency);
-        if (money.MinorUnits <= 0) throw new InvalidOperationException("Enter a split amount that is representable in the account currency.");
+        if (money.MinorUnits <= 0) throw new InvalidOperationException(L("TransactionDetailRepresentableSplit"));
         Splits.Add(new SplitEditorItem(
             NewSplitCategory?.Id,
-            NewSplitCategory?.Name ?? "Uncategorized",
+            NewSplitCategory?.Name ?? L("TransactionDetailUncategorized"),
             money.ToMajorUnits().ToString($"F{money.DecimalPlaces}", CultureInfo.CurrentCulture),
             IsAmountHidden ? "••••" : money.Format(),
             string.IsNullOrWhiteSpace(NewSplitNote) ? null : NewSplitNote.Trim()));
@@ -188,7 +188,7 @@ public sealed class TransactionDetailViewModel : ViewModelBase
 
     private Task RemoveSplitAsync() => RunAsync(() =>
     {
-        if (SelectedSplit is null) throw new InvalidOperationException("Choose a split to remove.");
+        if (SelectedSplit is null) throw new InvalidOperationException(L("TransactionDetailChooseSplitRemove"));
         Splits.Remove(SelectedSplit);
         SelectedSplit = null;
         return Task.CompletedTask;
@@ -199,7 +199,7 @@ public sealed class TransactionDetailViewModel : ViewModelBase
         if (IsDeleted) return;
         await _store.SoftDeleteTransactionAsync(_transactionId);
         IsDeleted = true;
-        Status = "Transaction deleted. You can restore it from this screen while it remains in the local database.";
+        Status = L("TransactionDetailDeleted");
         await ReloadCoreAsync();
     });
 
@@ -208,7 +208,7 @@ public sealed class TransactionDetailViewModel : ViewModelBase
         if (!IsDeleted) return;
         await _store.RestoreDeletedTransactionAsync(_transactionId);
         IsDeleted = false;
-        Status = "Transaction restored.";
+        Status = L("TransactionDetailRestored");
         await ReloadCoreAsync();
     });
 
@@ -247,13 +247,15 @@ public sealed class TransactionDetailViewModel : ViewModelBase
 
     private static long SafeMagnitude(long value)
     {
-        if (value == long.MinValue) throw new InvalidDataException("Transaction amount is outside the supported range.");
+        if (value == long.MinValue) throw new InvalidDataException(L("TransactionDetailAmountOutOfRange"));
         return value < 0 ? -value : value;
     }
 
     private static bool TryParseDecimal(string value, out decimal result)
         => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result)
            || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
+
+    private static string L(string key) => LocalizationResources.Get(key);
 }
 
 public sealed class SelectableTagItem(Guid id, string name, bool isSelected) : INotifyPropertyChanged
