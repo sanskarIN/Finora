@@ -1,0 +1,49 @@
+name: CSV diagnostics validation
+
+on:
+  push:
+    paths:
+      - "scripts/diagnose_finora_csv.py"
+      - "scripts/generate_sample_finance_csv.py"
+      - "scripts/tests/test_diagnose_finora_csv.py"
+      - "scripts/tests/test_generate_sample_finance_csv.py"
+      - ".github/workflows/csv-diagnostics.yml"
+  pull_request:
+    paths:
+      - "scripts/diagnose_finora_csv.py"
+      - "scripts/generate_sample_finance_csv.py"
+      - "scripts/tests/test_diagnose_finora_csv.py"
+      - "scripts/tests/test_generate_sample_finance_csv.py"
+      - ".github/workflows/csv-diagnostics.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test CSV diagnostic engine
+        run: python -m unittest discover -s scripts/tests -p "test_diagnose_finora_csv.py" -v
+
+      - name: Test deterministic fixture generator
+        run: python -m unittest discover -s scripts/tests -p "test_generate_sample_finance_csv.py" -v
+
+      - name: Generate and diagnose major-unit fixture
+        run: |
+          python scripts/generate_sample_finance_csv.py artifacts/diagnostic_fixture.csv --rows 1000 --seed 20260819
+          python scripts/diagnose_finora_csv.py artifacts/diagnostic_fixture.csv
+
+      - name: Generate and diagnose minor-unit fixture
+        run: |
+          python scripts/generate_sample_finance_csv.py artifacts/diagnostic_fixture_jpy.csv --rows 500 --seed 20260819 --currency JPY --minor-units
+          python scripts/diagnose_finora_csv.py artifacts/diagnostic_fixture_jpy.csv --minor-units
