@@ -98,6 +98,11 @@ class ReleaseReadinessGuardTests(unittest.TestCase):
         blocked = [item.path for item in report.findings if item.code == "forbidden_tracked_artifact"]
         self.assertEqual(paths, blocked)
 
+    def test_normalize_preserves_dotfiles_and_removes_only_dot_slash_prefix(self) -> None:
+        self.assertEqual(".env", checker.normalize(".env"))
+        self.assertEqual(".env", checker.normalize("./.env"))
+        self.assertEqual(".github/workflows/ci.yml", checker.normalize("./.github/workflows/ci.yml"))
+
     def test_conflict_marker_in_tracked_text_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -114,10 +119,12 @@ class ReleaseReadinessGuardTests(unittest.TestCase):
     def test_generated_bin_and_obj_are_blocked_when_tracked(self) -> None:
         self.assertTrue(checker.matches_forbidden_file("src/App/bin/Release/app.dll"))
         self.assertTrue(checker.matches_forbidden_file("obj/project.assets.json"))
+        self.assertTrue(checker.matches_forbidden_file("tools/check/artifacts/result.json"))
 
     def test_regular_source_and_document_paths_are_allowed(self) -> None:
         self.assertFalse(checker.matches_forbidden_file("src/Finora.App/App.xaml"))
         self.assertFalse(checker.matches_forbidden_file("docs/backup/BACKUP_VERIFICATION.md"))
+        self.assertFalse(checker.matches_forbidden_file("src/Subject/Object.cs"))
 
     def test_small_change_ledger_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
