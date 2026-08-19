@@ -50,7 +50,7 @@ public sealed class ReminderCoordinator(ILocalNotificationService notifications,
             cancellationToken.ThrowIfCancellationRequested();
             var key = $"budget:{budget.Id}:threshold";
             activeKeys.Add(key);
-            var threshold = PercentOf(budget.PlannedMinor, budget.WarningThresholdPercent);
+            var threshold = PercentageMath.CeilingPercentOf(budget.PlannedMinor, budget.WarningThresholdPercent);
             if (budget.PlannedMinor > 0 && budget.ActualMinor >= threshold)
             {
                 await _notifications.ScheduleAsync(
@@ -114,14 +114,5 @@ public sealed class ReminderCoordinator(ILocalNotificationService notifications,
             if (reminder.DedupeKey is not string key || !key.StartsWith(prefix, StringComparison.Ordinal) || activeKeys.Contains(key)) continue;
             await _notifications.CancelAsync(reminder.Id, cancellationToken).ConfigureAwait(false);
         }
-    }
-
-    private static long PercentOf(long amountMinor, int percent)
-    {
-        if (amountMinor < 0) throw new InvalidDataException("Budget planned amount cannot be negative.");
-        percent = Math.Clamp(percent, 0, 100);
-        var whole = amountMinor / 100;
-        var remainder = amountMinor % 100;
-        return checked(checked(whole * percent) + checked(remainder * percent) / 100);
     }
 }
