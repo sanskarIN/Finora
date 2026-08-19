@@ -42,7 +42,8 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - [Build and Run](setup/BUILD.md)
 - [Troubleshooting](setup/TROUBLESHOOTING.md)
 - [Developer Guide](development/DEVELOPER_GUIDE.md)
-- [Repository Code Map](development/CODE_MAP.md)
+- [Repository Code Map](development/CODE_MAP.md) — concise layer/area navigation guide.
+- [Repository File Reference](development/REPOSITORY_FILE_REFERENCE.md) — exhaustive tracked-file responsibility/ownership reference, mechanically checked against `git ls-files`.
 - [Adding or Changing a Feature](development/ADDING_A_FEATURE.md)
 - [Engineering Decisions](../DECISIONS.md)
 
@@ -50,6 +51,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 
 - [Test Plan](TEST_PLAN.md)
 - [Testing Guide](testing/TESTING_GUIDE.md)
+- [Repository QA](testing/REPOSITORY_QA.md) — dependency-free developer-tool, tracked-file documentation coverage, and localization checks.
 - [Performance Benchmarking](testing/PERFORMANCE_BENCHMARKING.md) — reproducible synthetic 10k/50k/100k performance and correctness harness guidance.
 - [CI Evidence](testing/CI_EVIDENCE.md) — dated, commit-specific GitHub Actions evidence and explicit source-build versus release-validation boundaries.
 - [Native Validation Matrix](testing/NATIVE_VALIDATION_MATRIX.md)
@@ -93,6 +95,14 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - [Support](../SUPPORT.md)
 - [Third-Party Notices](../THIRD_PARTY_NOTICES.md)
 - [Apache-2.0 License](../LICENSE)
+
+## Documentation completeness contract
+
+The focused manuals above describe behavior. [Repository File Reference](development/REPOSITORY_FILE_REFERENCE.md) describes tracked-file ownership and change impact.
+
+`python scripts/check_documentation_coverage.py` compares that reference with the exact `git ls-files` set. It fails when a tracked file is uncovered, when a declared area no longer contains a tracked file, or when the reference attempts to hide detail behind a broad one-component catch-all such as `src/` or `docs/`. The same check is part of `scripts/run_repo_qa.py` and the primary CI structural preflight.
+
+This coverage contract makes it difficult for a new source, test, workflow, script, asset, platform resource, or policy file to exist without an explicit documented responsibility. It does **not** turn documentation into runtime evidence; target-platform/native/store validation remains separate.
 
 ## Product identity
 
