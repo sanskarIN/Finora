@@ -130,14 +130,14 @@ public sealed class RecurringViewModel : ViewModelBase
 
     private Task AddAsync() => RunAsync(async () =>
     {
-        if (Account is null) throw new InvalidOperationException("Choose an account.");
-        if (string.IsNullOrWhiteSpace(Name)) throw new InvalidOperationException("Rule name is required.");
-        if (!TryParse(Amount, out var major) || major <= 0) throw new InvalidOperationException("Enter a positive amount.");
-        if (HasEndDate && EndsOn.Date < StartsOn.Date) throw new InvalidOperationException("End date cannot be earlier than the start date.");
+        if (Account is null) throw new InvalidOperationException(LocalizationResources.Get("RecurringChooseAccountError"));
+        if (string.IsNullOrWhiteSpace(Name)) throw new InvalidOperationException(LocalizationResources.Get("RecurringRuleNameRequired"));
+        if (!TryParse(Amount, out var major) || major <= 0) throw new InvalidOperationException(LocalizationResources.Get("RecurringPositiveAmountError"));
+        if (HasEndDate && EndsOn.Date < StartsOn.Date) throw new InvalidOperationException(LocalizationResources.Get("RecurringEndBeforeStartError"));
         if (IsTransfer)
         {
-            if (DestinationAccount is null || DestinationAccount.Id == Account.Id) throw new InvalidOperationException("Choose a different destination account for the transfer.");
-            if (!string.Equals(Account.Currency, DestinationAccount.Currency, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Recurring transfers currently require matching account currencies.");
+            if (DestinationAccount is null || DestinationAccount.Id == Account.Id) throw new InvalidOperationException(LocalizationResources.Get("RecurringDestinationAccountError"));
+            if (!string.Equals(Account.Currency, DestinationAccount.Currency, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException(LocalizationResources.Get("RecurringCurrencyMatchError"));
         }
 
         var start = DateOnly.FromDateTime(StartsOn);
@@ -169,29 +169,29 @@ public sealed class RecurringViewModel : ViewModelBase
         await SyncRemindersIfEnabledAsync();
         await LoadRulesCoreAsync(rule.Id);
         await LoadOccurrencesCoreAsync();
-        ProcessingResult = "Recurring item saved.";
+        ProcessingResult = LocalizationResources.Get("RecurringItemSaved");
     });
 
     private Task ProcessNowAsync() => RunAsync(async () =>
     {
         var count = await _store.ProcessDueRecurrencesAsync(DateOnly.FromDateTime(DateTime.Today));
-        ProcessingResult = $"Prepared {count} due occurrence(s). No transaction is created until you mark an occurrence paid.";
+        ProcessingResult = Format("RecurringPreparedFormat", count);
         await SyncRemindersIfEnabledAsync();
         await LoadRulesCoreAsync();
         await LoadOccurrencesCoreAsync();
     });
 
-    private Task PauseRuleAsync() => ChangeRuleStateAsync(_workflow.PauseRuleAsync, "Recurring rule paused.");
-    private Task ResumeRuleAsync() => ChangeRuleStateAsync(_workflow.ResumeRuleAsync, "Recurring rule resumed.");
-    private Task ArchiveRuleAsync() => ChangeRuleStateAsync(_workflow.ArchiveRuleAsync, "Recurring rule archived. Existing occurrence history was preserved.");
+    private Task PauseRuleAsync() => ChangeRuleStateAsync(_workflow.PauseRuleAsync, "RecurringRulePaused");
+    private Task ResumeRuleAsync() => ChangeRuleStateAsync(_workflow.ResumeRuleAsync, "RecurringRuleResumed");
+    private Task ArchiveRuleAsync() => ChangeRuleStateAsync(_workflow.ArchiveRuleAsync, "RecurringRuleArchived");
 
-    private Task ChangeRuleStateAsync(Func<Guid, CancellationToken, Task<Finora.Shared.Result>> change, string successMessage) => RunAsync(async () =>
+    private Task ChangeRuleStateAsync(Func<Guid, CancellationToken, Task<Finora.Shared.Result>> change, string successMessageKey) => RunAsync(async () =>
     {
-        if (SelectedRule is null) throw new InvalidOperationException("Choose a recurring rule.");
+        if (SelectedRule is null) throw new InvalidOperationException(LocalizationResources.Get("RecurringChooseRuleError"));
         var selectedId = SelectedRule.Id;
         var result = await change(selectedId, CancellationToken.None);
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        ProcessingResult = successMessage;
+        ProcessingResult = LocalizationResources.Get(successMessageKey);
         await SyncRemindersIfEnabledAsync();
         await LoadRulesCoreAsync(selectedId);
         await LoadOccurrencesCoreAsync();
@@ -199,39 +199,41 @@ public sealed class RecurringViewModel : ViewModelBase
 
     private Task MarkPaidAsync() => RunAsync(async () =>
     {
-        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence.");
-        if (!TryParse(PaidAmount, out var major) || major <= 0) throw new InvalidOperationException("Enter a positive paid amount.");
+        if (SelectedOccurrence is null) throw new InvalidOperationException(LocalizationResources.Get("RecurringChooseDueOccurrence"));
+        if (!TryParse(PaidAmount, out var major) || major <= 0) throw new InvalidOperationException(LocalizationResources.Get("RecurringPositivePaidAmount"));
         var minor = Money.FromMajorUnits(major, SelectedOccurrence.Currency).MinorUnits;
         var result = await _workflow.MarkPaidAsync(SelectedOccurrence.Id, minor);
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        ProcessingResult = minor == SelectedOccurrence.AmountMinor ? "Occurrence marked paid." : "Partial payment recorded.";
+        ProcessingResult = minor == SelectedOccurrence.AmountMinor
+            ? LocalizationResources.Get("RecurringOccurrencePaid")
+            : LocalizationResources.Get("RecurringPartialPayment");
         await LoadOccurrencesCoreAsync();
     });
 
     private Task SkipAsync() => RunAsync(async () =>
     {
-        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence.");
+        if (SelectedOccurrence is null) throw new InvalidOperationException(LocalizationResources.Get("RecurringChooseDueOccurrence"));
         var result = await _workflow.SkipAsync(SelectedOccurrence.Id);
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        ProcessingResult = "Occurrence skipped without creating a transaction.";
+        ProcessingResult = LocalizationResources.Get("RecurringOccurrenceSkipped");
         await LoadOccurrencesCoreAsync();
     });
 
     private Task PostponeAsync() => RunAsync(async () =>
     {
-        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a due occurrence.");
+        if (SelectedOccurrence is null) throw new InvalidOperationException(LocalizationResources.Get("RecurringChooseDueOccurrence"));
         var result = await _workflow.PostponeAsync(SelectedOccurrence.Id, DateOnly.FromDateTime(PostponeDate));
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        ProcessingResult = $"Occurrence postponed to {PostponeDate:d}.";
+        ProcessingResult = Format("RecurringPostponedFormat", PostponeDate);
         await LoadOccurrencesCoreAsync();
     });
 
     private Task ReopenAsync() => RunAsync(async () =>
     {
-        if (SelectedOccurrence is null) throw new InvalidOperationException("Choose a skipped occurrence.");
+        if (SelectedOccurrence is null) throw new InvalidOperationException(LocalizationResources.Get("RecurringChooseSkippedOccurrence"));
         var result = await _workflow.ReopenAsync(SelectedOccurrence.Id);
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        ProcessingResult = "Skipped occurrence reopened as pending.";
+        ProcessingResult = LocalizationResources.Get("RecurringOccurrenceReopened");
         await LoadOccurrencesCoreAsync();
     });
 
@@ -256,6 +258,9 @@ public sealed class RecurringViewModel : ViewModelBase
 
     private Task SyncRemindersIfEnabledAsync()
         => _settings.NotificationsEnabled ? _reminders.SyncAsync() : Task.CompletedTask;
+
+    private static string Format(string key, params object[] values)
+        => string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get(key), values);
 
     private static bool TryParse(string value, out decimal result)
         => decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out result)
