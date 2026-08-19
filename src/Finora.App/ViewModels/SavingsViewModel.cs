@@ -20,7 +20,7 @@ public sealed class SavingsViewModel : ViewModelBase
     private string _contribution = string.Empty;
     private string _contributionNote = string.Empty;
     private TransactionListItem? _linkedTransaction;
-    private string _forecast = "Select a goal to see its forecast.";
+    private string _forecast = LocalizationResources.Get("SelectGoalForecast");
     private string _milestones = string.Empty;
     private string _status = string.Empty;
     private bool _showCompletionCelebration;
@@ -50,23 +50,28 @@ public sealed class SavingsViewModel : ViewModelBase
 
     private Task AddGoalAsync() => RunAsync(async () =>
     {
-        if (string.IsNullOrWhiteSpace(Name)) throw new InvalidOperationException("Goal name is required.");
-        if (!TryParse(Target, out var target) || target <= 0) throw new InvalidOperationException("Enter a positive target.");
-        if (!TryParse(Starting, out var starting) || starting < 0) throw new InvalidOperationException("Starting amount cannot be negative.");
+        if (string.IsNullOrWhiteSpace(Name)) throw new InvalidOperationException(LocalizationResources.Get("GoalNameRequired"));
+        if (!TryParse(Target, out var target) || target <= 0) throw new InvalidOperationException(LocalizationResources.Get("EnterPositiveTarget"));
+        if (!TryParse(Starting, out var starting) || starting < 0) throw new InvalidOperationException(LocalizationResources.Get("StartingAmountNotNegative"));
         var targetMinor = Money.FromMajorUnits(target, _settings.DefaultCurrency).MinorUnits; var startingMinor = Money.FromMajorUnits(starting, _settings.DefaultCurrency).MinorUnits;
-        if (startingMinor > targetMinor) throw new InvalidOperationException("Starting amount cannot exceed the target amount.");
+        if (startingMinor > targetMinor) throw new InvalidOperationException(LocalizationResources.Get("StartingAmountNotExceedTarget"));
         await _store.SaveSavingsGoalAsync(new SavingsGoal { Name = Name.Trim(), TargetMinor = targetMinor, StartingMinor = startingMinor, Currency = _settings.DefaultCurrency, TargetDate = DateOnly.FromDateTime(TargetDate), Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim(), Icon = string.IsNullOrWhiteSpace(Icon) ? "target" : Icon.Trim(), IsCompleted = startingMinor >= targetMinor });
         Name = Target = Notes = string.Empty; Starting = "0"; Icon = "target"; await LoadCoreAsync();
     });
 
     private Task ContributeAsync() => RunAsync(async () =>
     {
-        if (SelectedGoal is null) throw new InvalidOperationException("Choose a savings goal.");
-        if (!TryParse(Contribution, out var major) || major == 0) throw new InvalidOperationException("Enter a non-zero contribution or withdrawal.");
+        if (SelectedGoal is null) throw new InvalidOperationException(LocalizationResources.Get("ChooseSavingsGoal"));
+        if (!TryParse(Contribution, out var major) || major == 0) throw new InvalidOperationException(LocalizationResources.Get("EnterNonZeroContribution"));
         var before = SelectedGoal.Progress;
         await _store.AddGoalContributionAsync(new GoalContribution { SavingsGoalId = SelectedGoal.Id, AmountMinor = Money.FromMajorUnits(major, SelectedGoal.Currency).MinorUnits, OccurredAtUtc = DateTimeOffset.UtcNow, TransactionId = LinkedTransaction?.Id, Note = string.IsNullOrWhiteSpace(ContributionNote) ? null : ContributionNote.Trim() });
         var selectedId = SelectedGoal.Id; Contribution = ContributionNote = string.Empty; LinkedTransaction = null; await LoadCoreAsync(); SelectedGoal = Goals.FirstOrDefault(x => x.Id == selectedId);
-        ShowCompletionCelebration = before < 1 && SelectedGoal?.Progress >= 1; Status = ShowCompletionCelebration ? "Goal completed — congratulations!" : major > 0 ? "Contribution recorded." : "Withdrawal recorded.";
+        ShowCompletionCelebration = before < 1 && SelectedGoal?.Progress >= 1;
+        Status = ShowCompletionCelebration
+            ? LocalizationResources.Get("GoalCompletedCongratulations")
+            : major > 0
+                ? LocalizationResources.Get("ContributionRecorded")
+                : LocalizationResources.Get("WithdrawalRecorded");
     });
 
     private async Task LoadCoreAsync()
@@ -77,15 +82,29 @@ public sealed class SavingsViewModel : ViewModelBase
 
     private void UpdatePlanningText()
     {
-        if (SelectedGoal is null) { Forecast = "Select a goal to see its forecast."; Milestones = string.Empty; return; }
+        if (SelectedGoal is null) { Forecast = LocalizationResources.Get("SelectGoalForecast"); Milestones = string.Empty; return; }
         var goal = SelectedGoal; var percent = (int)Math.Round(goal.Progress * 100, MidpointRounding.AwayFromZero); var achieved = MilestonePercents.Where(x => percent >= x).ToArray(); var next = MilestonePercents.FirstOrDefault(x => percent < x);
-        Milestones = achieved.Length == 0 ? $"Next milestone: {next}%." : next == 0 ? "Milestones achieved: 25%, 50%, 75%, 100%." : $"Achieved: {string.Join(", ", achieved.Select(x => $"{x}%"))}. Next: {next}%.";
-        if (goal.TargetDate is null || goal.CurrentMinor >= goal.TargetMinor) { Forecast = goal.CurrentMinor >= goal.TargetMinor ? "Target reached." : "Add a target date to calculate a contribution forecast."; return; }
+        Milestones = achieved.Length == 0
+            ? Format("NextMilestoneFormat", next)
+            : next == 0
+                ? LocalizationResources.Get("MilestonesAchievedAll")
+                : Format("AchievedNextFormat", string.Join(", ", achieved.Select(x => $"{x}%")), next);
+        if (goal.TargetDate is null || goal.CurrentMinor >= goal.TargetMinor)
+        {
+            Forecast = goal.CurrentMinor >= goal.TargetMinor
+                ? LocalizationResources.Get("TargetReached")
+                : LocalizationResources.Get("AddTargetDateForecast");
+            return;
+        }
+
         var days = Math.Max(1, goal.TargetDate.Value.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber); var remaining = checked(goal.TargetMinor - goal.CurrentMinor); var months = Math.Max(1m, days / 30.4375m); var monthly = (long)Math.Ceiling(remaining / months);
         Forecast = _settings.PrivacyMode || _settings.HideAmountsOnLaunch
-            ? $"To reach the target by {goal.TargetDate:yyyy-MM-dd}, the monthly contribution estimate is hidden by privacy mode. {days} day(s) remain."
-            : $"To reach the target by {goal.TargetDate:yyyy-MM-dd}, aim for about {new Money(monthly, goal.Currency).Format()} per month over the remaining {days} day(s).";
+            ? Format("ForecastPrivacyFormat", goal.TargetDate.Value, days)
+            : Format("ForecastAmountFormat", goal.TargetDate.Value, new Money(monthly, goal.Currency).Format(), days);
     }
+
+    private static string Format(string key, params object[] values)
+        => string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get(key), values);
 
     private static bool TryParse(string value, out decimal result) => decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out result) || decimal.TryParse(value, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result);
 }
