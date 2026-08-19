@@ -314,6 +314,67 @@ The new source assertions were manually cross-checked against the exact producti
 
 ---
 
+## 175. Final correctness, restore-safety, and governance hardening
+
+A final post-closure source audit was opened as PR #26 on branch `final-hardening-2026-08-19`. It found and corrected additional reproducible correctness/safety issues rather than adding speculative features.
+
+### Budget threshold correctness
+
+- Added `PercentageMath.CeilingPercentOf` for overflow-safe ceiling percentage arithmetic.
+- Budget warning reminders now wait until the configured fractional threshold is actually reached instead of flooring the result and potentially firing one minor unit early.
+- Added normal, fractional, invalid, zero, and `long.MaxValue` boundary tests.
+
+### Transaction factory validity
+
+- `TransactionFactory.Create` now refuses `TransactionType.Transfer`, because a generic single-row constructor cannot create Finora's required reciprocal balanced transfer pair.
+- Returned non-transfer transactions are validated through `DomainRules.ValidateTransaction` before leaving the factory.
+- Tests cover valid sign behavior plus transfer, missing-account, and missing-timestamp rejection.
+
+### Receipt metadata consistency
+
+- Receipt MIME values are trimmed/canonicalized before persistence.
+- The private stored extension now follows the allowed MIME type rather than a conflicting original filename extension.
+- The original user-facing filename remains stored separately.
+- Integration tests cover mismatched original filename/MIME inputs and MIME whitespace normalization.
+
+### Encrypted restore receipt swap safety
+
+- Added an explicit receipt-directory recovery primitive and integration coverage.
+- If the live receipt directory was moved to rollback storage and staging/promotion later fails, the original tree is restored instead of deleting rollback evidence.
+- If promoted receipts exist but there was no original receipt directory, database-commit failure removes that newly promoted tree.
+- If an expected rollback directory is unexpectedly missing, recovery fails closed instead of deleting the current live tree and falsely claiming success.
+- Cancellation and commit-failure paths use the same explicit recovery state.
+- Existing `CrashSafeBackupService` journal/marker recovery remains the outer process-interruption layer; the inner `BackupService` is now safer independently as well.
+
+### Strict build-policy review
+
+The new test code was reviewed for the repository's `Nullable=enable`, `TreatWarningsAsErrors=true`, latest-recommended analyzer policy. A nullable-flow dereference in new receipt metadata coverage was corrected before final documentation.
+
+### Documentation/governance
+
+- Added `docs/FINAL_HARDENING_2026-08-19.md` with the complete post-closure audit, fixes, evidence boundary, backlog state, and release boundary.
+- Added `docs/development/BRANCH_PROTECTION.md` defining the intended `main` ruleset/status-check policy and administrative validation steps.
+- Updated `docs/README.md` to index both documents.
+- GitHub currently reports `main` as **not protected**. This repository interface does not expose a safe branch-protection mutation action, so the ledger does not falsely claim that host-level setting was enabled.
+- Repository issue search returned no open non-PR issues; the only open PR at the audit checkpoint was PR #26 itself.
+
+### Hosted evidence state
+
+The older exact verified candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` remains the recorded **319/319 automated tests + four-platform Release source builds + CodeQL + Dependency Review** evidence baseline and is not reused as runtime proof for PR #26.
+
+The pre-ledger PR #26 documentation head `4950134c1667b37b0d4ef170cbfe7712eae4ff3c` created these observed runs:
+
+- Finora CI — run `32242452702` — queued;
+- Repository release readiness — run `32242452546` — queued;
+- Dependency Review — run `32242452637` — queued;
+- CodeQL — run `32242452674` — pending.
+
+None had a conclusion at the recorded observation. This ledger update itself advances the PR head and therefore creates a newer exact candidate; no older run is represented as validating that newer commit.
+
+Remaining gates continue to be native/release-owner evidence: signed packages, installation and device behavior, process-kill/low-disk restore injection, accessibility validation, store-console policy checks, signing-key custody, and store approval.
+
+---
+
 ## Historical ledger integrity
 
 Sections **1–163** remain available in full, unchanged form at `docs/history/what_changed_through_2026-08-18.md`. This split was performed only because the cumulative file was too large for a safe single contents-API append while GitHub-hosted runners were unavailable. No historical section was discarded.
