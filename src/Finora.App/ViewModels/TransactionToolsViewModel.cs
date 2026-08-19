@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using Finora.Application;
 using Finora.Domain;
 using Finora.Shared;
@@ -46,9 +47,9 @@ public sealed class TransactionToolsViewModel : ViewModelBase
     private Task BulkCategorizeAsync() => RunAsync(async () =>
     {
         var ids = Transactions.Where(x => x.IsSelected).Select(x => x.Id).ToArray();
-        if (ids.Length == 0) throw new InvalidOperationException("Select at least one transaction.");
+        if (ids.Length == 0) throw new InvalidOperationException(LocalizationResources.Get("TransactionToolsSelectOne"));
         var count = await _maintenance.BulkCategorizeAsync(ids, BulkCategory?.Id);
-        Status = $"Updated {count} transaction(s). Revision history was preserved.";
+        Status = Format("TransactionToolsUpdatedFormat", count);
         await LoadTransactionsCoreAsync();
     });
 
@@ -67,14 +68,19 @@ public sealed class TransactionToolsViewModel : ViewModelBase
         var range = ResolveRange();
         Duplicates.Clear();
         foreach (var item in await _maintenance.FindLikelyDuplicatesAsync(range.FromUtc, range.ToExclusiveUtc.AddTicks(-1))) Duplicates.Add(item);
-        Status = Duplicates.Count == 0 ? "No likely duplicates found in this period." : $"Found {Duplicates.Count} possible duplicate pair(s). Review before deleting anything.";
+        Status = Duplicates.Count == 0
+            ? LocalizationResources.Get("TransactionToolsNoDuplicatesPeriod")
+            : Format("TransactionToolsFoundDuplicatesFormat", Duplicates.Count);
     }
 
     private UtcDateRange ResolveRange()
     {
-        if (ToDate.Date < FromDate.Date) throw new InvalidOperationException("The end date cannot be earlier than the start date.");
+        if (ToDate.Date < FromDate.Date) throw new InvalidOperationException(LocalizationResources.Get("TransactionToolsEndBeforeStart"));
         return LocalDateRange.ToUtc(DateOnly.FromDateTime(FromDate), DateOnly.FromDateTime(ToDate), TimeZoneInfo.Local);
     }
+
+    private static string Format(string key, params object[] values)
+        => string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get(key), values);
 }
 
 public sealed class ToolTransactionItem : INotifyPropertyChanged
