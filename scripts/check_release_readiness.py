@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import re
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
@@ -56,6 +57,16 @@ REQUIRED_WORKFLOWS = (
     ".github/workflows/native-ui-harness.yml",
     ".github/workflows/performance.yml",
     ".github/workflows/release-readiness.yml",
+)
+
+ACTION_MAJOR_POLICY = {
+    "actions/checkout": 7,
+    "actions/setup-python": 7,
+    "actions/setup-dotnet": 6,
+    "actions/upload-artifact": 7,
+}
+ACTION_REFERENCE_PATTERN = re.compile(
+    r"uses:\s*([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@v(\d+)\b"
 )
 
 FORBIDDEN_TRACKED_PATTERNS = (
@@ -223,6 +234,31 @@ def check_required_files(root: Path, findings: list[Finding]) -> None:
             )
 
 
+def check_workflow_action_majors(root: Path, findings: list[Finding]) -> None:
+    for relative in REQUIRED_WORKFLOWS:
+        path = root / relative
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            continue
+        for action, raw_major in ACTION_REFERENCE_PATTERN.findall(text):
+            expected_major = ACTION_MAJOR_POLICY.get(action.casefold())
+            if expected_major is None:
+                continue
+            actual_major = int(raw_major)
+            if actual_major != expected_major:
+                findings.append(
+                    Finding(
+                        "error",
+                        "outdated_action_major",
+                        relative,
+                        f"{action}@v{actual_major} must use v{expected_major} under the current CI runtime policy.",
+                    )
+                )
+
+
 def check_tracked_paths(paths: Sequence[str], findings: list[Finding]) -> None:
     for relative in paths:
         if matches_forbidden_file(relative):
@@ -283,6 +319,7 @@ def check_release_readiness(root: Path) -> ReadinessReport:
     findings: list[Finding] = []
     paths = tracked_files(root)
     check_required_files(root, findings)
+    check_workflow_action_majors(root, findings)
     check_tracked_paths(paths, findings)
     check_conflict_markers(root, paths, findings)
     check_change_ledgers(root, findings)
