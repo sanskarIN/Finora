@@ -26,14 +26,17 @@ public sealed class AttachmentService(IDbContextFactory<FinoraDbContext> factory
     public async Task<Result<AttachmentInfo>> AddAttachmentAsync(Guid transactionId, Stream source, string originalFileName, string contentType, CancellationToken cancellationToken = default)
     {
         if (source is null || !source.CanRead) return Result<AttachmentInfo>.Failure("The selected attachment cannot be read.");
-        if (!AllowedContentTypes.Contains(contentType)) return Result<AttachmentInfo>.Failure("Use a JPEG, PNG, WebP, HEIC/HEIF image, or PDF receipt.");
+        var normalizedContentType = contentType?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedContentType) || !AllowedContentTypes.Contains(normalizedContentType))
+            return Result<AttachmentInfo>.Failure("Use a JPEG, PNG, WebP, HEIC/HEIF image, or PDF receipt.");
+
         await using var db = await _factory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         var exists = await db.Transactions.AsNoTracking().AnyAsync(x => x.Id == transactionId && !x.IsDeleted, cancellationToken).ConfigureAwait(false);
         if (!exists) return Result<AttachmentInfo>.Failure("The transaction no longer exists.");
 
         var attachmentId = Guid.NewGuid();
         var safeName = SanitizeFileName(originalFileName);
-        var extension = NormalizeExtension(Path.GetExtension(safeName), contentType);
+        var extension = ExtensionForContentType(normalizedContentType);
         var transactionDirectory = transactionId.ToString("N");
         var relativeWithinAttachments = Path.Combine(transactionDirectory, $"{attachmentId:N}{extension}");
         var finalPath = ResolveSafePath(relativeWithinAttachments);
@@ -67,7 +70,7 @@ public sealed class AttachmentService(IDbContextFactory<FinoraDbContext> factory
                 TransactionId = transactionId,
                 RelativePath = Path.Combine("attachments", relativeWithinAttachments).Replace('\\', '/'),
                 OriginalFileName = safeName,
-                ContentType = contentType,
+                ContentType = normalizedContentType,
                 SizeBytes = copied,
                 Sha256 = hash
             };
@@ -171,12 +174,15 @@ public sealed class AttachmentService(IDbContextFactory<FinoraDbContext> factory
         return string.IsNullOrWhiteSpace(name) ? "receipt" : name;
     }
 
-    private static string NormalizeExtension(string extension, string contentType)
+    private static string ExtensionForContentType(string contentType) => contentType.ToLowerInvariant() switch
     {
-        var allowed = extension.ToLowerInvariant() switch { ".jpg" or ".jpeg" => ".jpg", ".png" => ".png", ".webp" => ".webp", ".heic" => ".heic", ".heif" => ".heif", ".pdf" => ".pdf", _ => string.Empty };
-        if (!string.IsNullOrEmpty(allowed)) return allowed;
-        return contentType.ToLowerInvariant() switch { "image/png" => ".png", "image/webp" => ".webp", "image/heic" => ".heic", "image/heif" => ".heif", "application/pdf" => ".pdf", _ => ".jpg" };
-    }
+        "image/png" => ".png",
+        "image/webp" => ".webp",
+        "image/heic" => ".heic",
+        "image/heif" => ".heif",
+        "application/pdf" => ".pdf",
+        _ => ".jpg"
+    };
 
     private static void SafeDelete(string path) { try { if (File.Exists(path)) File.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
     private static void DeleteDirectoryIfEmpty(string? path) { if (string.IsNullOrWhiteSpace(path)) return; try { if (Directory.Exists(path) && !Directory.EnumerateFileSystemEntries(path).Any()) Directory.Delete(path); } catch (IOException) { } catch (UnauthorizedAccessException) { } }
