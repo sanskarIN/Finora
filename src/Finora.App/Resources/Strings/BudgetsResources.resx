@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="ViewPeriod" xml:space="preserve"><value>View period</value></data>
+  <data name="NoBudgetsForPeriod" xml:space="preserve"><value>No budgets for this period.</value></data>
+  <data name="AvailablePlan" xml:space="preserve"><value>Available plan:</value></data>
+  <data name="ActualSpending" xml:space="preserve"><value>Actual spending:</value></data>
+  <data name="WarningAt" xml:space="preserve"><value>Warning at</value></data>
+  <data name="CreateBudget" xml:space="preserve"><value>Create budget</value></data>
+  <data name="BudgetName" xml:space="preserve"><value>Budget name</value></data>
+  <data name="Limit" xml:space="preserve"><value>Limit</value></data>
+  <data name="BudgetLimitDescription" xml:space="preserve"><value>Budget limit in major currency units</value></data>
+  <data name="Cadence" xml:space="preserve"><value>Cadence</value></data>
+  <data name="CustomPeriodStart" xml:space="preserve"><value>Custom period start</value></data>
+  <data name="CustomPeriodEnd" xml:space="preserve"><value>Custom period end</value></data>
+  <data name="CategoryOverallOptional" xml:space="preserve"><value>Category (leave empty for overall)</value></data>
+  <data name="RolloverUnusedBudget" xml:space="preserve"><value>Rollover unused weekly/monthly budget</value></data>
+  <data name="WarningThresholdPercent" xml:space="preserve"><value>Warning threshold (%)</value></data>
+  <data name="SaveBudget" xml:space="preserve"><value>Save budget</value></data>
+  <data name="BudgetActualsNotice" xml:space="preserve"><value>Budget actuals include transaction splits and descendant categories. Rollover is calculated from explicit budget periods when present.</value></data>
+</root>
