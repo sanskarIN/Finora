@@ -14,7 +14,13 @@ on:
       - "PRIVACY.md"
       - "TERMS.md"
       - "CONTRIBUTING.md"
+      - "CHANGELOG.md"
+      - "PROJECT_STATUS.md"
       - "what_changed.md"
+      - "global.json"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - ".gitignore"
   pull_request:
     paths:
       - "src/**"
@@ -28,7 +34,13 @@ on:
       - "PRIVACY.md"
       - "TERMS.md"
       - "CONTRIBUTING.md"
+      - "CHANGELOG.md"
+      - "PROJECT_STATUS.md"
       - "what_changed.md"
+      - "global.json"
+      - "Directory.Build.props"
+      - "Directory.Packages.props"
+      - ".gitignore"
 
 permissions:
   contents: read
