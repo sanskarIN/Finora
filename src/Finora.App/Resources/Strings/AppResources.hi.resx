@@ -51,4 +51,20 @@
   <data name="BiometricNotCompleted" xml:space="preserve"><value>बायोमेट्रिक सत्यापन पूरा नहीं हुआ। आगे बढ़ने के लिए अपना Finora PIN उपयोग करें।</value></data>
   <data name="IncorrectPin" xml:space="preserve"><value>PIN गलत है। फिर से प्रयास करें।</value></data>
   <data name="LockoutMinutes" xml:space="preserve"><value>बहुत अधिक प्रयास हुए। {0} मिनट बाद फिर प्रयास करें।</value></data>
+  <data name="Accounts" xml:space="preserve"><value>अकाउंट</value></data>
+  <data name="AccountsEmpty" xml:space="preserve"><value>नीचे अपना पहला अकाउंट जोड़ें।</value></data>
+  <data name="ReconcileAccount" xml:space="preserve"><value>अकाउंट का मिलान करें</value></data>
+  <data name="CategoriesTags" xml:space="preserve"><value>श्रेणियाँ और टैग</value></data>
+  <data name="AddAccount" xml:space="preserve"><value>अकाउंट जोड़ें</value></data>
+  <data name="AccountName" xml:space="preserve"><value>अकाउंट का नाम</value></data>
+  <data name="AccountType" xml:space="preserve"><value>अकाउंट का प्रकार</value></data>
+  <data name="OpeningBalance" xml:space="preserve"><value>प्रारंभिक शेष</value></data>
+  <data name="OpeningBalanceMajorDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में प्रारंभिक शेष</value></data>
+  <data name="TransferBetweenAccounts" xml:space="preserve"><value>अकाउंट के बीच राशि स्थानांतरित करें</value></data>
+  <data name="From" xml:space="preserve"><value>से</value></data>
+  <data name="To" xml:space="preserve"><value>तक</value></data>
+  <data name="Amount" xml:space="preserve"><value>राशि</value></data>
+  <data name="TransferAmountDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में स्थानांतरण राशि</value></data>
+  <data name="OptionalNote" xml:space="preserve"><value>वैकल्पिक नोट</value></data>
+  <data name="Transfer" xml:space="preserve"><value>स्थानांतरित करें</value></data>
 </root>
