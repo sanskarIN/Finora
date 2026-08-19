@@ -4,7 +4,11 @@ Finora uses pull requests, automated CI/security checks, CODEOWNERS, and release
 
 ## Current enforcement state
 
-As observed on 2026-08-19, GitHub reports `main` as **not protected**. This document defines the intended policy; it does not claim that the settings have already been enabled.
+As observed again during the final repository audit on **2026-08-19**, GitHub reports `main` as **not protected**. This document defines the intended policy; it does not claim that the settings have already been enabled.
+
+The remaining host-administration action is tracked as **GitHub issue #28 — “Repository host: enable protection/ruleset for main.”** The issue is assigned to the repository owner and contains the exact activation/verification checklist. Close it only after GitHub itself reports the rule/ruleset active and the blocking behavior has been tested.
+
+This is a repository-host governance action, not missing Finora application source functionality.
 
 ## Recommended GitHub ruleset
 
@@ -48,6 +52,7 @@ After enabling protection/rulesets:
 - verify a failing required check blocks merge;
 - verify force-push and deletion are blocked;
 - verify the documented emergency-bypass owner, if any, is intentional;
-- record the ruleset/protection evidence against the release candidate.
+- record the ruleset/protection evidence against the release candidate;
+- close GitHub issue #28 only after the above evidence is complete.
 
 Branch protection is repository-host configuration, not application source behavior. It should therefore be validated in GitHub itself rather than inferred from files in the repository.
