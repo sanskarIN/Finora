@@ -3,14 +3,15 @@
 Finora is a multi-project .NET MAUI solution. The current source targets .NET 10 TFMs for Android, iOS, Mac Catalyst, and Windows. Use a .NET/MAUI toolchain that supports the target frameworks declared in `src/Finora.App/Finora.App.csproj`.
 
 Complete documentation index: [`docs/README.md`](../README.md)  
-Prioritized next steps: [`docs/NEXT_STEPS.md`](../NEXT_STEPS.md)
+Prioritized next steps: [`docs/NEXT_STEPS.md`](../NEXT_STEPS.md)  
+Exhaustive tracked-file ownership: [`docs/development/REPOSITORY_FILE_REFERENCE.md`](../development/REPOSITORY_FILE_REFERENCE.md)
 
 ## Required development tools
 
 Common:
 
 - Git.
-- Python 3 for the dependency-free structural preflight.
+- Python 3 for dependency-free structural/repository QA.
 - .NET 10 SDK compatible with the declared target frameworks.
 - .NET MAUI workload for native app builds.
 
@@ -29,15 +30,18 @@ git clone https://github.com/sanskarIN/Finora.git
 cd Finora
 ```
 
-## Dependency-free preflight
+## Dependency-free preflight and repository QA
 
-Run this first:
+Run these first:
 
 ```bash
 python build/scripts/verify_structure.py
+python scripts/run_repo_qa.py
 ```
 
-The current preflight checks:
+### Structural preflight
+
+The current structural preflight checks:
 
 - required repository/legal/community files;
 - the complete required documentation tree, including `docs/NEXT_STEPS.md`;
@@ -62,7 +66,31 @@ The current preflight checks:
 
 The Markdown check validates repository-relative file targets only. It does not make network requests and does not attempt to prove external URLs or section anchors are reachable. Likewise, the preflight verifies the configured Buy Me a Coffee URL string but does not verify that the external service is reachable or allowed by a target app store.
 
-Structural preflight does **not** compile C#, restore NuGet packages, execute analyzers, run tests, build native targets, sign packages, or validate devices/stores.
+Structural preflight does **not** compile C#, restore NuGet packages, execute analyzers, run .NET tests, build native targets, sign packages, or validate devices/stores.
+
+### Repository QA runner
+
+`scripts/run_repo_qa.py` executes the dependency-free developer QA suite:
+
+1. Python developer-tool unit tests from `scripts/tests/`;
+2. tracked-file documentation coverage through `scripts/check_documentation_coverage.py`; and
+3. localization validation through `scripts/validate_localization.py`.
+
+The documentation coverage check reads the exact tracked set from `git ls-files` and compares it with `docs/development/REPOSITORY_FILE_REFERENCE.md`. Every tracked file must be covered by an exact path or a meaningful narrow directory responsibility. Stale entries and broad one-component catch-all prefixes such as `src/`, `docs/`, or `tests/` fail the check.
+
+Run only the coverage check with:
+
+```bash
+python scripts/check_documentation_coverage.py
+```
+
+Run the repository QA and continue into the .NET test suite when the SDK is available with:
+
+```bash
+python scripts/run_repo_qa.py --include-dotnet
+```
+
+A passing repository QA run proves those dependency-free repository contracts for the checked source tree. It does not prove native runtime, signed packaging, accessibility, biometric behavior, notification delivery, store compliance, installed upgrades, or interrupted recovery.
 
 ## Recommended repository wrappers
 
@@ -189,14 +217,23 @@ Finora stores integer minor units and contains built-in zero-/two-/three-decimal
 
 `.github/workflows/ci.yml` currently separates:
 
-- structural preflight on Ubuntu;
+- structural preflight plus dependency-free repository QA on Ubuntu;
 - unit/integration/UI-contract tests on Ubuntu;
 - Windows + Android MAUI builds on Windows;
 - iOS + Mac Catalyst MAUI builds on macOS.
 
+The CI structural-preflight job executes:
+
+```bash
+python build/scripts/verify_structure.py
+python scripts/run_repo_qa.py
+```
+
+This makes tracked-file documentation coverage, Python developer-tool tests, and localization validation prerequisites for downstream CI work.
+
 CodeQL/dependency-review repository workflows provide additional security gates. Current workflow action major versions are intentionally conservative; update them only after compatibility/security review.
 
-A source file existing in the repository is not proof that a platform feature works on a device. Notification, biometric, capture-protection, adaptive navigation, accessibility, file-picker/share, packaging, signing, and interrupted-restore behavior require validation on the corresponding platform.
+A source file existing in the repository—or being listed by the documentation coverage check—is not proof that a platform feature works on a device. Notification, biometric, capture-protection, adaptive navigation, accessibility, file-picker/share, packaging, signing, and interrupted-restore behavior require validation on the corresponding platform.
 
 ## Release preparation
 
@@ -204,6 +241,8 @@ Use:
 
 - [`docs/README.md`](../README.md)
 - [`docs/NEXT_STEPS.md`](../NEXT_STEPS.md)
+- [`docs/development/REPOSITORY_FILE_REFERENCE.md`](../development/REPOSITORY_FILE_REFERENCE.md)
+- [`docs/testing/REPOSITORY_QA.md`](../testing/REPOSITORY_QA.md)
 - [`docs/testing/TESTING_GUIDE.md`](../testing/TESTING_GUIDE.md)
 - [`docs/TEST_PLAN.md`](../TEST_PLAN.md)
 - [`docs/releases/RELEASE_CHECKLIST.md`](../releases/RELEASE_CHECKLIST.md)
