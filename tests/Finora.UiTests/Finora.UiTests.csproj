@@ -16,10 +16,7 @@
     <None Include="..\..\src\Finora.App\AppShell.xaml.cs" Link="Contracts\AppShell.xaml.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Finora.App.csproj" Link="Contracts\Finora.App.csproj" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\LocalizationResources.cs" Link="Contracts\LocalizationResources.cs" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\Finora.App\Resources\Strings\AppResources.resx" Link="Contracts\AppResources.resx" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\Finora.App\Resources\Strings\AppResources.hi.resx" Link="Contracts\AppResources.hi.resx" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\Finora.App\Resources\Strings\TransactionsResources.resx" Link="Contracts\TransactionsResources.resx" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\src\Finora.App\Resources\Strings\TransactionsResources.hi.resx" Link="Contracts\TransactionsResources.hi.resx" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Resources\Strings\*Resources*.resx" Link="Contracts\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\DashboardPage.xaml" Link="Contracts\DashboardPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\DashboardViewModel.cs" Link="Contracts\DashboardViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\ReportsPage.xaml" Link="Contracts\ReportsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
