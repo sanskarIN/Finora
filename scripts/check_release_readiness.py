@@ -14,7 +14,7 @@ import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 REQUIRED_FILES = (
     "README.md",
@@ -24,6 +24,8 @@ REQUIRED_FILES = (
     "TERMS.md",
     "CONTRIBUTING.md",
     "what_changed.md",
+    "global.json",
+    "Directory.Build.props",
     "docs/NEXT_STEPS.md",
     "docs/localization/LOCALIZATION_IMPLEMENTATION.md",
     "docs/accessibility/NATIVE_ACCESSIBILITY_QA.md",
@@ -33,6 +35,8 @@ REQUIRED_FILES = (
     "docs/import/CSV_DIAGNOSTICS.md",
     "docs/export/EXPORT_VERIFICATION.md",
     "docs/backup/BACKUP_VERIFICATION.md",
+    "scripts/README.md",
+    ".github/FUNDING.yml",
     ".github/pull_request_template.md",
     ".github/ISSUE_TEMPLATE/bug_report.yml",
     ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -41,12 +45,16 @@ REQUIRED_FILES = (
 
 REQUIRED_WORKFLOWS = (
     ".github/workflows/ci.yml",
+    ".github/workflows/codeql.yml",
+    ".github/workflows/dependency-review.yml",
     ".github/workflows/localization.yml",
     ".github/workflows/sample-data.yml",
     ".github/workflows/csv-diagnostics.yml",
     ".github/workflows/export-artifact.yml",
     ".github/workflows/backup-artifact.yml",
     ".github/workflows/native-ui-harness.yml",
+    ".github/workflows/performance.yml",
+    ".github/workflows/release-readiness.yml",
 )
 
 FORBIDDEN_TRACKED_PATTERNS = (
