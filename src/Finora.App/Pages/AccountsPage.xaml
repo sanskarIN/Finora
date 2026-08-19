@@ -5,24 +5,24 @@
              xmlns:local="clr-namespace:Finora.App"
              xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
              x:DataType="local:AccountsViewModel"
-             Title="Accounts">
+             Title="{DynamicResource Text.Accounts}">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
-    <Label Text="Accounts" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
-    <CollectionView x:Name="AccountList" ItemsSource="{Binding Accounts}" SelectionMode="Single" SelectionChanged="OnAccountSelected" EmptyView="Add your first account below." HeightRequest="280">
+    <Label Text="{DynamicResource Text.Accounts}" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
+    <CollectionView x:Name="AccountList" ItemsSource="{Binding Accounts}" SelectionMode="Single" SelectionChanged="OnAccountSelected" EmptyView="{DynamicResource Text.AccountsEmpty}" HeightRequest="280">
       <CollectionView.ItemTemplate><DataTemplate x:DataType="application:AccountSummary"><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Type}" /></VerticalStackLayout><VerticalStackLayout Grid.Column="1"><Label Text="{Binding Currency}" HorizontalTextAlignment="End" /><Label HorizontalTextAlignment="End"><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="BalanceMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></VerticalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate>
     </CollectionView>
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Reconcile account" Clicked="OnReconcileClicked" /><Button Grid.Column="1" Text="Categories &amp; tags" Clicked="OnAccountCategoriesClicked" /></Grid>
-    <Label Text="Add account" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <Entry Placeholder="Account name" Text="{Binding Name}" />
-    <Picker Title="Account type" ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding AccountType}" />
-    <Entry Placeholder="Opening balance" Keyboard="Numeric" Text="{Binding OpeningBalance}" SemanticProperties.Description="Opening balance in major currency units" />
-    <Button Text="Add account" Command="{Binding AddAccountCommand}" />
-    <Label Text="Transfer between accounts" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <Picker Title="From" ItemsSource="{Binding Accounts}" SelectedItem="{Binding SourceAccount}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:AccountSummary" /></Picker.ItemDisplayBinding></Picker>
-    <Picker Title="To" ItemsSource="{Binding Accounts}" SelectedItem="{Binding DestinationAccount}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:AccountSummary" /></Picker.ItemDisplayBinding></Picker>
-    <Entry Placeholder="Amount" Keyboard="Numeric" Text="{Binding TransferAmount}" SemanticProperties.Description="Transfer amount in major currency units" />
-    <Entry Placeholder="Optional note" Text="{Binding TransferNote}" />
-    <Button Text="Transfer" Command="{Binding TransferCommand}" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="{DynamicResource Text.ReconcileAccount}" Clicked="OnReconcileClicked" /><Button Grid.Column="1" Text="{DynamicResource Text.CategoriesTags}" Clicked="OnAccountCategoriesClicked" /></Grid>
+    <Label Text="{DynamicResource Text.AddAccount}" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+    <Entry Placeholder="{DynamicResource Text.AccountName}" Text="{Binding Name}" />
+    <Picker Title="{DynamicResource Text.AccountType}" ItemsSource="{Binding AccountTypes}" SelectedItem="{Binding AccountType}" />
+    <Entry Placeholder="{DynamicResource Text.OpeningBalance}" Keyboard="Numeric" Text="{Binding OpeningBalance}" SemanticProperties.Description="{DynamicResource Text.OpeningBalanceMajorDescription}" />
+    <Button Text="{DynamicResource Text.AddAccount}" Command="{Binding AddAccountCommand}" />
+    <Label Text="{DynamicResource Text.TransferBetweenAccounts}" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+    <Picker Title="{DynamicResource Text.From}" ItemsSource="{Binding Accounts}" SelectedItem="{Binding SourceAccount}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:AccountSummary" /></Picker.ItemDisplayBinding></Picker>
+    <Picker Title="{DynamicResource Text.To}" ItemsSource="{Binding Accounts}" SelectedItem="{Binding DestinationAccount}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:AccountSummary" /></Picker.ItemDisplayBinding></Picker>
+    <Entry Placeholder="{DynamicResource Text.Amount}" Keyboard="Numeric" Text="{Binding TransferAmount}" SemanticProperties.Description="{DynamicResource Text.TransferAmountDescription}" />
+    <Entry Placeholder="{DynamicResource Text.OptionalNote}" Text="{Binding TransferNote}" />
+    <Button Text="{DynamicResource Text.Transfer}" Command="{Binding TransferCommand}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
