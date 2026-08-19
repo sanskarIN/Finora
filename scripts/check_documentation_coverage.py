@@ -134,6 +134,14 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def display_reference_path(reference: Path) -> str:
+    """Return a stable display path for repository-local or external references."""
+    try:
+        return reference.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return str(reference)
+
+
 def main() -> int:
     args = parse_args()
     reference = args.reference
@@ -167,7 +175,7 @@ def main() -> int:
     print(
         f"Documentation coverage OK: {len(tracked)} tracked files are covered by "
         f"{len(entries)} reference entries in "
-        f"{reference.relative_to(REPO_ROOT).as_posix()}."
+        f"{display_reference_path(reference)}."
     )
     return 0
 
