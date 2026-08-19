@@ -20,6 +20,8 @@ Explain the user or engineering problem this change solves.
 ## Validation
 
 - [ ] `python build/scripts/verify_structure.py`
+- [ ] `python scripts/run_repo_qa.py`
+- [ ] Tracked-file ownership remains covered by `docs/development/REPOSITORY_FILE_REFERENCE.md`
 - [ ] `dotnet workload restore`
 - [ ] `dotnet restore Finora.sln`
 - [ ] `dotnet format Finora.sln --verify-no-changes --no-restore`
@@ -32,6 +34,10 @@ Explain the user or engineering problem this change solves.
 - [ ] No secrets, credentials, signing material, real financial records, or private receipt contents were added
 - [ ] Logs/notifications remain privacy-safe
 - [ ] Documentation and changelog are updated when required
+
+## Documentation ownership
+
+For every new, moved, or deleted tracked file, confirm the repository file reference still describes the narrow area correctly. `scripts/check_documentation_coverage.py` is part of `scripts/run_repo_qa.py` and CI structural preflight; do not bypass the check with a broad catch-all directory entry.
 
 ## Screenshots / recordings
 
