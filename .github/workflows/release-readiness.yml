@@ -1,0 +1,53 @@
+name: Repository release readiness
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - ".github/**"
+      - "README.md"
+      - "LICENSE"
+      - "SECURITY.md"
+      - "PRIVACY.md"
+      - "TERMS.md"
+      - "CONTRIBUTING.md"
+      - "what_changed.md"
+  pull_request:
+    paths:
+      - "src/**"
+      - "tests/**"
+      - "scripts/**"
+      - "docs/**"
+      - ".github/**"
+      - "README.md"
+      - "LICENSE"
+      - "SECURITY.md"
+      - "PRIVACY.md"
+      - "TERMS.md"
+      - "CONTRIBUTING.md"
+      - "what_changed.md"
+
+permissions:
+  contents: read
+
+jobs:
+  structural-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run release-readiness guard tests
+        run: python -m unittest discover -s scripts/tests -p "test_check_release_readiness.py" -v
+
+      - name: Check repository release-readiness invariants
+        run: python scripts/check_release_readiness.py
