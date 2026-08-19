@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="CategoriesTagsTitle" xml:space="preserve"><value>Categories &amp; tags</value></data>
+  <data name="CategoriesSection" xml:space="preserve"><value>Categories</value></data>
+  <data name="CategoriesSelected" xml:space="preserve"><value>Selected category</value></data>
+  <data name="CategoriesName" xml:space="preserve"><value>Category name</value></data>
+  <data name="CategoriesParentOptional" xml:space="preserve"><value>Parent category (optional)</value></data>
+  <data name="CategoriesCreate" xml:space="preserve"><value>Create category</value></data>
+  <data name="CategoriesUpdateSelected" xml:space="preserve"><value>Update selected</value></data>
+  <data name="CategoriesMoveUp" xml:space="preserve"><value>Move up</value></data>
+  <data name="CategoriesMoveDown" xml:space="preserve"><value>Move down</value></data>
+  <data name="CategoriesMergeTarget" xml:space="preserve"><value>Merge/reassign target</value></data>
+  <data name="CategoriesMerge" xml:space="preserve"><value>Merge</value></data>
+  <data name="CategoriesArchive" xml:space="preserve"><value>Archive</value></data>
+  <data name="CategoriesRestore" xml:space="preserve"><value>Restore</value></data>
+  <data name="CategoriesNoItems" xml:space="preserve"><value>No categories.</value></data>
+  <data name="CategoriesParentPrefix" xml:space="preserve"><value>Parent:</value></data>
+  <data name="CategoriesArchivedPrefix" xml:space="preserve"><value>Archived:</value></data>
+  <data name="TagsSection" xml:space="preserve"><value>Tags</value></data>
+  <data name="TagsSelected" xml:space="preserve"><value>Selected tag</value></data>
+  <data name="TagsName" xml:space="preserve"><value>Tag name</value></data>
+  <data name="TagsOptionalColor" xml:space="preserve"><value>Optional color label</value></data>
+  <data name="TagsCreate" xml:space="preserve"><value>Create tag</value></data>
+  <data name="TagsArchive" xml:space="preserve"><value>Archive tag</value></data>
+  <data name="TagsRestore" xml:space="preserve"><value>Restore tag</value></data>
+  <data name="TagsNoItems" xml:space="preserve"><value>No tags.</value></data>
+  <data name="TagsTransactionCountFormat" xml:space="preserve"><value>{0} transaction(s)</value></data>
+  <data name="CategoriesCreated" xml:space="preserve"><value>Category created.</value></data>
+  <data name="CategoriesChooseUpdate" xml:space="preserve"><value>Choose a category to update.</value></data>
+  <data name="CategoriesUpdated" xml:space="preserve"><value>Category updated.</value></data>
+  <data name="CategoriesChooseArchive" xml:space="preserve"><value>Choose a category to archive.</value></data>
+  <data name="CategoriesArchived" xml:space="preserve"><value>Category archived.</value></data>
+  <data name="CategoriesChooseRestore" xml:space="preserve"><value>Choose a category to restore.</value></data>
+  <data name="CategoriesRestored" xml:space="preserve"><value>Category restored.</value></data>
+  <data name="CategoriesChooseMove" xml:space="preserve"><value>Choose a category to move.</value></data>
+  <data name="CategoriesMovedUp" xml:space="preserve"><value>Category moved up.</value></data>
+  <data name="CategoriesMovedDown" xml:space="preserve"><value>Category moved down.</value></data>
+  <data name="CategoriesChooseMerge" xml:space="preserve"><value>Choose source and target categories.</value></data>
+  <data name="CategoriesMerged" xml:space="preserve"><value>Category records were merged and the source category was archived.</value></data>
+  <data name="TagsCreated" xml:space="preserve"><value>Tag created.</value></data>
+  <data name="TagsChooseUpdate" xml:space="preserve"><value>Choose a tag to update.</value></data>
+  <data name="TagsUpdated" xml:space="preserve"><value>Tag updated.</value></data>
+  <data name="TagsChooseArchive" xml:space="preserve"><value>Choose a tag to archive.</value></data>
+  <data name="TagsArchived" xml:space="preserve"><value>Tag archived. Existing transaction links are preserved.</value></data>
+  <data name="TagsChooseRestore" xml:space="preserve"><value>Choose a tag to restore.</value></data>
+  <data name="TagsRestored" xml:space="preserve"><value>Tag restored.</value></data>
+</root>
