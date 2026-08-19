@@ -48,9 +48,9 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Versioning/migrations | `docs/releases/VERSIONING_AND_MIGRATIONS.md` | Current |
 | Store metadata template | `docs/releases/STORE_METADATA_TEMPLATE.md` | Current |
 | Engineering decisions | `DECISIONS.md` | Current |
-| Project implementation status | `PROJECT_STATUS.md` | Current — verified performance tooling/smoke, final repository closure, and remaining runtime/native gates recorded |
-| Detailed change ledger | `what_changed.md` | Current after final continuation ledger commit |
-| Changelog | `CHANGELOG.md` | Current source history |
+| Project implementation status | `PROJECT_STATUS.md` | Current through the repository-closure baseline; this documentation-coverage continuation does not change runtime feature status |
+| Detailed change ledger | `what_changed.md` | Current through the prior repository-closure/security continuation; append only exact completed validation evidence |
+| Changelog | `CHANGELOG.md` | Current through the prior source baseline; documentation-coverage changes are being validated before release-history promotion |
 | Privacy policy | `PRIVACY.md` | Current |
 | Terms | `TERMS.md` | Current |
 | Security reporting | `SECURITY.md` | Current |
