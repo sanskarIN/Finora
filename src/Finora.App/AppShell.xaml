@@ -7,7 +7,7 @@
   FlyoutBehavior="Disabled">
 
   <Shell.FlyoutFooter>
-    <Grid Padding="12" SemanticProperties.Description="Support Finora development on Buy Me a Coffee. Opens the external support page in the system browser.">
+    <Grid Padding="12" SemanticProperties.Description="{DynamicResource Text.SupportFinoraExternalDescription}">
       <Grid.GestureRecognizers>
         <TapGestureRecognizer Tapped="OnShellBuyMeACoffeeTapped" />
       </Grid.GestureRecognizers>
@@ -16,26 +16,26 @@
   </Shell.FlyoutFooter>
 
   <TabBar x:Name="MobileTabBar" Route="mobile-tabs">
-    <ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate local:DashboardPage}" />
-    <ShellContent Title="Transactions" Route="transactions" ContentTemplate="{DataTemplate local:TransactionsPage}" />
-    <ShellContent Title="Budgets" Route="budgets" ContentTemplate="{DataTemplate local:BudgetsPage}" />
-    <ShellContent Title="Goals" Route="goals" ContentTemplate="{DataTemplate local:SavingsPage}" />
-    <ShellContent Title="Settings" Route="settings" ContentTemplate="{DataTemplate local:SettingsPage}" />
+    <ShellContent Title="{DynamicResource Text.Dashboard}" Route="dashboard" ContentTemplate="{DataTemplate local:DashboardPage}" />
+    <ShellContent Title="{DynamicResource Text.Transactions}" Route="transactions" ContentTemplate="{DataTemplate local:TransactionsPage}" />
+    <ShellContent Title="{DynamicResource Text.Budgets}" Route="budgets" ContentTemplate="{DataTemplate local:BudgetsPage}" />
+    <ShellContent Title="{DynamicResource Text.Goals}" Route="goals" ContentTemplate="{DataTemplate local:SavingsPage}" />
+    <ShellContent Title="{DynamicResource Text.Settings}" Route="settings" ContentTemplate="{DataTemplate local:SettingsPage}" />
   </TabBar>
 
-  <FlyoutItem x:Name="DesktopDashboard" Title="Dashboard" Route="dashboard-desktop" IsVisible="False">
+  <FlyoutItem x:Name="DesktopDashboard" Title="{DynamicResource Text.Dashboard}" Route="dashboard-desktop" IsVisible="False">
     <ShellContent ContentTemplate="{DataTemplate local:DashboardPage}" />
   </FlyoutItem>
-  <FlyoutItem x:Name="DesktopTransactions" Title="Transactions" Route="transactions-desktop" IsVisible="False">
+  <FlyoutItem x:Name="DesktopTransactions" Title="{DynamicResource Text.Transactions}" Route="transactions-desktop" IsVisible="False">
     <ShellContent ContentTemplate="{DataTemplate local:TransactionsPage}" />
   </FlyoutItem>
-  <FlyoutItem x:Name="DesktopBudgets" Title="Budgets" Route="budgets-desktop" IsVisible="False">
+  <FlyoutItem x:Name="DesktopBudgets" Title="{DynamicResource Text.Budgets}" Route="budgets-desktop" IsVisible="False">
     <ShellContent ContentTemplate="{DataTemplate local:BudgetsPage}" />
   </FlyoutItem>
-  <FlyoutItem x:Name="DesktopGoals" Title="Goals" Route="goals-desktop" IsVisible="False">
+  <FlyoutItem x:Name="DesktopGoals" Title="{DynamicResource Text.Goals}" Route="goals-desktop" IsVisible="False">
     <ShellContent ContentTemplate="{DataTemplate local:SavingsPage}" />
   </FlyoutItem>
-  <FlyoutItem x:Name="DesktopSettings" Title="Settings" Route="settings-desktop" IsVisible="False">
+  <FlyoutItem x:Name="DesktopSettings" Title="{DynamicResource Text.Settings}" Route="settings-desktop" IsVisible="False">
     <ShellContent ContentTemplate="{DataTemplate local:SettingsPage}" />
   </FlyoutItem>
 
