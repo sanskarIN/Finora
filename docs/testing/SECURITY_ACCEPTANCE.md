@@ -22,7 +22,9 @@ The `Finora.UiTests` project copies selected production source/XAML files into t
 ### Biometric / Windows Hello unlock
 
 - The lock screen always retains a masked numeric PIN fallback.
+- When biometric unlock is disabled, the lock view model does not invoke the native availability probe.
 - Biometric unlock is exposed only when the user preference is enabled and the native service reports availability.
+- A transient exception from the native availability probe is contained and degrades to the PIN path instead of leaving an unobserved fire-and-forget task fault.
 - Authentication failure does not navigate past the lock screen.
 - Android uses the platform biometric prompt and exposes an explicit `Use PIN` fallback.
 - Apple platforms use LocalAuthentication biometrics.
