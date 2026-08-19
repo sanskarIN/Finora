@@ -16,7 +16,7 @@ public sealed class ReconciliationViewModel : ViewModelBase
     private DateTime _statementDate = DateTime.Today;
     private bool _createAdjustment;
     private string _note = string.Empty;
-    private string _previewText = "Choose an account and enter the statement balance.";
+    private string _previewText = LocalizationResources.Get("ReconciliationChooseInput");
     private string _status = string.Empty;
 
     public ReconciliationViewModel(IFinanceStore store, IReconciliationService service, IAppSettingsService? settings = null)
@@ -57,7 +57,11 @@ public sealed class ReconciliationViewModel : ViewModelBase
         var result = await _service.PreviewAsync(account.Id, minor, date);
         if (!result.IsSuccess || result.Value is null) throw new InvalidOperationException(result.Error);
         var p = result.Value;
-        PreviewText = $"Book balance: {DisplayMoney(p.BookBalanceMinor, p.Currency)}\nStatement balance: {DisplayMoney(p.StatementBalanceMinor, p.Currency)}\nDifference: {DisplayMoney(p.DifferenceMinor, p.Currency)}";
+        PreviewText = string.Join(
+            Environment.NewLine,
+            Format("ReconciliationBookBalanceFormat", DisplayMoney(p.BookBalanceMinor, p.Currency)),
+            Format("ReconciliationStatementBalanceFormat", DisplayMoney(p.StatementBalanceMinor, p.Currency)),
+            Format("ReconciliationDifferenceFormat", DisplayMoney(p.DifferenceMinor, p.Currency)));
     });
 
     private Task CompleteAsync() => RunAsync(async () =>
@@ -65,17 +69,19 @@ public sealed class ReconciliationViewModel : ViewModelBase
         var (account, minor, date) = ReadInput();
         var result = await _service.CompleteAsync(account.Id, minor, date, CreateAdjustment, Note);
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        Status = result.Value?.AdjustmentCreated == true ? "Reconciliation completed with an explicit adjustment transaction." : "Reconciliation completed.";
+        Status = result.Value?.AdjustmentCreated == true
+            ? LocalizationResources.Get("ReconciliationCompletedAdjustment")
+            : LocalizationResources.Get("ReconciliationCompleted");
         await LoadHistoryAsync();
         await LoadAccountsBalancesAsync(account.Id);
     });
 
     private (AccountSummary Account, long Minor, DateTimeOffset Date) ReadInput()
     {
-        if (Account is null) throw new InvalidOperationException("Choose an account.");
+        if (Account is null) throw new InvalidOperationException(LocalizationResources.Get("ReconciliationChooseAccount"));
         if (!decimal.TryParse(StatementBalance, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.CurrentCulture, out var major) &&
             !decimal.TryParse(StatementBalance, NumberStyles.Number | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out major))
-            throw new InvalidOperationException("Enter a valid statement balance.");
+            throw new InvalidOperationException(LocalizationResources.Get("ReconciliationInvalidBalance"));
         var minor = Money.FromMajorUnits(major, Account.Currency).MinorUnits;
         var date = DateOnly.FromDateTime(StatementDate);
         var boundary = LocalDateRange.ToUtc(date, date, TimeZoneInfo.Local).ToExclusiveUtc.AddTicks(-1);
@@ -105,6 +111,9 @@ public sealed class ReconciliationViewModel : ViewModelBase
 
     private string DisplayMoney(long minor, string currency)
         => _settings?.PrivacyMode == true || _settings?.HideAmountsOnLaunch == true ? "••••" : new Money(minor, currency).Format();
+
+    private static string Format(string key, params object[] values)
+        => string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get(key), values);
 }
 
 public sealed record ReconciliationHistoryDisplayItem(DateTimeOffset StatementDateUtc, string Difference, bool AdjustmentCreated, string? Note);
