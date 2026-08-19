@@ -4,16 +4,25 @@ namespace Finora.UiTests;
 
 public sealed class LocalizationContractTests
 {
-    [Theory]
-    [InlineData("AppResources.resx", "AppResources.hi.resx")]
-    [InlineData("TransactionsResources.resx", "TransactionsResources.hi.resx")]
-    public void HindiResourceBundles_MatchNeutralKeySets(string neutralFile, string hindiFile)
+    [Fact]
+    public void EveryNeutralResourceBundle_HasMatchingHindiKeySet()
     {
-        var neutral = ReadKeys(neutralFile);
-        var hindi = ReadKeys(hindiFile);
+        var contracts = Path.Combine(AppContext.BaseDirectory, "Contracts");
+        var neutralFiles = Directory.GetFiles(contracts, "*Resources.resx", SearchOption.TopDirectoryOnly);
 
-        Assert.NotEmpty(neutral);
-        Assert.Equal(neutral.Order(StringComparer.Ordinal), hindi.Order(StringComparer.Ordinal));
+        Assert.NotEmpty(neutralFiles);
+        foreach (var neutralPath in neutralFiles)
+        {
+            var hindiPath = Path.Combine(
+                contracts,
+                Path.GetFileNameWithoutExtension(neutralPath) + ".hi.resx");
+
+            Assert.True(File.Exists(hindiPath), $"Missing Hindi resource bundle for {Path.GetFileName(neutralPath)}.");
+            var neutral = ReadKeys(neutralPath);
+            var hindi = ReadKeys(hindiPath);
+            Assert.NotEmpty(neutral);
+            Assert.Equal(neutral.Order(StringComparer.Ordinal), hindi.Order(StringComparer.Ordinal));
+        }
     }
 
     [Fact]
@@ -34,6 +43,9 @@ public sealed class LocalizationContractTests
     [InlineData("DashboardPage.xaml", "Text.Dashboard")]
     [InlineData("TransactionsPage.xaml", "Text.Transactions")]
     [InlineData("AccountsPage.xaml", "Text.Accounts")]
+    [InlineData("BudgetsPage.xaml", "Text.Budgets")]
+    [InlineData("SavingsPage.xaml", "Text.SavingsGoals")]
+    [InlineData("RecurringPage.xaml", "Text.RecurringItems")]
     [InlineData("OnboardingPage.xaml", "Text.WelcomeToFinora")]
     public void PrimaryLocalizedSurfaces_UseDynamicResources(string fileName, string resourceKey)
     {
@@ -41,8 +53,8 @@ public sealed class LocalizationContractTests
         Assert.Contains($"{{DynamicResource {resourceKey}}}", source, StringComparison.Ordinal);
     }
 
-    private static HashSet<string> ReadKeys(string fileName)
-        => XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Contracts", fileName))
+    private static HashSet<string> ReadKeys(string path)
+        => XDocument.Load(path)
             .Root!
             .Elements("data")
             .Select(element => (string)element.Attribute("name")!)
