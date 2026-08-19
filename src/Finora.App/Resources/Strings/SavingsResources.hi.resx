@@ -24,4 +24,20 @@
   <data name="ContributionNote" xml:space="preserve"><value>योगदान नोट</value></data>
   <data name="ApplySelectedGoal" xml:space="preserve"><value>चुने हुए लक्ष्य पर लागू करें</value></data>
   <data name="ReducedMotionGoalNotice" xml:space="preserve"><value>पूर्णता संदेश में कोई बाध्य एनिमेशन नहीं है, इसलिए कम गति की प्राथमिकता का सम्मान होता है।</value></data>
+  <data name="SelectGoalForecast" xml:space="preserve"><value>पूर्वानुमान देखने के लिए एक लक्ष्य चुनें।</value></data>
+  <data name="GoalNameRequired" xml:space="preserve"><value>लक्ष्य का नाम आवश्यक है।</value></data>
+  <data name="EnterPositiveTarget" xml:space="preserve"><value>शून्य से अधिक लक्ष्य दर्ज करें।</value></data>
+  <data name="StartingAmountNotNegative" xml:space="preserve"><value>प्रारंभिक राशि ऋणात्मक नहीं हो सकती।</value></data>
+  <data name="StartingAmountNotExceedTarget" xml:space="preserve"><value>प्रारंभिक राशि लक्ष्य राशि से अधिक नहीं हो सकती।</value></data>
+  <data name="ChooseSavingsGoal" xml:space="preserve"><value>एक बचत लक्ष्य चुनें।</value></data>
+  <data name="EnterNonZeroContribution" xml:space="preserve"><value>शून्य से अलग योगदान या निकासी राशि दर्ज करें।</value></data>
+  <data name="ContributionRecorded" xml:space="preserve"><value>योगदान दर्ज किया गया।</value></data>
+  <data name="WithdrawalRecorded" xml:space="preserve"><value>निकासी दर्ज की गई।</value></data>
+  <data name="NextMilestoneFormat" xml:space="preserve"><value>अगला पड़ाव: {0}%।</value></data>
+  <data name="MilestonesAchievedAll" xml:space="preserve"><value>पड़ाव पूरे हुए: 25%, 50%, 75%, 100%।</value></data>
+  <data name="AchievedNextFormat" xml:space="preserve"><value>पूरे हुए: {0}। अगला: {1}%।</value></data>
+  <data name="TargetReached" xml:space="preserve"><value>लक्ष्य प्राप्त हो गया।</value></data>
+  <data name="AddTargetDateForecast" xml:space="preserve"><value>योगदान पूर्वानुमान की गणना के लिए लक्ष्य तारीख जोड़ें।</value></data>
+  <data name="ForecastPrivacyFormat" xml:space="preserve"><value>{0:d} तक लक्ष्य पाने के लिए मासिक योगदान अनुमान गोपनीयता मोड के कारण छिपा है। {1} दिन शेष हैं।</value></data>
+  <data name="ForecastAmountFormat" xml:space="preserve"><value>{0:d} तक लक्ष्य पाने के लिए अगले {2} दिनों में लगभग {1} प्रति माह का योगदान रखें।</value></data>
 </root>
