@@ -1,3 +1,4 @@
+using System.Globalization;
 using Finora.Application;
 
 namespace Finora.App;
@@ -8,7 +9,7 @@ public sealed class LockViewModel : ViewModelBase
     private readonly IAppSettingsService _settings;
     private readonly IBiometricService _biometric;
     private string _pin = string.Empty;
-    private string _status = "Enter your Finora PIN.";
+    private string _status = string.Empty;
     private bool _canUseBiometrics;
 
     public LockViewModel(IAppLockService appLock, IAppSettingsService settings, IBiometricService biometric)
@@ -33,11 +34,11 @@ public sealed class LockViewModel : ViewModelBase
 
     private Task BiometricAsync() => RunAsync(async () =>
     {
-        if (!CanUseBiometrics) throw new InvalidOperationException("Biometric unlock is not available or enabled.");
-        var result = await _biometric.AuthenticateAsync("Unlock your local Finora finance data.");
+        if (!CanUseBiometrics) throw new InvalidOperationException(LocalizationResources.Get("BiometricUnavailable"));
+        var result = await _biometric.AuthenticateAsync(LocalizationResources.Get("BiometricPrompt"));
         if (!result.IsSuccess)
         {
-            Status = "Biometric verification was not completed. Use your Finora PIN to continue.";
+            Status = LocalizationResources.Get("BiometricNotCompleted");
             return;
         }
 
@@ -62,14 +63,14 @@ public sealed class LockViewModel : ViewModelBase
 
         Pin = string.Empty;
         UpdateStatus();
-        if (_lock.RemainingLockout == TimeSpan.Zero) Status = "Incorrect PIN. Try again.";
+        if (_lock.RemainingLockout == TimeSpan.Zero) Status = LocalizationResources.Get("IncorrectPin");
     });
 
     private void UpdateStatus()
     {
         var lockout = _lock.RemainingLockout;
         Status = lockout > TimeSpan.Zero
-            ? $"Too many attempts. Try again in {Math.Ceiling(lockout.TotalMinutes)} minute(s)."
-            : "Enter your Finora PIN.";
+            ? string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get("LockoutMinutes"), Math.Ceiling(lockout.TotalMinutes))
+            : LocalizationResources.Get("EnterFinoraPin");
     }
 }
