@@ -91,6 +91,7 @@ A workflow file describes automation. It is not proof that a specific commit pas
 | File or area | Responsibility | Change/validation notes |
 |---|---|---|
 | `docs/DOCUMENTATION_STATUS.md` | Documentation coverage matrix and update policy. | Update when a new canonical manual/coverage class is introduced. |
+| `docs/FINAL_HARDENING_2026-08-19.md` | Post-closure correctness, restore-safety, receipt-consistency, regression, evidence-boundary, and branch-governance audit. | Keep exact completed work separate from queued/native/store evidence. |
 | `docs/FINAL_REPOSITORY_CLOSURE.md` | Repository-engineering closure boundary versus external release evidence. | Never reinterpret external/native work as already complete. |
 | `docs/NEXT_STEPS.md` | Prioritized release-evidence and later-version roadmap. | Current source backlog and external gates must stay distinct. |
 | `docs/README.md` | Documentation entry point/index. | New canonical manuals should be linked here. |
