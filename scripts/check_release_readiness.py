@@ -127,7 +127,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def normalize(path: str) -> str:
-    return path.replace("\\", "/").lstrip("./")
+    normalized = path.replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized
 
 
 def git_tracked_files(root: Path) -> list[str] | None:
@@ -167,7 +170,11 @@ def tracked_files(root: Path) -> list[str]:
 def matches_forbidden_file(path: str) -> bool:
     normalized = normalize(path)
     basename = Path(normalized).name
-    if any(normalized.casefold().startswith(prefix.casefold()) for prefix in FORBIDDEN_TRACKED_PREFIXES):
+    segments = {part.casefold() for part in normalized.split("/") if part}
+    forbidden_directories = {
+        prefix.rstrip("/").casefold() for prefix in FORBIDDEN_TRACKED_PREFIXES
+    }
+    if segments & forbidden_directories:
         return True
     return any(
         fnmatch.fnmatch(basename.casefold(), pattern.casefold())
