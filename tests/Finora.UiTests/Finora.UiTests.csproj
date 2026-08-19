@@ -44,6 +44,7 @@
     <None Include="..\..\src\Finora.App\ViewModels\ReconciliationViewModel.cs" Link="Contracts\ReconciliationViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\OnboardingPage.xaml" Link="Contracts\OnboardingPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\OnboardingPage.Links.cs" Link="Contracts\OnboardingPage.Links.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\LockPage.xaml" Link="Contracts\LockPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.xaml" Link="Contracts\SettingsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\SettingsViewModel.cs" Link="Contracts\SettingsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\LockViewModel.cs" Link="Contracts\LockViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
