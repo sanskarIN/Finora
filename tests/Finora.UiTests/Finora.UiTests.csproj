@@ -14,8 +14,12 @@
   <ItemGroup>
     <None Include="..\..\src\Finora.App\AppShell.xaml" Link="Contracts\AppShell.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\AppShell.xaml.cs" Link="Contracts\AppShell.xaml.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\App.xaml.cs" Link="Contracts\App.xaml.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Finora.App.csproj" Link="Contracts\Finora.App.csproj" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\LocalizationResources.cs" Link="Contracts\LocalizationResources.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Services.cs" Link="Contracts\Services.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\SensitiveScreenService.cs" Link="Contracts\SensitiveScreenService.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\PlatformBiometricService.cs" Link="Contracts\PlatformBiometricService.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Resources\Strings\*Resources*.resx" Link="Contracts\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\DashboardPage.xaml" Link="Contracts\DashboardPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\DashboardViewModel.cs" Link="Contracts\DashboardViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
@@ -40,8 +44,10 @@
     <None Include="..\..\src\Finora.App\ViewModels\ReconciliationViewModel.cs" Link="Contracts\ReconciliationViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\OnboardingPage.xaml" Link="Contracts\OnboardingPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\OnboardingPage.Links.cs" Link="Contracts\OnboardingPage.Links.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\Pages\LockPage.xaml" Link="Contracts\LockPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.xaml" Link="Contracts\SettingsPage.xaml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\ViewModels\SettingsViewModel.cs" Link="Contracts\SettingsViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\src\Finora.App\ViewModels\LockViewModel.cs" Link="Contracts\LockViewModel.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.Reset.cs" Link="Contracts\SettingsPage.Reset.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.Security.cs" Link="Contracts\SettingsPage.Security.cs" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\src\Finora.App\Pages\SettingsPage.About.cs" Link="Contracts\SettingsPage.About.cs" CopyToOutputDirectory="PreserveNewest" />
