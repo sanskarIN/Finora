@@ -1,0 +1,54 @@
+name: Backup artifact validation
+
+on:
+  push:
+    paths:
+      - "scripts/verify_backup_artifact.py"
+      - "scripts/tests/test_verify_backup_artifact.py"
+      - ".github/workflows/backup-artifact.yml"
+  pull_request:
+    paths:
+      - "scripts/verify_backup_artifact.py"
+      - "scripts/tests/test_verify_backup_artifact.py"
+      - ".github/workflows/backup-artifact.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run backup verifier tests
+        run: python -m unittest discover -s scripts/tests -p "test_verify_backup_artifact.py" -v
+
+      - name: Verify representative synthetic artifact
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          Path('artifacts').mkdir(exist_ok=True)
+          Path('artifacts/synthetic_backup.finora').write_bytes(
+              (b'FINORA-ENCRYPTED-SYNTHETIC\x01\x02\x03' * 64)[:2048]
+          )
+          PY
+          python scripts/verify_backup_artifact.py artifacts/synthetic_backup.finora
+
+      - name: Confirm plaintext SQLite artifact is rejected
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          Path('artifacts/plaintext.sqlite').write_bytes(b'SQLite format 3\x00' + b'x' * 512)
+          PY
+          if python scripts/verify_backup_artifact.py artifacts/plaintext.sqlite; then
+            echo "Expected plaintext SQLite verification to fail."
+            exit 1
+          fi
