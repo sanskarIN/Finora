@@ -17,18 +17,18 @@ SPEC.loader.exec_module(coverage)
 
 
 class DocumentationCoverageTests(unittest.TestCase):
-    def test_documented_files_reads_only_first_table_column_paths(self) -> None:
+    def test_documented_entries_read_only_first_table_column(self) -> None:
         markdown = """
-| File | Purpose |
+| File or area | Purpose |
 |---|---|
 | `README.md` | overview |
-| `src/App.cs` | source |
+| `src/Finora.Domain/` | domain files |
 
 Inline `not-a-table-entry.md` is intentionally ignored.
 """
         self.assertEqual(
-            ["README.md", "src/App.cs"],
-            coverage.documented_files(markdown),
+            ["README.md", "src/Finora.Domain/"],
+            coverage.documented_entries(markdown),
         )
 
     def test_normalize_paths_deduplicates_and_preserves_dotfiles(self) -> None:
@@ -39,13 +39,47 @@ Inline `not-a-table-entry.md` is intentionally ignored.
             ),
         )
 
-    def test_compare_coverage_reports_missing_and_stale_paths(self) -> None:
+    def test_directory_entry_covers_every_tracked_file_below_it(self) -> None:
+        missing, stale = coverage.compare_coverage(
+            [
+                "README.md",
+                "src/Finora.Domain/DomainRules.cs",
+                "src/Finora.Domain/Money.cs",
+            ],
+            ["README.md", "src/Finora.Domain/"],
+        )
+        self.assertEqual([], missing)
+        self.assertEqual([], stale)
+
+    def test_compare_coverage_reports_missing_and_unused_entries(self) -> None:
         missing, stale = coverage.compare_coverage(
             ["README.md", "src/App.cs"],
-            ["README.md", "docs/old.md"],
+            ["README.md", "docs/legacy/"],
         )
         self.assertEqual(["src/App.cs"], missing)
-        self.assertEqual(["docs/old.md"], stale)
+        self.assertEqual(["docs/legacy/"], stale)
+
+    def test_validate_entries_rejects_broad_top_level_prefixes(self) -> None:
+        self.assertEqual(
+            ["docs/", "src/"],
+            coverage.validate_entries(
+                ["README.md", "docs/", "src/", "src/Finora.Domain/"]
+            ),
+        )
+
+    def test_validate_entries_accepts_granular_prefixes(self) -> None:
+        self.assertEqual(
+            [],
+            coverage.validate_entries(
+                [
+                    "README.md",
+                    ".github/workflows/",
+                    "docs/security/",
+                    "src/Finora.Domain/",
+                    "tests/Finora.UnitTests/",
+                ]
+            ),
+        )
 
     def test_tracked_files_uses_git_ls_files_null_delimited_output(self) -> None:
         completed = mock.Mock(
@@ -68,11 +102,14 @@ Inline `not-a-table-entry.md` is intentionally ignored.
             with self.assertRaisesRegex(RuntimeError, "not a repo"):
                 coverage.tracked_files(Path("/repo"))
 
-    def test_main_succeeds_for_exact_inventory(self) -> None:
+    def test_main_succeeds_for_exact_and_directory_inventory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             reference = Path(directory) / "reference.md"
             reference.write_text(
-                "| File | Purpose |\n|---|---|\n| `README.md` | overview |\n",
+                "| File or area | Purpose |\n"
+                "|---|---|\n"
+                "| `README.md` | overview |\n"
+                "| `src/Finora.Domain/` | domain |\n",
                 encoding="utf-8",
             )
             with mock.patch.object(
@@ -80,7 +117,9 @@ Inline `not-a-table-entry.md` is intentionally ignored.
                 "argv",
                 ["check_documentation_coverage.py", "--reference", str(reference)],
             ), mock.patch.object(
-                coverage, "tracked_files", return_value=["README.md"]
+                coverage,
+                "tracked_files",
+                return_value=["README.md", "src/Finora.Domain/Money.cs"],
             ):
                 self.assertEqual(0, coverage.main())
 
@@ -88,7 +127,7 @@ Inline `not-a-table-entry.md` is intentionally ignored.
         with tempfile.TemporaryDirectory() as directory:
             reference = Path(directory) / "reference.md"
             reference.write_text(
-                "| File | Purpose |\n|---|---|\n| `README.md` | overview |\n",
+                "| File or area | Purpose |\n|---|---|\n| `README.md` | overview |\n",
                 encoding="utf-8",
             )
             with mock.patch.object(
