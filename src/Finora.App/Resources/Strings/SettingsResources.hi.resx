@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SettingsPreferences" xml:space="preserve"><value>प्राथमिकताएँ</value></data>
+  <data name="SettingsTheme" xml:space="preserve"><value>थीम</value></data>
+  <data name="SettingsThemes" xml:space="preserve"><value>थीम</value></data>
+  <data name="SettingsFormattingLocale" xml:space="preserve"><value>फ़ॉर्मेटिंग लोकेल</value></data>
+  <data name="SettingsNumberDatePreview" xml:space="preserve"><value>संख्या/तारीख पूर्वावलोकन</value></data>
+  <data name="SettingsFinancialMonthStartDay" xml:space="preserve"><value>वित्तीय महीने की शुरुआत का दिन</value></data>
+  <data name="SettingsDefaultEntryBehavior" xml:space="preserve"><value>डिफ़ॉल्ट प्रविष्टि व्यवहार</value></data>
+  <data name="SettingsDefaultAccount" xml:space="preserve"><value>डिफ़ॉल्ट अकाउंट</value></data>
+  <data name="SettingsDefaultTransactionType" xml:space="preserve"><value>डिफ़ॉल्ट लेन-देन प्रकार</value></data>
+  <data name="SettingsReceiptImageQuality" xml:space="preserve"><value>रसीद छवि गुणवत्ता</value></data>
+  <data name="SettingsReceiptImageQualityPlaceholder" xml:space="preserve"><value>रसीद छवि गुणवत्ता (40-100)</value></data>
+  <data name="SettingsReceiptImageQualityDescription" xml:space="preserve"><value>JPEG रसीद छवि गुणवत्ता 40 से 100 के बीच</value></data>
+  <data name="SettingsAccessibility" xml:space="preserve"><value>सुलभता</value></data>
+  <data name="SettingsLargerInterface" xml:space="preserve"><value>बड़ा इंटरफ़ेस</value></data>
+  <data name="SettingsLargerInterfaceDescription" xml:space="preserve"><value>पाठ और नियंत्रण का आकार बढ़ाएँ</value></data>
+  <data name="SettingsReducedMotion" xml:space="preserve"><value>कम गति</value></data>
+  <data name="SettingsReducedMotionDescription" xml:space="preserve"><value>गैर-ज़रूरी एनिमेशन कम करें</value></data>
+  <data name="SettingsPrivacySecurity" xml:space="preserve"><value>गोपनीयता और सुरक्षा</value></data>
+  <data name="SettingsPrivacyMode" xml:space="preserve"><value>गोपनीयता मोड</value></data>
+  <data name="SettingsPrivacyModeDescription" xml:space="preserve"><value>डैशबोर्ड और रिपोर्ट की राशि छिपाएँ</value></data>
+  <data name="SettingsHideAmountsLaunch" xml:space="preserve"><value>शुरुआत में राशि छिपाएँ</value></data>
+  <data name="SettingsHideAmountsLaunchDescription" xml:space="preserve"><value>हर सत्र की शुरुआत राशि छिपाकर करें</value></data>
+  <data name="SettingsEnablePinLock" xml:space="preserve"><value>PIN लॉक सक्षम करें</value></data>
+  <data name="SettingsPinLockDescription" xml:space="preserve"><value>4–12 अंकों वाला Finora PIN सेट करें या हटाएँ</value></data>
+  <data name="SettingsBiometricUnlock" xml:space="preserve"><value>बायोमेट्रिक / Windows Hello अनलॉक</value></data>
+  <data name="SettingsBiometricUnlockDescription" xml:space="preserve"><value>उपलब्ध होने पर डिवाइस प्रमाणीकरण उपयोग करें; PIN बैकअप रहेगा</value></data>
+  <data name="SettingsAutoLockMinutes" xml:space="preserve"><value>ऑटो-लॉक मिनट</value></data>
+  <data name="SettingsAutoLockDescription" xml:space="preserve"><value>इतने मिनट निष्क्रिय रहने के बाद ऑटो-लॉक करें</value></data>
+  <data name="SettingsSensitiveScreenProtection" xml:space="preserve"><value>संवेदनशील स्क्रीन कैप्चर / टास्क पूर्वावलोकन रोकें</value></data>
+  <data name="SettingsSensitiveScreenProtectionDescription" xml:space="preserve"><value>समर्थित होने पर OS-स्तरीय स्क्रीनशॉट/टास्क-पूर्वावलोकन सुरक्षा लागू करें</value></data>
+  <data name="SettingsBackupExport" xml:space="preserve"><value>बैकअप और एक्सपोर्ट</value></data>
+  <data name="SettingsCreateBackup" xml:space="preserve"><value>बैकअप बनाएँ</value></data>
+  <data name="SettingsCreateBackupDescription" xml:space="preserve"><value>एन्क्रिप्टेड बैकअप अभी एक्सपोर्ट करें</value></data>
+  <data name="SettingsRestoreBackup" xml:space="preserve"><value>बैकअप पुनर्स्थापित करें</value></data>
+  <data name="SettingsRestoreBackupDescription" xml:space="preserve"><value>एटॉमिक रिप्लेसमेंट से Finora बैकअप पुनर्स्थापित करें</value></data>
+  <data name="SettingsAutomaticBackupReminders" xml:space="preserve"><value>स्वचालित बैकअप रिमाइंडर</value></data>
+  <data name="SettingsBackupReminderDescription" xml:space="preserve"><value>बैकअप देय होने पर लोकल सूचना दिखाएँ</value></data>
+  <data name="SettingsBackupReminderTimeFormat" xml:space="preserve"><value>बैकअप रिमाइंडर समय {0}</value></data>
+  <data name="SettingsNotifications" xml:space="preserve"><value>सूचनाएँ</value></data>
+  <data name="SettingsNotificationsDescription" xml:space="preserve"><value>लोकल रिमाइंडर सूचनाएँ अनुमति दें</value></data>
+  <data name="SettingsImportExport" xml:space="preserve"><value>आयात / एक्सपोर्ट</value></data>
+  <data name="SettingsImportCsv" xml:space="preserve"><value>CSV आयात करें</value></data>
+  <data name="SettingsExportCsv" xml:space="preserve"><value>CSV एक्सपोर्ट करें</value></data>
+  <data name="SettingsExportPdf" xml:space="preserve"><value>PDF एक्सपोर्ट करें</value></data>
+  <data name="SettingsImportExportNotice" xml:space="preserve"><value>आयात की जाँच लोकल रूप से होती है। एक्सपोर्ट इस डिवाइस पर रहते हैं जब तक आप उन्हें स्पष्ट रूप से साझा न करें।</value></data>
+  <data name="SettingsSupportDevelopment" xml:space="preserve"><value>Finora के विकास का समर्थन करें</value></data>
+  <data name="SettingsLegalSupport" xml:space="preserve"><value>कानूनी और सहायता</value></data>
+  <data name="SettingsLicensesNotices" xml:space="preserve"><value>लाइसेंस / नोटिस</value></data>
+  <data name="SettingsLicenses" xml:space="preserve"><value>लाइसेंस</value></data>
+  <data name="SettingsOpenSupportRepository" xml:space="preserve"><value>सहायता रिपॉज़िटरी खोलें</value></data>
+  <data name="SettingsAboutFinora" xml:space="preserve"><value>Finora के बारे में</value></data>
+  <data name="SettingsRestartOnboarding" xml:space="preserve"><value>ऑनबोर्डिंग फिर शुरू करें</value></data>
+  <data name="SettingsRestartOnboardingDescription" xml:space="preserve"><value>ऑनबोर्डिंग पूर्ण स्थिति रीसेट करके गोपनीयता/लोकल-फर्स्ट सेटअप फिर खोलें</value></data>
+  <data name="SettingsLocalPremiumDemo" xml:space="preserve"><value>लोकल प्रीमियम डेमो मोड (स्टोर निर्भरता नहीं)</value></data>
+  <data name="SettingsLocalPremiumDemoDescription" xml:space="preserve"><value>नियत लोकल पात्रता डेमो व्यवहार सक्षम करें</value></data>
+  <data name="SettingsWipeAllData" xml:space="preserve"><value>सारा लोकल डेटा मिटाएँ</value></data>
+  <data name="SettingsWipeAllDataDescription" xml:space="preserve"><value>सभी लेन-देन, अकाउंट, बजट, लक्ष्य, आवर्ती नियम, इतिहास, अटैचमेंट और सेटिंग्स स्थायी रूप से साफ़ करें</value></data>
+  <data name="SettingsAbout" xml:space="preserve"><value>परिचय</value></data>
+  <data name="SettingsFooterNotice" xml:space="preserve"><value>Finora लोकल-फर्स्ट है। किसी अकाउंट की आवश्यकता नहीं है और वित्तीय रिकॉर्ड इसी डिवाइस पर रहते हैं, जब तक आप उन्हें स्पष्ट रूप से एक्सपोर्ट या साझा न करें।</value></data>
+  <data name="SettingsSetPinTitle" xml:space="preserve"><value>Finora PIN सेट करें</value></data>
+  <data name="SettingsSetPinMessage" xml:space="preserve"><value>4–12 अंकों वाला संख्यात्मक PIN चुनें। इसे केवल salted hash के रूप में संग्रहीत किया जाता है।</value></data>
+  <data name="SettingsSetPinAction" xml:space="preserve"><value>PIN सेट करें</value></data>
+  <data name="SettingsCancel" xml:space="preserve"><value>रद्द करें</value></data>
+  <data name="SettingsPinNotSetTitle" xml:space="preserve"><value>PIN सेट नहीं हुआ</value></data>
+  <data name="SettingsPinDigitsError" xml:space="preserve"><value>4 से 12 अंक उपयोग करें।</value></data>
+  <data name="SettingsOk" xml:space="preserve"><value>ठीक है</value></data>
+  <data name="SettingsPinLockTitle" xml:space="preserve"><value>PIN लॉक</value></data>
+  <data name="SettingsPinEnabled" xml:space="preserve"><value>PIN लॉक सक्षम किया गया।</value></data>
+  <data name="SettingsDisablePinTitle" xml:space="preserve"><value>PIN लॉक अक्षम करें</value></data>
+  <data name="SettingsDisablePinMessage" xml:space="preserve"><value>लोकल PIN लॉक हटाएँ? आपका वित्तीय डेटा इसी डिवाइस पर रहेगा।</value></data>
+  <data name="SettingsDisable" xml:space="preserve"><value>अक्षम करें</value></data>
+  <data name="SettingsKeep" xml:space="preserve"><value>रखें</value></data>
+  <data name="SettingsPinDisabled" xml:space="preserve"><value>PIN लॉक अक्षम किया गया।</value></data>
+  <data name="SettingsBiometricTitle" xml:space="preserve"><value>बायोमेट्रिक अनलॉक</value></data>
+  <data name="SettingsBiometricUnavailableNow" xml:space="preserve"><value>डिवाइस प्रमाणीकरण अभी उपलब्ध नहीं है।</value></data>
+  <data name="SettingsBiometricNeedsPin" xml:space="preserve"><value>पहले Finora PIN सेट करें। बायोमेट्रिक्स में PIN बैकअप हमेशा रहता है।</value></data>
+  <data name="SettingsBiometricAvailabilityFormat" xml:space="preserve"><value>डिवाइस प्रमाणीकरण उपलब्ध नहीं है ({0})।</value></data>
+  <data name="SettingsVerificationFailed" xml:space="preserve"><value>सत्यापन विफल रहा।</value></data>
+  <data name="SettingsBiometricEnabled" xml:space="preserve"><value>बायोमेट्रिक अनलॉक सक्षम किया गया।</value></data>
+  <data name="SettingsDisableBiometricTitle" xml:space="preserve"><value>बायोमेट्रिक अनलॉक अक्षम करें</value></data>
+  <data name="SettingsDisableBiometricMessage" xml:space="preserve"><value>Finora अनलॉक के लिए डिवाइस प्रमाणीकरण का उपयोग बंद करें? PIN बैकअप सक्षम रहेगा।</value></data>
+  <data name="SettingsBiometricDisabled" xml:space="preserve"><value>बायोमेट्रिक अनलॉक अक्षम किया गया।</value></data>
+  <data name="SettingsSensitiveScreenTitle" xml:space="preserve"><value>संवेदनशील स्क्रीन सुरक्षा</value></data>
+  <data name="SettingsSensitiveScreenUnsupported" xml:space="preserve"><value>यह प्लेटफ़ॉर्म समर्थित स्क्रीनशॉट / टास्क-पूर्वावलोकन सुरक्षा API उपलब्ध नहीं कराता।</value></data>
+  <data name="SettingsSensitiveScreenUpdateFailed" xml:space="preserve"><value>संवेदनशील स्क्रीन सुरक्षा अपडेट नहीं हो सकी।</value></data>
+  <data name="SettingsAutoLockPromptMessage" xml:space="preserve"><value>1 से 60 तक मान दर्ज करें।</value></data>
+  <data name="SettingsSave" xml:space="preserve"><value>सहेजें</value></data>
+  <data name="SettingsAutoLockTitle" xml:space="preserve"><value>ऑटो-लॉक</value></data>
+  <data name="SettingsAutoLockInvalid" xml:space="preserve"><value>1 से 60 तक पूर्ण संख्या उपयोग करें।</value></data>
+  <data name="SettingsWipeConfirmMessage" xml:space="preserve"><value>यह इस डिवाइस के सभी लोकल वित्तीय डेटा, ऐप कंटेनर में संग्रहीत बैकअप, अटैचमेंट, सुरक्षा सेटिंग्स और प्राथमिकताओं को स्थायी रूप से हटाता है। इसे पूर्ववत नहीं किया जा सकता।</value></data>
+  <data name="SettingsWipeEverything" xml:space="preserve"><value>सब कुछ मिटाएँ</value></data>
+  <data name="SettingsTypeWipeTitle" xml:space="preserve"><value>पुष्टि के लिए WIPE लिखें</value></data>
+  <data name="SettingsTypeWipeMessage" xml:space="preserve"><value>जारी रखने के लिए ठीक WIPE लिखें।</value></data>
+  <data name="SettingsContinue" xml:space="preserve"><value>जारी रखें</value></data>
+  <data name="SettingsCancelledTitle" xml:space="preserve"><value>रद्द किया गया</value></data>
+  <data name="SettingsWipeMismatch" xml:space="preserve"><value>पुष्टि पाठ मेल नहीं खाता। कुछ भी नहीं हटाया गया।</value></data>
+  <data name="SettingsResetTitle" xml:space="preserve"><value>Finora रीसेट</value></data>
+  <data name="SettingsResetComplete" xml:space="preserve"><value>सारा लोकल वित्तीय डेटा और प्राथमिकताएँ हटा दी गईं। Finora ऑनबोर्डिंग पर लौटेगा।</value></data>
+  <data name="SettingsRestartOnboardingMessage" xml:space="preserve"><value>गोपनीयता/लोकल-फर्स्ट सेटअप फिर खोलें? मौजूदा वित्तीय डेटा इसी डिवाइस पर रहेगा।</value></data>
+  <data name="SettingsRestart" xml:space="preserve"><value>फिर शुरू करें</value></data>
+  <data name="SettingsLicensesMessage" xml:space="preserve"><value>Finora ओपन-सोर्स .NET, .NET MAUI, EF Core और SQLite-संबंधित घटकों का उनके संबंधित लाइसेंस के अंतर्गत उपयोग करता है। पूर्ण निर्भरता नोटिस के लिए रिपॉज़िटरी की NOTICES फ़ाइल देखें।</value></data>
+  <data name="SettingsAboutMessageFormat" xml:space="preserve"><value>{0}\n\nबिना अनिवार्य अकाउंट के लोकल-फर्स्ट व्यक्तिगत वित्त ट्रैकिंग। वित्तीय रिकॉर्ड इसी डिवाइस पर रहते हैं जब तक आप स्पष्ट रूप से एक्सपोर्ट या बैकअप साझा न करें।\n\nMade by the Sanskar</value></data>
+  <data name="SettingsOpenLinkTitle" xml:space="preserve"><value>लिंक खोलें</value></data>
+  <data name="SettingsOpenLinkFailed" xml:space="preserve"><value>यह लिंक इस डिवाइस पर नहीं खुल सका।</value></data>
+  <data name="SettingsBmcLinkFailed" xml:space="preserve"><value>Buy Me a Coffee सहायता लिंक इस डिवाइस पर नहीं खुल सका।</value></data>
+  <data name="SettingsPrivacyLinkFailed" xml:space="preserve"><value>गोपनीयता दस्तावेज़ इस डिवाइस पर नहीं खुल सका।</value></data>
+  <data name="SettingsTermsLinkFailed" xml:space="preserve"><value>शर्तों का दस्तावेज़ इस डिवाइस पर नहीं खुल सका।</value></data>
+  <data name="SettingsSupportRepoLinkFailed" xml:space="preserve"><value>सहायता रिपॉज़िटरी इस डिवाइस पर नहीं खुल सकी।</value></data>
+  <data name="SettingsBackupReminderTimeTitle" xml:space="preserve"><value>बैकअप रिमाइंडर समय</value></data>
+  <data name="SettingsBackupReminderTimePrompt" xml:space="preserve"><value>स्थानीय समय HH:mm में दर्ज करें (उदाहरण 18:30)।</value></data>
+  <data name="SettingsBackupReminderTimeInvalid" xml:space="preserve"><value>18:30 जैसा 24-घंटे का मान उपयोग करें।</value></data>
+</root>
