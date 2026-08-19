@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SettingsDefaultCurrencyCodeDescription" xml:space="preserve"><value>Default ISO-like currency code</value></data>
+  <data name="SettingsFormattingLocaleDescription" xml:space="preserve"><value>BCP-47 locale tag used for number and date formatting</value></data>
+  <data name="SettingsNumberDatePreviewDescription" xml:space="preserve"><value>Number and date formatting preview</value></data>
+  <data name="SettingsBackupReminderTime" xml:space="preserve"><value>Backup reminder time</value></data>
+  <data name="SettingsRequestSyncNotifications" xml:space="preserve"><value>Request / sync notifications</value></data>
+  <data name="SettingsCleanupReceipts" xml:space="preserve"><value>Clean up stale receipt copies</value></data>
+  <data name="SettingsEncryptedBackupPassword" xml:space="preserve"><value>Encrypted backup password</value></data>
+  <data name="SettingsBackupPasswordNotice" xml:space="preserve"><value>Backup password is stored only in secure device storage. It is used to create and restore encrypted backups.</value></data>
+  <data name="SettingsBackupPassword" xml:space="preserve"><value>Backup password</value></data>
+  <data name="SettingsBmcSupportNotice" xml:space="preserve"><value>Buy Me a Coffee is an optional external way to support the project. Contributions do not unlock app features, change support priority, or replace store entitlement rules.</value></data>
+  <data name="SettingsOpenProjectRepository" xml:space="preserve"><value>Open Finora source repository</value></data>
+  <data name="SettingsContactFinora" xml:space="preserve"><value>Contact Finora</value></data>
+  <data name="SettingsSetUpdatePin" xml:space="preserve"><value>Set / update Finora PIN</value></data>
+  <data name="SettingsRemovePin" xml:space="preserve"><value>Remove Finora PIN</value></data>
+  <data name="SettingsCheckDataIntegrity" xml:space="preserve"><value>Check data integrity</value></data>
+  <data name="SettingsExportDiagnostics" xml:space="preserve"><value>Export diagnostics bundle</value></data>
+  <data name="SettingsDeleteAllFinanceData" xml:space="preserve"><value>Delete all finance data</value></data>
+  <data name="SettingsDeleteAllFinanceDataDescription" xml:space="preserve"><value>Permanently remove finance records while preserving onboarding, locale, theme, and security preferences</value></data>
+  <data name="SettingsDeveloperOptions" xml:space="preserve"><value>Developer options</value></data>
+  <data name="SettingsDeveloperNotice" xml:space="preserve"><value>Developer-only reset remains hidden until Developer options is explicitly enabled. Production recovery should prefer encrypted backup restore or the safer finance-data deletion action.</value></data>
+  <data name="SettingsDeveloperResetAll" xml:space="preserve"><value>Developer: reset entire local app state</value></data>
+  <data name="SettingsNoPinConfigured" xml:space="preserve"><value>No Finora PIN is currently configured.</value></data>
+  <data name="SettingsRemovePinTitle" xml:space="preserve"><value>Remove Finora PIN</value></data>
+  <data name="SettingsRemovePinMessage" xml:space="preserve"><value>Remove the local PIN lock? Financial data stays on this device.</value></data>
+  <data name="SettingsRemovePinAction" xml:space="preserve"><value>Remove PIN</value></data>
+  <data name="SettingsSecuritySettingFailed" xml:space="preserve"><value>Security setting failed</value></data>
+  <data name="SettingsDeleteFinanceTitle" xml:space="preserve"><value>Delete all finance data</value></data>
+  <data name="SettingsDeleteFinanceMessage" xml:space="preserve"><value>This deletes all finance records, attachments, local backups, recurring rules, and finance history while preserving onboarding, locale, theme, and security preferences. This cannot be undone.</value></data>
+  <data name="SettingsDeleteFinancePromptTitle" xml:space="preserve"><value>Type DELETE to confirm</value></data>
+  <data name="SettingsDeleteFinancePromptMessage" xml:space="preserve"><value>Type DELETE exactly to permanently remove local finance data.</value></data>
+  <data name="SettingsDeleteAction" xml:space="preserve"><value>Delete</value></data>
+  <data name="SettingsDeleteConfirmationMismatch" xml:space="preserve"><value>Confirmation text did not match. Nothing was deleted.</value></data>
+  <data name="SettingsFinanceDataDeletedTitle" xml:space="preserve"><value>Finance data deleted</value></data>
+  <data name="SettingsFinanceDataDeletedMessage" xml:space="preserve"><value>All finance records, local backups, attachments, diagnostics event history, and finance-specific preferences were removed. App appearance, locale, onboarding status, and PIN/biometric settings were preserved.</value></data>
+  <data name="SettingsDeleteFailedTitle" xml:space="preserve"><value>Delete failed</value></data>
+  <data name="SettingsDeveloperResetTitle" xml:space="preserve"><value>Developer reset</value></data>
+  <data name="SettingsDeveloperResetMessage" xml:space="preserve"><value>This is a developer-only destructive reset. It removes all local finance data, backups, attachments, security settings, onboarding status, and preferences on this device. This cannot be undone.</value></data>
+  <data name="SettingsResetEverything" xml:space="preserve"><value>Reset everything</value></data>
+  <data name="SettingsResetFailedTitle" xml:space="preserve"><value>Reset failed</value></data>
+  <data name="SettingsProjectRepoLinkFailed" xml:space="preserve"><value>The project repository could not be opened on this device.</value></data>
+  <data name="SettingsContactLinkFailed" xml:space="preserve"><value>The contact link could not be opened on this device.</value></data>
+  <data name="SettingsSystemRejectedLink" xml:space="preserve"><value>The system did not accept the external link.</value></data>
+</root>
