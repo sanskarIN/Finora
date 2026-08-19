@@ -199,24 +199,25 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             }
             catch
             {
-                Cleanup(AttachmentRoot);
-                if (Directory.Exists(rollbackDirectory)) Directory.Move(rollbackDirectory, AttachmentRoot);
-                rollbackDirectory = null;
+                if (!RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory))
+                    throw new IOException("Restore database commit failed and receipt rollback could not be placed back into live storage.");
                 throw;
             }
             return Result.Success();
         }
         catch (OperationCanceledException)
         {
+            _ = RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory);
             Cleanup(stagedDirectory);
-            Cleanup(rollbackDirectory);
             throw;
         }
         catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException or InvalidOperationException or OverflowException)
         {
+            var receiptsRestored = RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory);
             Cleanup(stagedDirectory);
-            Cleanup(rollbackDirectory);
-            return Result.Failure("Restore failed safely; the existing database was not committed with incomplete backup data.");
+            return receiptsRestored
+                ? Result.Failure("Restore failed safely; the existing database and receipt storage were not left in a partial restored state.")
+                : Result.Failure("Restore failed; the previous receipt directory was preserved in rollback storage because it could not be returned to the live path automatically.");
         }
         finally
         {
@@ -361,5 +362,5 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
     }
 
     private sealed record AttachmentBlob(Guid AttachmentId, byte[] Data);
-    private sealed record Snapshot(int SchemaVersion, DateTimeOffset CreatedAtUtc, List<Account> Accounts, List<FinanceTransaction> Transactions, List<TransactionSplit> Splits, List<Category> Categories, List<Tag> Tags, List<TransactionTag> TransactionTags, List<Budget> Budgets, List<BudgetPeriod> BudgetPeriods, List<SavingsGoal> Goals, List<GoalContribution> Contributions, List<RecurrenceRule> Rules, List<RecurrenceOccurrence> Occurrences, List<Attachment> Attachments, List<AttachmentBlob> AttachmentBlobs, List<TransactionRevision> Revisions, List<AccountReconciliation> Reconciliations, List<NotificationSchedule> Notifications, List<AppSetting> Settings);
+    private sealed record Snapshot(int SchemaVersion, DateTimeOffset CreatedAtUtc, List<Account> Accounts, List<FinanceTransaction> Transactions, List<TransactionSplit> Splits, List<Category> Categories, List<Tag> TransactionTags, List<Budget> Budgets, List<BudgetPeriod> BudgetPeriods, List<SavingsGoal> Goals, List<GoalContribution> Contributions, List<RecurrenceRule> Rules, List<RecurrenceOccurrence> Occurrences, List<Attachment> Attachments, List<AttachmentBlob> AttachmentBlobs, List<TransactionRevision> Revisions, List<AccountReconciliation> Reconciliations, List<NotificationSchedule> Notifications, List<AppSetting> Settings);
 }
