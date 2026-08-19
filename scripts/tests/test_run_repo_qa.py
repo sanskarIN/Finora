@@ -20,12 +20,16 @@ class RepositoryQaRunnerTests(unittest.TestCase):
     def test_dependency_free_steps_use_selected_python(self) -> None:
         steps = qa.dependency_free_steps("python-test")
 
-        self.assertEqual(2, len(steps))
+        self.assertEqual(3, len(steps))
         self.assertEqual("python-test", steps[0].command[0])
         self.assertIn("unittest", steps[0].command)
         self.assertEqual(
-            ("python-test", "scripts/validate_localization.py"),
+            ("python-test", "scripts/check_documentation_coverage.py"),
             steps[1].command,
+        )
+        self.assertEqual(
+            ("python-test", "scripts/validate_localization.py"),
+            steps[2].command,
         )
 
     def test_dotnet_step_is_opt_in(self) -> None:
@@ -40,8 +44,8 @@ class RepositoryQaRunnerTests(unittest.TestCase):
             python="py",
         )
 
-        self.assertEqual(2, len(without_dotnet))
-        self.assertEqual(3, len(with_dotnet))
+        self.assertEqual(3, len(without_dotnet))
+        self.assertEqual(4, len(with_dotnet))
         self.assertEqual(
             ("dotnet", "test", "-c", "Debug", "--nologo"),
             with_dotnet[-1].command,

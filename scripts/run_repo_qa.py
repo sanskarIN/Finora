@@ -9,7 +9,6 @@ This runner intentionally focuses on checks that can execute without restoring t
 from __future__ import annotations
 
 import argparse
-import os
 import shlex
 import subprocess
 import sys
@@ -84,6 +83,10 @@ def dependency_free_steps(python: str | None = None) -> list[QaStep]:
                 "test_*.py",
                 "-v",
             ),
+        ),
+        QaStep(
+            "Tracked-file documentation coverage",
+            (interpreter, "scripts/check_documentation_coverage.py"),
         ),
         QaStep(
             "Localization bundles and source references",

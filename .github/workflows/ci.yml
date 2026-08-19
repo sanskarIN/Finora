@@ -32,6 +32,8 @@ jobs:
           python-version: '3.13'
       - name: Validate repository structure
         run: python build/scripts/verify_structure.py
+      - name: Run dependency-free repository QA
+        run: python scripts/run_repo_qa.py
 
   core-tests:
     name: Core tests

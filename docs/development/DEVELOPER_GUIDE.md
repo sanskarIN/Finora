@@ -2,12 +2,14 @@
 
 This guide is for contributors working on the current Finora 0.2.0 local-first source line.
 
+For quick navigation use `docs/development/CODE_MAP.md`. For exhaustive tracked-file ownership and change impact use `docs/development/REPOSITORY_FILE_REFERENCE.md`.
+
 ## 1. Prerequisites
 
 Common development tools:
 
 - Git;
-- Python 3 for structural preflight;
+- Python 3 for dependency-free structural/repository QA;
 - .NET 10 SDK compatible with the declared target frameworks;
 - .NET MAUI workloads for native app builds;
 - platform SDK/tooling for the target being built.
@@ -29,11 +31,14 @@ cd Finora
 
 ## 3. First verification
 
-Run the dependency-free structural preflight first:
+Run the dependency-free structural and repository QA first:
 
 ```bash
 python build/scripts/verify_structure.py
+python scripts/run_repo_qa.py
 ```
+
+The repository QA runner executes Python developer-tool tests, tracked-file documentation coverage, and localization validation. The documentation coverage step compares `git ls-files` with `docs/development/REPOSITORY_FILE_REFERENCE.md`.
 
 Then use the host wrapper:
 
@@ -224,9 +229,9 @@ Choose the lowest appropriate layer:
 
 Every financial correctness bug should receive a regression test at the layer that can reproduce it.
 
-## 19. Structural preflight
+## 19. Structural and repository QA
 
-If adding a repository invariant that can be checked without .NET, extend `build/scripts/verify_structure.py` carefully.
+If adding a repository invariant that can be checked without .NET, extend `build/scripts/verify_structure.py` carefully when it belongs to structural/privacy/source-contract validation.
 
 Good structural checks include:
 
@@ -241,7 +246,31 @@ Good structural checks include:
 
 Do not make structural preflight pretend to compile C# or prove native behavior.
 
-## 20. Documentation requirement
+Repository-wide dependency-free checks belong in `scripts/run_repo_qa.py`. The runner currently includes:
+
+- all Python tool unit tests under `scripts/tests/`;
+- `scripts/check_documentation_coverage.py`;
+- `scripts/validate_localization.py`.
+
+The primary Finora CI structural-preflight job runs both `verify_structure.py` and `run_repo_qa.py` before expensive downstream jobs.
+
+## 20. Tracked-file documentation ownership
+
+Every `git ls-files` path must be represented by the repository file reference.
+
+The reference allows exact files and meaningful narrow directories. Broad declarations such as `src/`, `docs/`, `tests/`, `scripts/`, or `.github/` are rejected so the check cannot be bypassed with a catch-all.
+
+When adding, moving, or deleting a file:
+
+1. place it in the narrowest correct area;
+2. verify the area's responsibility/change-impact description remains truthful;
+3. update the reference when the responsibility changed or a new area is needed;
+4. run `python scripts/check_documentation_coverage.py`;
+5. run the complete dependency-free repository QA.
+
+Coverage means documented repository ownership. It is not proof of runtime execution, native behavior, or store readiness.
+
+## 21. Documentation requirement
 
 A feature is not complete when code alone changes. Update relevant documentation:
 
@@ -254,9 +283,10 @@ A feature is not complete when code alone changes. Update relevant documentation
 - test plan;
 - release checklist/store readiness;
 - changelog/status;
-- `what_changed.md` as detailed ledger.
+- `what_changed.md` as detailed ledger;
+- repository file reference when tracked-file ownership/change impact changes.
 
-## 21. Commit hygiene
+## 22. Commit hygiene
 
 Use focused imperative/conventional commit messages, for example:
 
@@ -267,7 +297,7 @@ Use focused imperative/conventional commit messages, for example:
 
 Do not bundle unrelated finance, platform, migration, and documentation changes into one opaque commit when they can be separated.
 
-## 22. Local Git email
+## 23. Local Git email
 
 When committing locally and the intended identity is the project contact:
 
@@ -277,11 +307,13 @@ git config user.email "sanskarin@outlook.in"
 
 The ChatGPT GitHub connector cannot force author/committer email fields, so connector-created commits must not be falsely claimed to use that email.
 
-## 23. Pull request/review checklist
+## 24. Pull request/review checklist
 
 Before requesting review:
 
 - structural preflight passes;
+- dependency-free repository QA passes;
+- tracked-file documentation coverage passes;
 - relevant tests pass;
 - native builds tested where change is target-specific;
 - no secrets/private data added;
@@ -292,6 +324,6 @@ Before requesting review:
 - docs updated;
 - release notes/checklist updated when behavior changes.
 
-## 24. Release honesty
+## 25. Release honesty
 
-Do not mark Android/Windows/iOS/Mac Catalyst as validated based on source inspection or an empty classic commit-status response. Retain actual CI/build/device/store evidence for release.
+Do not mark Android/Windows/iOS/Mac Catalyst as validated based on source inspection, documentation coverage, or an empty classic commit-status response. Retain actual CI/build/device/store evidence for release.

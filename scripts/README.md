@@ -6,7 +6,7 @@ The `scripts/` directory contains dependency-light helpers for repeatable develo
 
 ### `run_repo_qa.py`
 
-Runs the dependency-free Python test suite plus localization validation from one command.
+Runs the dependency-free Python tool tests, tracked-file documentation coverage, and localization validation from one command.
 
 ```bash
 python scripts/run_repo_qa.py
@@ -19,6 +19,28 @@ python scripts/run_repo_qa.py --include-dotnet
 ```
 
 Guide: `docs/testing/REPOSITORY_QA.md`
+
+### `check_documentation_coverage.py`
+
+Compares `docs/development/REPOSITORY_FILE_REFERENCE.md` with the exact tracked-file set returned by `git ls-files`.
+
+It fails when:
+
+- a tracked file has no documented responsibility;
+- an inventory entry no longer covers a tracked file; or
+- the reference uses an overly broad one-component directory catch-all such as `src/`, `docs/`, or `tests/`.
+
+```bash
+python scripts/check_documentation_coverage.py
+```
+
+Print only uncovered paths:
+
+```bash
+python scripts/check_documentation_coverage.py --list-missing
+```
+
+Reference: `docs/development/REPOSITORY_FILE_REFERENCE.md`
 
 ### `check_release_readiness.py`
 
@@ -138,7 +160,7 @@ All Python tool tests live under `scripts/tests/` and can be run together:
 python -m unittest discover -s scripts/tests -p "test_*.py" -v
 ```
 
-Each tool also has focused workflow coverage under `.github/workflows/` where appropriate.
+Each tool also has focused workflow coverage under `.github/workflows/` where appropriate. The primary Finora CI structural-preflight job also runs `scripts/run_repo_qa.py`, which includes the tracked-file documentation coverage check.
 
 ## Privacy rules for developer tooling
 
@@ -147,6 +169,7 @@ Each tool also has focused workflow coverage under `.github/workflows/` where ap
 - Do not put real account names, transaction descriptions, balances, or other private data in CI arguments/logs.
 - Artifact validators intentionally report structural metadata rather than contents.
 - Native smoke harnesses intentionally avoid screenshots/full hierarchy dumps by default.
+- Documentation coverage reads tracked path names only; it does not open or publish user finance artifacts.
 
 ## Scope boundary
 
