@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="ReportStartDateDescription" xml:space="preserve"><value>Report start date</value></data>
+  <data name="ReportEndDateDescription" xml:space="preserve"><value>Report end date</value></data>
+  <data name="ReportRefresh" xml:space="preserve"><value>Refresh reports</value></data>
+  <data name="ReportCurrencyBehaviorDescription" xml:space="preserve"><value>Reporting currency, privacy, and multi-currency behavior</value></data>
+  <data name="ReportSpendingByCategory" xml:space="preserve"><value>Spending by category</value></data>
+  <data name="ReportIncomeVersusExpense" xml:space="preserve"><value>Income versus expense</value></data>
+  <data name="ReportMonthlyNetComparison" xml:space="preserve"><value>12-month net-change comparison</value></data>
+  <data name="ReportMonthlyChartDescription" xml:space="preserve"><value>Monthly net-change comparison chart; equivalent values follow in a list</value></data>
+  <data name="ReportNoMonthlyData" xml:space="preserve"><value>No monthly comparison data.</value></data>
+  <data name="ReportYearlyNetComparison" xml:space="preserve"><value>5-year net-change comparison</value></data>
+  <data name="ReportYearlyChartDescription" xml:space="preserve"><value>Yearly net-change comparison chart; equivalent values follow in a list</value></data>
+  <data name="ReportNoYearlyData" xml:space="preserve"><value>No yearly comparison data.</value></data>
+  <data name="ReportMerchantPayee" xml:space="preserve"><value>Merchant / payee report</value></data>
+  <data name="ReportNoMerchantData" xml:space="preserve"><value>No merchant data.</value></data>
+  <data name="ReportSpent" xml:space="preserve"><value>Spent</value></data>
+  <data name="ReportBudgetPerformance" xml:space="preserve"><value>Budget performance</value></data>
+  <data name="ReportNoActiveBudgets" xml:space="preserve"><value>No active budgets for the selected date.</value></data>
+  <data name="ReportPlanned" xml:space="preserve"><value>Planned</value></data>
+  <data name="ReportActual" xml:space="preserve"><value>Actual</value></data>
+  <data name="ReportVariance" xml:space="preserve"><value>Variance</value></data>
+  <data name="ReportRecurringObligations" xml:space="preserve"><value>Recurring obligations</value></data>
+  <data name="ReportNoRecurringObligations" xml:space="preserve"><value>No recurring obligations.</value></data>
+  <data name="ReportStatus" xml:space="preserve"><value>Status:</value></data>
+  <data name="ReportNextDue" xml:space="preserve"><value>Next due:</value></data>
+  <data name="ReportEnd" xml:space="preserve"><value>End:</value></data>
+  <data name="ReportSavingsProgress" xml:space="preserve"><value>Savings progress</value></data>
+  <data name="ReportNoSavingsGoals" xml:space="preserve"><value>No savings goals.</value></data>
+  <data name="ReportTargetDate" xml:space="preserve"><value>Target date:</value></data>
+  <data name="ReportCurrent" xml:space="preserve"><value>Current:</value></data>
+  <data name="ReportTarget" xml:space="preserve"><value>Target:</value></data>
+  <data name="ReportAccountBalanceTrends" xml:space="preserve"><value>Account balance trends</value></data>
+  <data name="ReportNoAccountTrendData" xml:space="preserve"><value>No account trend data.</value></data>
+  <data name="ReportExportCsv" xml:space="preserve"><value>Export CSV</value></data>
+  <data name="ReportExportPdf" xml:space="preserve"><value>Export PDF</value></data>
+  <data name="ReportChartAccessibilityNotice" xml:space="preserve"><value>Quantitative charts are hidden when privacy mode hides amounts. Otherwise, every chart has equivalent text or tabular values and signed charts use a true zero baseline.</value></data>
+  <data name="ReportEndBeforeStart" xml:space="preserve"><value>The report end date cannot be earlier than the start date.</value></data>
+  <data name="ReportCurrencyPrivacyFormat" xml:space="preserve"><value>Report amounts and quantitative charts are hidden by privacy mode. Aggregated reports use {0}; rows retain their own currencies and Finora does not silently convert between currencies.</value></data>
+  <data name="ReportCurrencyNormalFormat" xml:space="preserve"><value>Aggregated spending, income, merchant, monthly, and yearly comparisons use {0}. Account, budget, recurring, and savings rows retain their own currencies; Finora does not silently convert between currencies.</value></data>
+  <data name="ReportNoNextDueDate" xml:space="preserve"><value>No next due date</value></data>
+  <data name="ReportNoEndDate" xml:space="preserve"><value>No end date</value></data>
+  <data name="ReportNoTargetDate" xml:space="preserve"><value>No target date</value></data>
+  <data name="ReportCompleted" xml:space="preserve"><value>Completed</value></data>
+  <data name="ReportInProgress" xml:space="preserve"><value>In progress</value></data>
+  <data name="ReportPrivacySummaryFormat" xml:space="preserve"><value>{0:d}–{1:d}: monetary values hidden by privacy mode.</value></data>
+  <data name="ReportSummaryFormat" xml:space="preserve"><value>{0:d}–{1:d}: income {2}, spending {3}, net {4}.</value></data>
+  <data name="ReportNoCategorySpending" xml:space="preserve"><value>No category spending exists for this period.</value></data>
+  <data name="ReportCategoryPrivacy" xml:space="preserve"><value>Category spending amounts are hidden by privacy mode.</value></data>
+  <data name="ReportCategorySummaryPrefix" xml:space="preserve"><value>Spending by category: </value></data>
+  <data name="ReportIncomeExpensePrivacy" xml:space="preserve"><value>Income and expense amounts are hidden by privacy mode.</value></data>
+  <data name="ReportIncomeExpenseSummaryFormat" xml:space="preserve"><value>Income {0}; expense {1}.</value></data>
+  <data name="ReportIncomeLabel" xml:space="preserve"><value>Income</value></data>
+  <data name="ReportExpenseLabel" xml:space="preserve"><value>Expense</value></data>
+  <data name="ReportTransactionTypeExpense" xml:space="preserve"><value>Expense</value></data>
+  <data name="ReportTransactionTypeIncome" xml:space="preserve"><value>Income</value></data>
+  <data name="ReportTransactionTypeTransfer" xml:space="preserve"><value>Transfer</value></data>
+  <data name="ReportTransactionTypeRefund" xml:space="preserve"><value>Refund</value></data>
+  <data name="ReportTransactionTypeAdjustment" xml:space="preserve"><value>Adjustment</value></data>
+  <data name="ReportRecurrenceStatusActive" xml:space="preserve"><value>Active</value></data>
+  <data name="ReportRecurrenceStatusPaused" xml:space="preserve"><value>Paused</value></data>
+  <data name="ReportRecurrenceStatusArchived" xml:space="preserve"><value>Archived</value></data>
+</root>
