@@ -67,4 +67,34 @@
   <data name="TransferAmountDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में स्थानांतरण राशि</value></data>
   <data name="OptionalNote" xml:space="preserve"><value>वैकल्पिक नोट</value></data>
   <data name="Transfer" xml:space="preserve"><value>स्थानांतरित करें</value></data>
+  <data name="HideShow" xml:space="preserve"><value>छिपाएँ / दिखाएँ</value></data>
+  <data name="ToggleAmountPrivacyDescription" xml:space="preserve"><value>राशि गोपनीयता मोड बदलें</value></data>
+  <data name="DashboardPeriod" xml:space="preserve"><value>डैशबोर्ड अवधि</value></data>
+  <data name="ChoosePeriod" xml:space="preserve"><value>अवधि चुनें</value></data>
+  <data name="DashboardPeriodPickerDescription" xml:space="preserve"><value>आय, खर्च, बजट, हाल के लेन-देन और श्रेणी डैशबोर्ड कार्ड के लिए तारीख की अवधि चुनें</value></data>
+  <data name="Apply" xml:space="preserve"><value>लागू करें</value></data>
+  <data name="ApplyDashboardPeriodDescription" xml:space="preserve"><value>चुनी हुई डैशबोर्ड अवधि लागू करें</value></data>
+  <data name="DashboardCurrencyDescription" xml:space="preserve"><value>डैशबोर्ड रिपोर्टिंग मुद्रा की जानकारी</value></data>
+  <data name="ConfigureDashboardCards" xml:space="preserve"><value>डैशबोर्ड कार्ड कॉन्फ़िगर करें</value></data>
+  <data name="DashboardCards" xml:space="preserve"><value>डैशबोर्ड कार्ड</value></data>
+  <data name="CurrentBalance" xml:space="preserve"><value>वर्तमान शेष</value></data>
+  <data name="IncomeSpendingNetChange" xml:space="preserve"><value>आय, खर्च और शुद्ध बदलाव</value></data>
+  <data name="RemainingBudget" xml:space="preserve"><value>शेष बजट</value></data>
+  <data name="UpcomingBillsRecurring" xml:space="preserve"><value>आगामी बिल और आवर्ती मदें</value></data>
+  <data name="TopSpendingCategories" xml:space="preserve"><value>सबसे अधिक खर्च वाली श्रेणियाँ</value></data>
+  <data name="SavingsGoals" xml:space="preserve"><value>बचत लक्ष्य</value></data>
+  <data name="RecentTransactions" xml:space="preserve"><value>हाल के लेन-देन</value></data>
+  <data name="CashFlowTrend" xml:space="preserve"><value>नकदी प्रवाह रुझान</value></data>
+  <data name="Income" xml:space="preserve"><value>आय</value></data>
+  <data name="Spending" xml:space="preserve"><value>खर्च</value></data>
+  <data name="NetChange" xml:space="preserve"><value>शुद्ध बदलाव</value></data>
+  <data name="BudgetLeft" xml:space="preserve"><value>बचा बजट</value></data>
+  <data name="Reports" xml:space="preserve"><value>रिपोर्ट</value></data>
+  <data name="Recurring" xml:space="preserve"><value>आवर्ती</value></data>
+  <data name="NoUpcomingRecurring30Days" xml:space="preserve"><value>अगले 30 दिनों में कोई आगामी आवर्ती मद नहीं है।</value></data>
+  <data name="NoSavingsGoalsYet" xml:space="preserve"><value>अभी कोई बचत लक्ष्य नहीं है।</value></data>
+  <data name="CashFlowTrendSixMonths" xml:space="preserve"><value>नकदी प्रवाह रुझान (पिछले 6 महीने)</value></data>
+  <data name="NoTransactionsSelectedPeriod" xml:space="preserve"><value>चुनी हुई अवधि में कोई लेन-देन नहीं है।</value></data>
+  <data name="TopCategories" xml:space="preserve"><value>शीर्ष श्रेणियाँ</value></data>
+  <data name="CategorizedSpendingSelectedPeriod" xml:space="preserve"><value>चुनी हुई अवधि का श्रेणीबद्ध खर्च यहाँ दिखाई देगा।</value></data>
 </root>
