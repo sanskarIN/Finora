@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="AccountDetails" xml:space="preserve"><value>Account details</value></data>
+  <data name="AccountDetailsName" xml:space="preserve"><value>Name</value></data>
+  <data name="AccountDetailsOptionalColor" xml:space="preserve"><value>Optional color label</value></data>
+  <data name="AccountDetailsCreditLimit" xml:space="preserve"><value>Credit limit</value></data>
+  <data name="AccountDetailsCreditLimitDescription" xml:space="preserve"><value>Credit limit in major currency units</value></data>
+  <data name="AccountDetailsBillingDay" xml:space="preserve"><value>Billing day (1–31)</value></data>
+  <data name="AccountDetailsState" xml:space="preserve"><value>State</value></data>
+  <data name="AccountDetailsSave" xml:space="preserve"><value>Save account</value></data>
+  <data name="AccountDetailsArchiveRestore" xml:space="preserve"><value>Archive / restore account</value></data>
+  <data name="AccountDetailsReconcile" xml:space="preserve"><value>Reconcile this account</value></data>
+  <data name="AccountDetailsTransactions" xml:space="preserve"><value>Account transactions</value></data>
+  <data name="AccountDetailsNoTransactions" xml:space="preserve"><value>No transactions.</value></data>
+  <data name="AccountDetailsSummaryFormat" xml:space="preserve"><value>Current balance: {0} · {1} transaction(s)</value></data>
+  <data name="AccountDetailsLastReconciledFormat" xml:space="preserve"><value> · Last reconciled {0:g}</value></data>
+  <data name="AccountDetailsOpeningBalanceInvalid" xml:space="preserve"><value>Enter a valid opening balance.</value></data>
+  <data name="AccountDetailsCreditLimitInvalid" xml:space="preserve"><value>Enter a valid non-negative credit limit.</value></data>
+  <data name="AccountDetailsSaved" xml:space="preserve"><value>Account settings saved.</value></data>
+  <data name="AccountDetailsRestored" xml:space="preserve"><value>Account restored.</value></data>
+  <data name="AccountDetailsArchived" xml:space="preserve"><value>Account archived. Existing transactions were preserved.</value></data>
+</root>
