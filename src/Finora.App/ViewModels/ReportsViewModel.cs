@@ -49,7 +49,7 @@ public sealed class ReportsViewModel : ViewModelBase
     public Task LoadAsync() => RunAsync(async () =>
     {
         if (ToDate.Date < FromDate.Date)
-            throw new InvalidOperationException("The report end date cannot be earlier than the start date.");
+            throw new InvalidOperationException(L("ReportEndBeforeStart"));
 
         AmountsHidden = _settings.PrivacyMode || _settings.HideAmountsOnLaunch;
         var selectedRange = LocalDateRange.ToUtc(DateOnly.FromDateTime(FromDate), DateOnly.FromDateTime(ToDate), TimeZoneInfo.Local);
@@ -57,8 +57,8 @@ public sealed class ReportsViewModel : ViewModelBase
         var to = selectedRange.ToExclusiveUtc;
         var currency = _settings.DefaultCurrency;
         ReportingCurrencyNotice = AmountsHidden
-            ? $"Report amounts and quantitative charts are hidden by privacy mode. Aggregated reports use {currency}; rows retain their own currencies and Finora does not silently convert between currencies."
-            : $"Aggregated spending, income, merchant, monthly, and yearly comparisons use {currency}. Account, budget, recurring, and savings rows retain their own currencies; Finora does not silently convert between currencies.";
+            ? Format("ReportCurrencyPrivacyFormat", currency)
+            : Format("ReportCurrencyNormalFormat", currency);
 
         var category = await _reports.GetCategorySpendingAsync(from, to, currency);
         var incomeExpense = await _reports.GetIncomeExpenseAsync(from, to, currency);
@@ -71,16 +71,20 @@ public sealed class ReportsViewModel : ViewModelBase
         var savings = await _reports.GetSavingsProgressAsync();
 
         Replace(CategoryPoints, AmountsHidden ? Array.Empty<ReportPoint>() : category.Points);
-        Replace(IncomeExpensePoints, AmountsHidden ? Array.Empty<ReportPoint>() : incomeExpense.Points);
+        Replace(
+            IncomeExpensePoints,
+            AmountsHidden
+                ? Array.Empty<ReportPoint>()
+                : incomeExpense.Points.Select(item => new ReportPoint(LocalizeIncomeExpenseLabel(item.Label), item.ValueMinor)));
         IEnumerable<ReportPoint> monthlyPoints = monthly.Select(item => new ReportPoint($"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}", item.NetMinor));
         Replace(MonthlyNetPoints, AmountsHidden ? Array.Empty<ReportPoint>() : monthlyPoints);
         Replace(MonthlyNetRows, monthly.Select(item => new ReportDisplayPoint(
             $"{CultureInfo.CurrentCulture.DateTimeFormat.GetAbbreviatedMonthName(item.Month)} {item.Year}",
             DisplayMoney(item.NetMinor, currency))));
-        IEnumerable<ReportPoint> yearlyPoints = yearly.Select(item => new ReportPoint(item.Year.ToString(CultureInfo.InvariantCulture), item.NetMinor));
+        IEnumerable<ReportPoint> yearlyPoints = yearly.Select(item => new ReportPoint(item.Year.ToString(CultureInfo.CurrentCulture), item.NetMinor));
         Replace(YearlyNetPoints, AmountsHidden ? Array.Empty<ReportPoint>() : yearlyPoints);
         Replace(YearlyNetRows, yearly.Select(item => new ReportDisplayPoint(
-            item.Year.ToString(CultureInfo.InvariantCulture),
+            item.Year.ToString(CultureInfo.CurrentCulture),
             DisplayMoney(item.NetMinor, currency))));
         Replace(MerchantRows, merchants.Select(item => new MerchantReportDisplayItem(
             item.Merchant,
@@ -102,38 +106,66 @@ public sealed class ReportsViewModel : ViewModelBase
                 DisplayMoney(point.BalanceMinor, series.Currency))).ToList())));
         Replace(RecurringRows, recurring.Select(item => new RecurringObligationDisplayItem(
             item.Name,
-            item.Type.ToString(),
-            item.Status.ToString(),
+            LocalizeTransactionType(item.Type),
+            LocalizeRecurrenceStatus(item.Status),
             DisplayMoney(item.AmountMinor, item.Currency),
             item.Currency,
-            item.NextDueOn?.ToString("d", CultureInfo.CurrentCulture) ?? "No next due date",
-            item.EndsOn?.ToString("d", CultureInfo.CurrentCulture) ?? "No end date")));
+            item.NextDueOn?.ToString("d", CultureInfo.CurrentCulture) ?? L("ReportNoNextDueDate"),
+            item.EndsOn?.ToString("d", CultureInfo.CurrentCulture) ?? L("ReportNoEndDate"))));
         Replace(SavingsRows, savings.Select(item => new SavingsProgressDisplayItem(
             item.Name,
             item.Currency,
             DisplayMoney(item.CurrentMinor, item.Currency),
             DisplayMoney(item.TargetMinor, item.Currency),
             $"{Math.Clamp(item.Progress * 100d, 0d, 100d):0}%",
-            item.TargetDate?.ToString("d", CultureInfo.CurrentCulture) ?? "No target date",
-            item.IsCompleted ? "Completed" : "In progress")));
+            item.TargetDate?.ToString("d", CultureInfo.CurrentCulture) ?? L("ReportNoTargetDate"),
+            item.IsCompleted ? L("ReportCompleted") : L("ReportInProgress"))));
 
         var income = incomeExpense.Points.FirstOrDefault(item => string.Equals(item.Label, "Income", StringComparison.OrdinalIgnoreCase))?.ValueMinor ?? 0;
         var expense = incomeExpense.Points.FirstOrDefault(item => string.Equals(item.Label, "Expense", StringComparison.OrdinalIgnoreCase))?.ValueMinor ?? 0;
         Summary = AmountsHidden
-            ? $"{FromDate:d}–{ToDate:d}: monetary values hidden by privacy mode."
-            : $"{FromDate:d}–{ToDate:d}: income {DisplayMoney(income, currency)}, spending {DisplayMoney(expense, currency)}, net {DisplayMoney(checked(income - expense), currency)}.";
+            ? Format("ReportPrivacySummaryFormat", FromDate, ToDate)
+            : Format("ReportSummaryFormat", FromDate, ToDate, DisplayMoney(income, currency), DisplayMoney(expense, currency), DisplayMoney(checked(income - expense), currency));
         CategorySummary = category.Points.Count == 0
-            ? "No category spending exists for this period."
+            ? L("ReportNoCategorySpending")
             : AmountsHidden
-                ? "Category spending amounts are hidden by privacy mode."
-                : "Spending by category: " + string.Join("; ", category.Points.Select(item => $"{item.Label} {DisplayMoney(item.ValueMinor, currency)}")) + ".";
+                ? L("ReportCategoryPrivacy")
+                : L("ReportCategorySummaryPrefix") + string.Join("; ", category.Points.Select(item => $"{item.Label} {DisplayMoney(item.ValueMinor, currency)}")) + ".";
         IncomeExpenseSummary = AmountsHidden
-            ? "Income and expense amounts are hidden by privacy mode."
-            : $"Income {DisplayMoney(income, currency)}; expense {DisplayMoney(expense, currency)}.";
+            ? L("ReportIncomeExpensePrivacy")
+            : Format("ReportIncomeExpenseSummaryFormat", DisplayMoney(income, currency), DisplayMoney(expense, currency));
     });
 
     private string DisplayMoney(long minor, string currency)
         => AmountsHidden ? "••••" : new Money(minor, currency).Format();
+
+    private static string LocalizeIncomeExpenseLabel(string label)
+        => string.Equals(label, "Income", StringComparison.OrdinalIgnoreCase)
+            ? L("ReportIncomeLabel")
+            : string.Equals(label, "Expense", StringComparison.OrdinalIgnoreCase)
+                ? L("ReportExpenseLabel")
+                : label;
+
+    private static string LocalizeTransactionType(TransactionType type) => type switch
+    {
+        TransactionType.Expense => L("ReportTransactionTypeExpense"),
+        TransactionType.Income => L("ReportTransactionTypeIncome"),
+        TransactionType.Transfer => L("ReportTransactionTypeTransfer"),
+        TransactionType.Refund => L("ReportTransactionTypeRefund"),
+        TransactionType.Adjustment => L("ReportTransactionTypeAdjustment"),
+        _ => type.ToString()
+    };
+
+    private static string LocalizeRecurrenceStatus(RecurrenceStatus status) => status switch
+    {
+        RecurrenceStatus.Active => L("ReportRecurrenceStatusActive"),
+        RecurrenceStatus.Paused => L("ReportRecurrenceStatusPaused"),
+        RecurrenceStatus.Archived => L("ReportRecurrenceStatusArchived"),
+        _ => status.ToString()
+    };
+
+    private static string L(string key) => LocalizationResources.Get(key);
+    private static string Format(string key, params object[] values) => string.Format(CultureInfo.CurrentCulture, L(key), values);
 
     private static void Replace<T>(ObservableCollection<T> target, IEnumerable<T> values)
     {
