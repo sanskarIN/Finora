@@ -5,26 +5,26 @@
              xmlns:local="clr-namespace:Finora.App"
              xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
              x:DataType="local:CategoriesTagsViewModel"
-             Title="Categories &amp; Tags">
+             Title="{DynamicResource Text.CategoriesTagsTitle}">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
-    <Label Text="Categories &amp; tags" Style="{StaticResource Title}" />
-    <Label Text="Categories" Style="{StaticResource SectionTitle}" />
-    <Picker Title="Selected category" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
-    <Entry Placeholder="Category name" Text="{Binding CategoryName}" MaxLength="120" />
-    <Entry Placeholder="Icon name" Text="{Binding CategoryIcon}" MaxLength="60" />
-    <Picker Title="Parent category (optional)" ItemsSource="{Binding ActiveCategories}" SelectedItem="{Binding ParentCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Create category" Command="{Binding NewCategoryCommand}" /><Button Grid.Column="1" Text="Update selected" Command="{Binding UpdateCategoryCommand}" /></Grid>
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Move up" Command="{Binding MoveUpCommand}" /><Button Grid.Column="1" Text="Move down" Command="{Binding MoveDownCommand}" /></Grid>
-    <Picker Title="Merge/reassign target" ItemsSource="{Binding ActiveCategories}" SelectedItem="{Binding MergeTarget}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
-    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8"><Button Text="Merge" Command="{Binding MergeCategoryCommand}" /><Button Grid.Column="1" Text="Archive" Command="{Binding ArchiveCategoryCommand}" /><Button Grid.Column="2" Text="Restore" Command="{Binding RestoreCategoryCommand}" /></Grid>
-    <CollectionView ItemsSource="{Binding Categories}" EmptyView="No categories." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:CategoryInfo"><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding ParentName, StringFormat='Parent: {0}'}" FontSize="12" /></VerticalStackLayout><Label Grid.Column="1" Text="{Binding IsArchived, StringFormat='Archived: {0}'}" /></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-    <Label Text="Tags" Style="{StaticResource SectionTitle}" />
-    <Picker Title="Selected tag" ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:TagInfo" /></Picker.ItemDisplayBinding></Picker>
-    <Entry Placeholder="Tag name" Text="{Binding TagName}" MaxLength="80" />
-    <Entry Placeholder="Optional color label" Text="{Binding TagColor}" MaxLength="32" />
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Create tag" Command="{Binding NewTagCommand}" /><Button Grid.Column="1" Text="Update selected" Command="{Binding UpdateTagCommand}" /></Grid>
-    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="Archive tag" Command="{Binding ArchiveTagCommand}" /><Button Grid.Column="1" Text="Restore tag" Command="{Binding RestoreTagCommand}" /></Grid>
-    <CollectionView ItemsSource="{Binding Tags}" EmptyView="No tags." HeightRequest="220"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:TagInfo"><Grid Padding="10" ColumnDefinitions="*,Auto"><Label Text="{Binding Name}" /><Label Grid.Column="1" Text="{Binding TransactionCount, StringFormat='{0} transaction(s)'}" /></Grid></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Label Text="{DynamicResource Text.CategoriesTagsTitle}" Style="{StaticResource Title}" />
+    <Label Text="{DynamicResource Text.CategoriesSection}" Style="{StaticResource SectionTitle}" />
+    <Picker Title="{DynamicResource Text.CategoriesSelected}" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
+    <Entry Placeholder="{DynamicResource Text.CategoriesName}" Text="{Binding CategoryName}" MaxLength="120" />
+    <Entry Placeholder="{DynamicResource Text.IconName}" Text="{Binding CategoryIcon}" MaxLength="60" />
+    <Picker Title="{DynamicResource Text.CategoriesParentOptional}" ItemsSource="{Binding ActiveCategories}" SelectedItem="{Binding ParentCategory}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="{DynamicResource Text.CategoriesCreate}" Command="{Binding NewCategoryCommand}" /><Button Grid.Column="1" Text="{DynamicResource Text.CategoriesUpdateSelected}" Command="{Binding UpdateCategoryCommand}" /></Grid>
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="{DynamicResource Text.CategoriesMoveUp}" Command="{Binding MoveUpCommand}" /><Button Grid.Column="1" Text="{DynamicResource Text.CategoriesMoveDown}" Command="{Binding MoveDownCommand}" /></Grid>
+    <Picker Title="{DynamicResource Text.CategoriesMergeTarget}" ItemsSource="{Binding ActiveCategories}" SelectedItem="{Binding MergeTarget}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:CategoryInfo" /></Picker.ItemDisplayBinding></Picker>
+    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8"><Button Text="{DynamicResource Text.CategoriesMerge}" Command="{Binding MergeCategoryCommand}" /><Button Grid.Column="1" Text="{DynamicResource Text.CategoriesArchive}" Command="{Binding ArchiveCategoryCommand}" /><Button Grid.Column="2" Text="{DynamicResource Text.CategoriesRestore}" Command="{Binding RestoreCategoryCommand}" /></Grid>
+    <CollectionView ItemsSource="{Binding Categories}" EmptyView="{DynamicResource Text.CategoriesNoItems}" HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:CategoryInfo"><Border Style="{StaticResource Card}" Margin="0,4"><Grid ColumnDefinitions="*,Auto"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.CategoriesParentPrefix}" /><Label Text="{Binding ParentName}" FontSize="12" /></HorizontalStackLayout></VerticalStackLayout><HorizontalStackLayout Grid.Column="1" Spacing="4"><Label Text="{DynamicResource Text.CategoriesArchivedPrefix}" /><Label Text="{Binding IsArchived}" /></HorizontalStackLayout></Grid></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Label Text="{DynamicResource Text.TagsSection}" Style="{StaticResource SectionTitle}" />
+    <Picker Title="{DynamicResource Text.TagsSelected}" ItemsSource="{Binding Tags}" SelectedItem="{Binding SelectedTag}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:TagInfo" /></Picker.ItemDisplayBinding></Picker>
+    <Entry Placeholder="{DynamicResource Text.TagsName}" Text="{Binding TagName}" MaxLength="80" />
+    <Entry Placeholder="{DynamicResource Text.TagsOptionalColor}" Text="{Binding TagColor}" MaxLength="32" />
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="{DynamicResource Text.TagsCreate}" Command="{Binding NewTagCommand}" /><Button Grid.Column="1" Text="{DynamicResource Text.CategoriesUpdateSelected}" Command="{Binding UpdateTagCommand}" /></Grid>
+    <Grid ColumnDefinitions="*,*" ColumnSpacing="8"><Button Text="{DynamicResource Text.TagsArchive}" Command="{Binding ArchiveTagCommand}" /><Button Grid.Column="1" Text="{DynamicResource Text.TagsRestore}" Command="{Binding RestoreTagCommand}" /></Grid>
+    <CollectionView ItemsSource="{Binding Tags}" EmptyView="{DynamicResource Text.TagsNoItems}" HeightRequest="220"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:TagInfo"><Grid Padding="10" ColumnDefinitions="*,Auto"><Label Text="{Binding Name}" /><HorizontalStackLayout Grid.Column="1" Spacing="4"><Label Text="{Binding TransactionCount}" /><Label Text="{DynamicResource Text.Transactions}" /></HorizontalStackLayout></Grid></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="{Binding Status}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
