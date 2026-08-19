@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="ImportCsvTitle" xml:space="preserve"><value>Import CSV</value></data>
+  <data name="ImportValidationNotice" xml:space="preserve"><value>Finora validates CSV structure before writing anything. The import itself is transactional; invalid rows are reported instead of silently guessed.</value></data>
+  <data name="ImportChooseCsv" xml:space="preserve"><value>Choose CSV file</value></data>
+  <data name="ImportColumnMapping" xml:space="preserve"><value>Column mapping</value></data>
+  <data name="ImportRequiredMappings" xml:space="preserve"><value>Required mappings</value></data>
+  <data name="ImportDateColumn" xml:space="preserve"><value>Date column</value></data>
+  <data name="ImportTypeColumn" xml:space="preserve"><value>Type column</value></data>
+  <data name="ImportAmountColumn" xml:space="preserve"><value>Amount column</value></data>
+  <data name="ImportAccountColumn" xml:space="preserve"><value>Account column</value></data>
+  <data name="ImportAmountMinorUnits" xml:space="preserve"><value>Amount values are already minor units</value></data>
+  <data name="ImportOptionalMappings" xml:space="preserve"><value>Optional mappings</value></data>
+  <data name="ImportCurrencyColumn" xml:space="preserve"><value>Currency</value></data>
+  <data name="ImportCategoryColumn" xml:space="preserve"><value>Category</value></data>
+  <data name="ImportMerchantColumn" xml:space="preserve"><value>Merchant / payee</value></data>
+  <data name="ImportNoteColumn" xml:space="preserve"><value>Note</value></data>
+  <data name="ImportPaymentMethodColumn" xml:space="preserve"><value>Payment method</value></data>
+  <data name="ImportManualLocationColumn" xml:space="preserve"><value>Manual location</value></data>
+  <data name="ImportTransferGroupColumn" xml:space="preserve"><value>Transfer group</value></data>
+  <data name="ImportCounterpartyAccountColumn" xml:space="preserve"><value>Counterparty account</value></data>
+  <data name="ImportTagsColumn" xml:space="preserve"><value>Tags</value></data>
+  <data name="ImportRevalidate" xml:space="preserve"><value>Revalidate CSV structure</value></data>
+  <data name="ImportFallbackAccount" xml:space="preserve"><value>Fallback account for blank/unknown account rows</value></data>
+  <data name="ImportCreateMissingCategories" xml:space="preserve"><value>Create missing categories</value></data>
+  <data name="ImportSkipDuplicates" xml:space="preserve"><value>Skip likely duplicates</value></data>
+  <data name="ImportPreview" xml:space="preserve"><value>Preview</value></data>
+  <data name="ImportNoPreviewRows" xml:space="preserve"><value>No preview rows yet.</value></data>
+  <data name="ImportWithMapping" xml:space="preserve"><value>Import with selected mapping</value></data>
+  <data name="ImportNoCsvSelected" xml:space="preserve"><value>No CSV selected</value></data>
+  <data name="ImportChooseToValidate" xml:space="preserve"><value>Choose a CSV file to validate its mapping before importing.</value></data>
+  <data name="ImportNoneDisplay" xml:space="preserve"><value>(None)</value></data>
+  <data name="ImportEmptyFile" xml:space="preserve"><value>The selected CSV file is empty.</value></data>
+  <data name="ImportReviewMapping" xml:space="preserve"><value>Review the mapped columns. Change any mapping and choose Revalidate before importing.</value></data>
+  <data name="ImportChooseFileFirst" xml:space="preserve"><value>Choose a CSV file first.</value></data>
+  <data name="ImportMappingRevalidated" xml:space="preserve"><value>Selected mapping revalidated against every CSV row. The preview now reflects that mapping.</value></data>
+  <data name="ImportChooseValidateFirst" xml:space="preserve"><value>Choose and validate a CSV file first.</value></data>
+  <data name="ImportResultFormat" xml:space="preserve"><value>Imported {0:N0} row(s), skipped {1:N0} likely duplicate(s), and rejected {2:N0} invalid row(s).</value></data>
+  <data name="ImportFirstValidationMessages" xml:space="preserve"><value> First validation messages: </value></data>
+  <data name="ImportRequiredMappingError" xml:space="preserve"><value>Map Date, Type, Amount, and Account before importing.</value></data>
+  <data name="ImportPreviewSummaryFormat" xml:space="preserve"><value>Validated {0:N0} row(s): {1:N0} valid, {2:N0} invalid. Up to 500 rows are shown in the preview.</value></data>
+</root>
