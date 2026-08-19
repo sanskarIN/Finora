@@ -6,21 +6,21 @@
              xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
              xmlns:domain="clr-namespace:Finora.Domain;assembly=Finora.Domain"
              x:DataType="local:BudgetsViewModel"
-             Title="Budgets">
+             Title="{DynamicResource Text.Budgets}">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
-    <Label Text="Budgets" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
-    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><DatePicker Date="{Binding ViewDate}" /><Button Grid.Column="1" Text="View period" Command="{Binding RefreshCommand}" /></Grid>
-    <CollectionView ItemsSource="{Binding Budgets}" EmptyView="No budgets for this period." HeightRequest="300"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:BudgetSnapshot"><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Currency}" /><Label><Label.Text><MultiBinding StringFormat="Available plan: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="PlannedMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label><Label><Label.Text><MultiBinding StringFormat="Actual spending: {0}" Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="ActualMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label><Label Text="{Binding WarningThresholdPercent, StringFormat='Warning at {0}%'}" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
-    <Label Text="Create budget" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <Entry Placeholder="Budget name" Text="{Binding Name}" />
-    <Entry Placeholder="Limit" Keyboard="Numeric" Text="{Binding Limit}" SemanticProperties.Description="Budget limit in major currency units" />
-    <Picker Title="Cadence" ItemsSource="{Binding Cadences}" SelectedItem="{Binding Cadence}" />
-    <VerticalStackLayout IsVisible="{Binding IsCustom}"><Label Text="Custom period start" /><DatePicker Date="{Binding CustomStart}" /><Label Text="Custom period end" /><DatePicker Date="{Binding CustomEnd}" /></VerticalStackLayout>
-    <Picker Title="Category (leave empty for overall)" ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="domain:Category" /></Picker.ItemDisplayBinding></Picker>
-    <Grid ColumnDefinitions="*,Auto"><Label Text="Rollover unused weekly/monthly budget" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Rollover}" IsEnabled="{Binding IsCustom, Converter={StaticResource InverseBoolConverter}}" /></Grid>
-    <Label Text="Warning threshold (%)" /><Slider Minimum="1" Maximum="100" Value="{Binding WarningThreshold}" /><Label Text="{Binding WarningThreshold, StringFormat='{0}%'}" />
-    <Button Text="Save budget" Command="{Binding AddCommand}" />
-    <Label Text="Budget actuals include transaction splits and descendant categories. Rollover is calculated from explicit budget periods when present." FontSize="12" />
+    <Label Text="{DynamicResource Text.Budgets}" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
+    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8"><DatePicker Date="{Binding ViewDate}" /><Button Grid.Column="1" Text="{DynamicResource Text.ViewPeriod}" Command="{Binding RefreshCommand}" /></Grid>
+    <CollectionView ItemsSource="{Binding Budgets}" EmptyView="{DynamicResource Text.NoBudgetsForPeriod}" HeightRequest="300"><CollectionView.ItemTemplate><DataTemplate x:DataType="application:BudgetSnapshot"><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding Name}" FontAttributes="Bold" /><Label Text="{Binding Currency}" /><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.AvailablePlan}" /><Label><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="PlannedMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></HorizontalStackLayout><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.ActualSpending}" /><Label><Label.Text><MultiBinding Converter="{StaticResource PrivacyMoneyConverter}"><Binding Path="ActualMinor" /><Binding Path="Currency" /></MultiBinding></Label.Text></Label></HorizontalStackLayout><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.WarningAt}" /><Label Text="{Binding WarningThresholdPercent, StringFormat='{0}%'}" /></HorizontalStackLayout></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Label Text="{DynamicResource Text.CreateBudget}" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+    <Entry Placeholder="{DynamicResource Text.BudgetName}" Text="{Binding Name}" />
+    <Entry Placeholder="{DynamicResource Text.Limit}" Keyboard="Numeric" Text="{Binding Limit}" SemanticProperties.Description="{DynamicResource Text.BudgetLimitDescription}" />
+    <Picker Title="{DynamicResource Text.Cadence}" ItemsSource="{Binding Cadences}" SelectedItem="{Binding Cadence}" />
+    <VerticalStackLayout IsVisible="{Binding IsCustom}"><Label Text="{DynamicResource Text.CustomPeriodStart}" /><DatePicker Date="{Binding CustomStart}" /><Label Text="{DynamicResource Text.CustomPeriodEnd}" /><DatePicker Date="{Binding CustomEnd}" /></VerticalStackLayout>
+    <Picker Title="{DynamicResource Text.CategoryOverallOptional}" ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="domain:Category" /></Picker.ItemDisplayBinding></Picker>
+    <Grid ColumnDefinitions="*,Auto"><Label Text="{DynamicResource Text.RolloverUnusedBudget}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding Rollover}" IsEnabled="{Binding IsCustom, Converter={StaticResource InverseBoolConverter}}" /></Grid>
+    <Label Text="{DynamicResource Text.WarningThresholdPercent}" /><Slider Minimum="1" Maximum="100" Value="{Binding WarningThreshold}" /><Label Text="{Binding WarningThreshold, StringFormat='{0}%'}" />
+    <Button Text="{DynamicResource Text.SaveBudget}" Command="{Binding AddCommand}" />
+    <Label Text="{DynamicResource Text.BudgetActualsNotice}" FontSize="12" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
 </ContentPage>
