@@ -9,7 +9,8 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Public project overview | `README.md` | Current |
 | Documentation index | `docs/README.md` | Current |
 | Documentation completeness | `docs/DOCUMENTATION_STATUS.md` | Current |
-| Prioritized next steps | `docs/NEXT_STEPS.md` | Current — performance tooling implemented; remaining release/native/full-profile evidence separated |
+| Final repository closure | `docs/FINAL_REPOSITORY_CLOSURE.md` | Current — repository engineering closure and external release-evidence boundary recorded 2026-08-19 |
+| Prioritized next steps | `docs/NEXT_STEPS.md` | Current — repository backlog closed; remaining release/native/full-profile items are external evidence, optional polish, or later-version scope |
 | End-user workflows | `docs/USER_GUIDE.md` | Current |
 | Architecture overview | `docs/architecture/OVERVIEW.md` | Current |
 | Database/schema | `docs/architecture/DATABASE_SCHEMA.md` | Current |
@@ -45,7 +46,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Versioning/migrations | `docs/releases/VERSIONING_AND_MIGRATIONS.md` | Current |
 | Store metadata template | `docs/releases/STORE_METADATA_TEMPLATE.md` | Current |
 | Engineering decisions | `DECISIONS.md` | Current |
-| Project implementation status | `PROJECT_STATUS.md` | Current — verified performance tooling/smoke and remaining runtime/native gates recorded |
+| Project implementation status | `PROJECT_STATUS.md` | Current — verified performance tooling/smoke, final repository closure, and remaining runtime/native gates recorded |
 | Detailed change ledger | `what_changed.md` | Current after final continuation ledger commit |
 | Changelog | `CHANGELOG.md` | Current source history |
 | Privacy policy | `PRIVACY.md` | Current |
@@ -101,6 +102,8 @@ The retained smoke artifact is `9321290557` with SHA-256 `97eb07bf963491e8d89d45
 
 Performance timing remains a separate evidence class. The benchmark harness records synthetic observational measurements and correctness/integrity failures; arbitrary elapsed-time thresholds are not treated as finance correctness. The current evidence does not claim runtime completion of CSV/PDF/backup performance operations, the full 10k `all` profile, or 50k/100k comparisons.
 
+The 2026-08-19 repository closure records repository engineering completion separately from external release evidence. Queued or pending GitHub Actions runs are not represented as successful executed evidence; exact runtime claims remain tied to the commit/run where they actually completed.
+
 The remaining release decision must still retain real evidence for:
 
 - signed/package artifacts;
@@ -114,15 +117,14 @@ The remaining release decision must still retain real evidence for:
 
 ## Next-step priority rule
 
-`docs/NEXT_STEPS.md` is the current execution roadmap. The preferred order is:
+`docs/NEXT_STEPS.md` remains the release-evidence/future-scope roadmap after repository closure. The preferred order is:
 
-1. keep the proven structural/test/bounded-10k/four-target source-build/CodeQL/Dependency Review gates green;
-2. P0 migration, backup/recovery, privacy/security, native behavior and accessibility validation;
-3. P1 release-candidate packaging/store/security/license evidence;
-4. P2 full 10k/50k/100k performance comparison evidence plus localization/product polish;
-5. P3 later-version cloud/account/collaboration/entitlement/FX/telemetry architecture.
+1. preserve the proven structural/test/bounded-10k/four-target source-build/CodeQL/Dependency Review gates;
+2. complete only external P0/P1 release evidence required for the actual target package/store;
+3. execute optional P2 heavy performance/native evidence when it is needed for a release claim;
+4. begin P3 later-version cloud/account/collaboration/entitlement/FX/telemetry work only through an explicit new-version decision.
 
-Do not prioritize cosmetic expansion above an unresolved P0 data-corruption, migration, backup, privacy, native-behavior, accessibility, or packaging failure.
+Do not add speculative current-version features merely to keep the repository changing.
 
 ## Update policy
 
