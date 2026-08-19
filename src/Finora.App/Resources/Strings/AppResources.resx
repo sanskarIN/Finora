@@ -67,4 +67,34 @@
   <data name="TransferAmountDescription" xml:space="preserve"><value>Transfer amount in major currency units</value></data>
   <data name="OptionalNote" xml:space="preserve"><value>Optional note</value></data>
   <data name="Transfer" xml:space="preserve"><value>Transfer</value></data>
+  <data name="HideShow" xml:space="preserve"><value>Hide / show</value></data>
+  <data name="ToggleAmountPrivacyDescription" xml:space="preserve"><value>Toggle amount privacy mode</value></data>
+  <data name="DashboardPeriod" xml:space="preserve"><value>Dashboard period</value></data>
+  <data name="ChoosePeriod" xml:space="preserve"><value>Choose period</value></data>
+  <data name="DashboardPeriodPickerDescription" xml:space="preserve"><value>Select the date period used by income, spending, budget, recent transaction, and category dashboard cards</value></data>
+  <data name="Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="ApplyDashboardPeriodDescription" xml:space="preserve"><value>Apply selected dashboard period</value></data>
+  <data name="DashboardCurrencyDescription" xml:space="preserve"><value>Dashboard reporting currency information</value></data>
+  <data name="ConfigureDashboardCards" xml:space="preserve"><value>Configure dashboard cards</value></data>
+  <data name="DashboardCards" xml:space="preserve"><value>Dashboard cards</value></data>
+  <data name="CurrentBalance" xml:space="preserve"><value>Current balance</value></data>
+  <data name="IncomeSpendingNetChange" xml:space="preserve"><value>Income, spending and net change</value></data>
+  <data name="RemainingBudget" xml:space="preserve"><value>Remaining budget</value></data>
+  <data name="UpcomingBillsRecurring" xml:space="preserve"><value>Upcoming bills and recurring items</value></data>
+  <data name="TopSpendingCategories" xml:space="preserve"><value>Top spending categories</value></data>
+  <data name="SavingsGoals" xml:space="preserve"><value>Savings goals</value></data>
+  <data name="RecentTransactions" xml:space="preserve"><value>Recent transactions</value></data>
+  <data name="CashFlowTrend" xml:space="preserve"><value>Cash-flow trend</value></data>
+  <data name="Income" xml:space="preserve"><value>Income</value></data>
+  <data name="Spending" xml:space="preserve"><value>Spending</value></data>
+  <data name="NetChange" xml:space="preserve"><value>Net change</value></data>
+  <data name="BudgetLeft" xml:space="preserve"><value>Budget left</value></data>
+  <data name="Reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Recurring" xml:space="preserve"><value>Recurring</value></data>
+  <data name="NoUpcomingRecurring30Days" xml:space="preserve"><value>No upcoming recurring items in the next 30 days.</value></data>
+  <data name="NoSavingsGoalsYet" xml:space="preserve"><value>No savings goals yet.</value></data>
+  <data name="CashFlowTrendSixMonths" xml:space="preserve"><value>Cash-flow trend (last 6 months)</value></data>
+  <data name="NoTransactionsSelectedPeriod" xml:space="preserve"><value>No transactions in the selected period.</value></data>
+  <data name="TopCategories" xml:space="preserve"><value>Top categories</value></data>
+  <data name="CategorizedSpendingSelectedPeriod" xml:space="preserve"><value>Categorized spending for the selected period appears here.</value></data>
 </root>
