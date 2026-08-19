@@ -40,6 +40,7 @@ public partial class App : Microsoft.Maui.Controls.Application
         _exceptions.Start();
 
         CultureSettings.TryApply(_settings.Locale);
+        LocalizationResources.Apply(Resources);
         UserAppTheme = _settings.Theme switch
         {
             ThemePreference.Light => AppTheme.Light,
