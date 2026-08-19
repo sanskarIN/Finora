@@ -35,7 +35,7 @@ Inline `not-a-table-entry.md` is intentionally ignored.
         self.assertEqual(
             [".env", ".github/workflows/ci.yml", "src/App.cs"],
             coverage.normalize_paths(
-                ["./.env", ".env", ".\\github\\workflows\\ci.yml", "src/App.cs"]
+                ["./.env", ".env", ".github\\workflows\\ci.yml", "src/App.cs"]
             ),
         )
 
