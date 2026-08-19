@@ -51,6 +51,7 @@ class ReleaseReadinessGuardTests(unittest.TestCase):
         for path in (
             "global.json",
             "Directory.Build.props",
+            "docs/FINAL_REPOSITORY_CLOSURE.md",
             "scripts/README.md",
             ".github/FUNDING.yml",
         ):
