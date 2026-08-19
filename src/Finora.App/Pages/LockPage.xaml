@@ -7,11 +7,11 @@
              Shell.NavBarIsVisible="False">
   <Grid Padding="28">
     <VerticalStackLayout VerticalOptions="Center" Spacing="18" MaximumWidthRequest="460">
-      <Label Text="Finora is locked" Style="{StaticResource Title}" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
-      <Label Text="{Binding Status}" HorizontalTextAlignment="Center" SemanticProperties.Description="Finora lock status" />
-      <Button Text="Unlock with biometrics / Windows Hello" Command="{Binding BiometricCommand}" IsVisible="{Binding CanUseBiometrics}" SemanticProperties.Description="Unlock Finora using an available biometric or Windows Hello method. PIN remains available as fallback." />
-      <Entry Placeholder="PIN" IsPassword="True" Keyboard="Numeric" MaxLength="12" Text="{Binding Pin}" ReturnType="Done" SemanticProperties.Description="Enter your 4 to 12 digit Finora PIN. The PIN is masked." />
-      <Button Text="Unlock with PIN" Command="{Binding UnlockCommand}" SemanticProperties.Description="Verify the entered Finora PIN and unlock the app" />
+      <Label Text="{DynamicResource Text.FinoraLocked}" Style="{StaticResource Title}" HorizontalTextAlignment="Center" SemanticProperties.HeadingLevel="Level1" />
+      <Label Text="{Binding Status}" HorizontalTextAlignment="Center" SemanticProperties.Description="{DynamicResource Text.FinoraLockStatusDescription}" />
+      <Button Text="{DynamicResource Text.UnlockWithBiometrics}" Command="{Binding BiometricCommand}" IsVisible="{Binding CanUseBiometrics}" SemanticProperties.Description="{DynamicResource Text.UnlockWithBiometricsDescription}" />
+      <Entry Placeholder="{DynamicResource Text.PinPlaceholder}" IsPassword="True" Keyboard="Numeric" MaxLength="12" Text="{Binding Pin}" ReturnType="Done" SemanticProperties.Description="{DynamicResource Text.PinEntryDescription}" />
+      <Button Text="{DynamicResource Text.UnlockWithPin}" Command="{Binding UnlockCommand}" SemanticProperties.Description="{DynamicResource Text.UnlockWithPinDescription}" />
       <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
     </VerticalStackLayout>
   </Grid>
