@@ -15,8 +15,11 @@ public static class TransactionFactory
         string? note = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(positiveAmountMinor);
-        var signed = type == TransactionType.Expense ? -positiveAmountMinor : positiveAmountMinor;
-        return new FinanceTransaction
+        if (type == TransactionType.Transfer)
+            throw new NotSupportedException("Use the transfer workflow to create the required balanced pair of transfer rows.");
+
+        var signed = type == TransactionType.Expense ? checked(-positiveAmountMinor) : positiveAmountMinor;
+        var transaction = new FinanceTransaction
         {
             Type = type,
             AmountMinor = signed,
@@ -27,5 +30,7 @@ public static class TransactionFactory
             Merchant = merchant,
             Note = note
         };
+        DomainRules.ValidateTransaction(transaction);
+        return transaction;
     }
 }
