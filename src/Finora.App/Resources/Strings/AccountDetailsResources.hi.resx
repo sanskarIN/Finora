@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="AccountDetails" xml:space="preserve"><value>अकाउंट विवरण</value></data>
+  <data name="AccountDetailsName" xml:space="preserve"><value>नाम</value></data>
+  <data name="AccountDetailsOptionalColor" xml:space="preserve"><value>वैकल्पिक रंग लेबल</value></data>
+  <data name="AccountDetailsCreditLimit" xml:space="preserve"><value>क्रेडिट सीमा</value></data>
+  <data name="AccountDetailsCreditLimitDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में क्रेडिट सीमा</value></data>
+  <data name="AccountDetailsBillingDay" xml:space="preserve"><value>बिलिंग दिन (1–31)</value></data>
+  <data name="AccountDetailsState" xml:space="preserve"><value>स्थिति</value></data>
+  <data name="AccountDetailsSave" xml:space="preserve"><value>अकाउंट सहेजें</value></data>
+  <data name="AccountDetailsArchiveRestore" xml:space="preserve"><value>अकाउंट संग्रहित / पुनर्स्थापित करें</value></data>
+  <data name="AccountDetailsReconcile" xml:space="preserve"><value>इस अकाउंट का मिलान करें</value></data>
+  <data name="AccountDetailsTransactions" xml:space="preserve"><value>अकाउंट लेन-देन</value></data>
+  <data name="AccountDetailsNoTransactions" xml:space="preserve"><value>कोई लेन-देन नहीं है।</value></data>
+  <data name="AccountDetailsSummaryFormat" xml:space="preserve"><value>वर्तमान शेष: {0} · {1} लेन-देन</value></data>
+  <data name="AccountDetailsLastReconciledFormat" xml:space="preserve"><value> · अंतिम मिलान {0:g}</value></data>
+  <data name="AccountDetailsOpeningBalanceInvalid" xml:space="preserve"><value>मान्य प्रारंभिक शेष दर्ज करें।</value></data>
+  <data name="AccountDetailsCreditLimitInvalid" xml:space="preserve"><value>मान्य गैर-ऋणात्मक क्रेडिट सीमा दर्ज करें।</value></data>
+  <data name="AccountDetailsSaved" xml:space="preserve"><value>अकाउंट सेटिंग्स सहेजी गईं।</value></data>
+  <data name="AccountDetailsRestored" xml:space="preserve"><value>अकाउंट पुनर्स्थापित किया गया।</value></data>
+  <data name="AccountDetailsArchived" xml:space="preserve"><value>अकाउंट संग्रहित किया गया। मौजूदा लेन-देन सुरक्षित रखे गए।</value></data>
+</root>
