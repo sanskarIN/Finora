@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="ImportCsvTitle" xml:space="preserve"><value>CSV आयात</value></data>
+  <data name="ImportValidationNotice" xml:space="preserve"><value>Finora कुछ भी लिखने से पहले CSV संरचना की जाँच करता है। आयात लेन-देन आधारित है; अमान्य पंक्तियों के बारे में बताया जाता है, उनका अनुमान लगाकर चुपचाप आयात नहीं किया जाता।</value></data>
+  <data name="ImportChooseCsv" xml:space="preserve"><value>CSV फ़ाइल चुनें</value></data>
+  <data name="ImportColumnMapping" xml:space="preserve"><value>कॉलम मैपिंग</value></data>
+  <data name="ImportRequiredMappings" xml:space="preserve"><value>आवश्यक मैपिंग</value></data>
+  <data name="ImportDateColumn" xml:space="preserve"><value>तारीख कॉलम</value></data>
+  <data name="ImportTypeColumn" xml:space="preserve"><value>प्रकार कॉलम</value></data>
+  <data name="ImportAmountColumn" xml:space="preserve"><value>राशि कॉलम</value></data>
+  <data name="ImportAccountColumn" xml:space="preserve"><value>अकाउंट कॉलम</value></data>
+  <data name="ImportAmountMinorUnits" xml:space="preserve"><value>राशि के मान पहले से छोटी मुद्रा इकाइयों में हैं</value></data>
+  <data name="ImportOptionalMappings" xml:space="preserve"><value>वैकल्पिक मैपिंग</value></data>
+  <data name="ImportCurrencyColumn" xml:space="preserve"><value>मुद्रा</value></data>
+  <data name="ImportCategoryColumn" xml:space="preserve"><value>श्रेणी</value></data>
+  <data name="ImportMerchantColumn" xml:space="preserve"><value>व्यापारी / प्राप्तकर्ता</value></data>
+  <data name="ImportNoteColumn" xml:space="preserve"><value>नोट</value></data>
+  <data name="ImportPaymentMethodColumn" xml:space="preserve"><value>भुगतान विधि</value></data>
+  <data name="ImportManualLocationColumn" xml:space="preserve"><value>मैन्युअल स्थान</value></data>
+  <data name="ImportTransferGroupColumn" xml:space="preserve"><value>स्थानांतरण समूह</value></data>
+  <data name="ImportCounterpartyAccountColumn" xml:space="preserve"><value>प्रतिपक्ष अकाउंट</value></data>
+  <data name="ImportTagsColumn" xml:space="preserve"><value>टैग</value></data>
+  <data name="ImportRevalidate" xml:space="preserve"><value>CSV संरचना की फिर जाँच करें</value></data>
+  <data name="ImportFallbackAccount" xml:space="preserve"><value>खाली/अज्ञात अकाउंट पंक्तियों के लिए बैकअप अकाउंट</value></data>
+  <data name="ImportCreateMissingCategories" xml:space="preserve"><value>ग़ायब श्रेणियाँ बनाएँ</value></data>
+  <data name="ImportSkipDuplicates" xml:space="preserve"><value>संभावित डुप्लिकेट छोड़ें</value></data>
+  <data name="ImportPreview" xml:space="preserve"><value>पूर्वावलोकन</value></data>
+  <data name="ImportNoPreviewRows" xml:space="preserve"><value>अभी कोई पूर्वावलोकन पंक्ति नहीं है।</value></data>
+  <data name="ImportWithMapping" xml:space="preserve"><value>चुनी हुई मैपिंग के साथ आयात करें</value></data>
+  <data name="ImportNoCsvSelected" xml:space="preserve"><value>कोई CSV नहीं चुनी गई</value></data>
+  <data name="ImportChooseToValidate" xml:space="preserve"><value>आयात से पहले मैपिंग की जाँच करने के लिए CSV फ़ाइल चुनें।</value></data>
+  <data name="ImportNoneDisplay" xml:space="preserve"><value>(कोई नहीं)</value></data>
+  <data name="ImportEmptyFile" xml:space="preserve"><value>चुनी हुई CSV फ़ाइल खाली है।</value></data>
+  <data name="ImportReviewMapping" xml:space="preserve"><value>मैप किए गए कॉलम की समीक्षा करें। किसी मैपिंग को बदलने के बाद आयात से पहले फिर जाँच करें चुनें।</value></data>
+  <data name="ImportChooseFileFirst" xml:space="preserve"><value>पहले CSV फ़ाइल चुनें।</value></data>
+  <data name="ImportMappingRevalidated" xml:space="preserve"><value>चुनी हुई मैपिंग की हर CSV पंक्ति पर फिर जाँच की गई। पूर्वावलोकन अब उसी मैपिंग को दिखाता है।</value></data>
+  <data name="ImportChooseValidateFirst" xml:space="preserve"><value>पहले CSV फ़ाइल चुनें और उसकी जाँच करें।</value></data>
+  <data name="ImportResultFormat" xml:space="preserve"><value>{0:N0} पंक्ति आयात हुईं, {1:N0} संभावित डुप्लिकेट छोड़े गए और {2:N0} अमान्य पंक्तियाँ अस्वीकार हुईं।</value></data>
+  <data name="ImportFirstValidationMessages" xml:space="preserve"><value> पहले सत्यापन संदेश: </value></data>
+  <data name="ImportRequiredMappingError" xml:space="preserve"><value>आयात से पहले तारीख, प्रकार, राशि और अकाउंट मैप करें।</value></data>
+  <data name="ImportPreviewSummaryFormat" xml:space="preserve"><value>{0:N0} पंक्तियों की जाँच हुई: {1:N0} मान्य, {2:N0} अमान्य। पूर्वावलोकन में अधिकतम 500 पंक्तियाँ दिखाई जाती हैं।</value></data>
+</root>
