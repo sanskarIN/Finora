@@ -64,7 +64,10 @@ public sealed class AccountDetailViewModel : ViewModelBase
         State = account.State;
         var hideAmounts = _settings?.PrivacyMode == true || _settings?.HideAmountsOnLaunch == true;
         var currentBalance = hideAmounts ? "••••" : new Money(account.CurrentBalanceMinor, account.Currency).Format();
-        Summary = $"Current balance: {currentBalance} · {account.TransactionCount} transaction(s)" + (account.LastReconciledAtUtc is DateTimeOffset reconciled ? $" · Last reconciled {reconciled.ToLocalTime():g}" : string.Empty);
+        Summary = Format("AccountDetailsSummaryFormat", currentBalance, account.TransactionCount)
+            + (account.LastReconciledAtUtc is DateTimeOffset reconciled
+                ? Format("AccountDetailsLastReconciledFormat", reconciled.ToLocalTime())
+                : string.Empty);
         Transactions.Clear();
         foreach (var tx in await _store.SearchTransactionsAsync(accountId: id)) Transactions.Add(tx);
     });
@@ -73,11 +76,11 @@ public sealed class AccountDetailViewModel : ViewModelBase
     {
         var current = await _accounts.GetAccountAsync(_accountId);
         if (!current.IsSuccess || current.Value is null) throw new InvalidOperationException(current.Error);
-        if (!TryParseDecimal(OpeningBalance, out var opening)) throw new InvalidOperationException("Enter a valid opening balance.");
+        if (!TryParseDecimal(OpeningBalance, out var opening)) throw new InvalidOperationException(LocalizationResources.Get("AccountDetailsOpeningBalanceInvalid"));
         long? credit = null;
         if (IsCreditCard && !string.IsNullOrWhiteSpace(CreditLimit))
         {
-            if (!TryParseDecimal(CreditLimit, out var creditMajor) || creditMajor < 0) throw new InvalidOperationException("Enter a valid non-negative credit limit.");
+            if (!TryParseDecimal(CreditLimit, out var creditMajor) || creditMajor < 0) throw new InvalidOperationException(LocalizationResources.Get("AccountDetailsCreditLimitInvalid"));
             credit = Money.FromMajorUnits(creditMajor, current.Value.Currency).MinorUnits;
         }
         var result = await _accounts.UpdateAccountAsync(new AccountUpdateRequest(
@@ -91,7 +94,7 @@ public sealed class AccountDetailViewModel : ViewModelBase
             IsCreditCard ? BillingDay : null,
             State));
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
-        Status = "Account settings saved.";
+        Status = LocalizationResources.Get("AccountDetailsSaved");
         await LoadAsync(_accountId);
     });
 
@@ -101,8 +104,13 @@ public sealed class AccountDetailViewModel : ViewModelBase
         var result = wasArchived ? await _accounts.RestoreAsync(_accountId) : await _accounts.ArchiveAsync(_accountId);
         if (!result.IsSuccess) throw new InvalidOperationException(result.Error);
         await LoadAsync(_accountId);
-        Status = wasArchived ? "Account restored." : "Account archived. Existing transactions were preserved.";
+        Status = wasArchived
+            ? LocalizationResources.Get("AccountDetailsRestored")
+            : LocalizationResources.Get("AccountDetailsArchived");
     });
+
+    private static string Format(string key, params object[] values)
+        => string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get(key), values);
 
     private static string FormatEditableAmount(long minor, string currency)
     {
