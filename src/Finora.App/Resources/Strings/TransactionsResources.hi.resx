@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SearchMerchantNoteAccountCategory" xml:space="preserve"><value>व्यापारी, नोट, अकाउंट या श्रेणी खोजें</value></data>
+  <data name="Search" xml:space="preserve"><value>खोजें</value></data>
+  <data name="AdvancedFilters" xml:space="preserve"><value>उन्नत फ़िल्टर</value></data>
+  <data name="ClearFilters" xml:space="preserve"><value>फ़िल्टर साफ़ करें</value></data>
+  <data name="AccountAll" xml:space="preserve"><value>अकाउंट: सभी</value></data>
+  <data name="CategoryAll" xml:space="preserve"><value>श्रेणी: सभी</value></data>
+  <data name="TransactionType" xml:space="preserve"><value>लेन-देन का प्रकार</value></data>
+  <data name="Through" xml:space="preserve"><value>तक</value></data>
+  <data name="ApplyFilters" xml:space="preserve"><value>फ़िल्टर लागू करें</value></data>
+  <data name="SortHistory" xml:space="preserve"><value>इतिहास क्रमबद्ध करें</value></data>
+  <data name="SortHistoryDescription" xml:space="preserve"><value>लेन-देन इतिहास का क्रम चुनें</value></data>
+  <data name="ApplySort" xml:space="preserve"><value>क्रम लागू करें</value></data>
+  <data name="ImportCsv" xml:space="preserve"><value>CSV आयात करें</value></data>
+  <data name="Tools" xml:space="preserve"><value>उपकरण</value></data>
+  <data name="QuickAdd" xml:space="preserve"><value>त्वरित जोड़</value></data>
+  <data name="Type" xml:space="preserve"><value>प्रकार</value></data>
+  <data name="Account" xml:space="preserve"><value>अकाउंट</value></data>
+  <data name="CategoryOptional" xml:space="preserve"><value>श्रेणी (वैकल्पिक)</value></data>
+  <data name="Date" xml:space="preserve"><value>तारीख</value></data>
+  <data name="Time" xml:space="preserve"><value>समय</value></data>
+  <data name="TransactionAmountDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में लेन-देन राशि</value></data>
+  <data name="CalculatorKeypad" xml:space="preserve"><value>कैलकुलेटर कीपैड</value></data>
+  <data name="ExpressionPrefix" xml:space="preserve"><value>व्यंजक: </value></data>
+  <data name="Clear" xml:space="preserve"><value>साफ़ करें</value></data>
+  <data name="UseResult" xml:space="preserve"><value>= परिणाम उपयोग करें</value></data>
+  <data name="MerchantPayee" xml:space="preserve"><value>व्यापारी या प्राप्तकर्ता</value></data>
+  <data name="PaymentMethodOptional" xml:space="preserve"><value>भुगतान विधि (वैकल्पिक)</value></data>
+  <data name="LocationOptionalManual" xml:space="preserve"><value>स्थान (वैकल्पिक, केवल मैन्युअली दर्ज)</value></data>
+  <data name="Note" xml:space="preserve"><value>नोट</value></data>
+  <data name="SaveTransaction" xml:space="preserve"><value>लेन-देन सहेजें</value></data>
+  <data name="History" xml:space="preserve"><value>इतिहास</value></data>
+  <data name="NoMatchingTransactions" xml:space="preserve"><value>कोई मेल खाता लेन-देन नहीं है।</value></data>
+  <data name="TransactionTapHelp" xml:space="preserve"><value>संपादित करने, विभाजित करने, टैग लगाने, रसीद जोड़ने या संशोधन इतिहास देखने के लिए टैप करें।</value></data>
+  <data name="LoadMoreTransactions" xml:space="preserve"><value>और लेन-देन लोड करें</value></data>
+  <data name="LoadMoreTransactionsDescription" xml:space="preserve"><value>अगले 50 मेल खाते लेन-देन लोड करें</value></data>
+</root>
