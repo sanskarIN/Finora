@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="RecurringItems" xml:space="preserve"><value>आवर्ती मदें</value></data>
+  <data name="RecurringWorkflowNotice" xml:space="preserve"><value>आवर्ती नियम देय प्रविष्टियाँ तैयार करते हैं। राशि तभी दर्ज होती है जब आप किसी प्रविष्टि को भुगतान किया हुआ या आंशिक भुगतान किया हुआ चिह्नित करते हैं।</value></data>
+  <data name="RecurringPrepareNow" xml:space="preserve"><value>देय प्रविष्टियाँ अभी तैयार करें</value></data>
+  <data name="RecurringRules" xml:space="preserve"><value>नियम</value></data>
+  <data name="RecurringChooseRule" xml:space="preserve"><value>आवर्ती नियम चुनें</value></data>
+  <data name="RecurringChooseRuleDescription" xml:space="preserve"><value>रोकने, फिर शुरू करने या संग्रहित करने के लिए एक आवर्ती नियम चुनें</value></data>
+  <data name="RecurringStatus" xml:space="preserve"><value>स्थिति:</value></data>
+  <data name="RecurringType" xml:space="preserve"><value>प्रकार:</value></data>
+  <data name="RecurringFrequency" xml:space="preserve"><value>आवृत्ति:</value></data>
+  <data name="RecurringScheduledAmount" xml:space="preserve"><value>निर्धारित राशि:</value></data>
+  <data name="RecurringNextDue" xml:space="preserve"><value>अगली देय तारीख:</value></data>
+  <data name="RecurringPause" xml:space="preserve"><value>रोकें</value></data>
+  <data name="RecurringPauseDescription" xml:space="preserve"><value>इतिहास हटाए बिना चुने हुए आवर्ती नियम को रोकें</value></data>
+  <data name="RecurringResume" xml:space="preserve"><value>फिर शुरू करें</value></data>
+  <data name="RecurringResumeDescription" xml:space="preserve"><value>चुने हुए रुके आवर्ती नियम को फिर शुरू करें</value></data>
+  <data name="RecurringArchive" xml:space="preserve"><value>संग्रहित करें</value></data>
+  <data name="RecurringArchiveDescription" xml:space="preserve"><value>प्रविष्टि इतिहास रखते हुए चुने हुए आवर्ती नियम को संग्रहित करें</value></data>
+  <data name="RecurringNoItems" xml:space="preserve"><value>कोई आवर्ती मद नहीं है।</value></data>
+  <data name="RecurringNext" xml:space="preserve"><value>अगला:</value></data>
+  <data name="RecurringOccurrenceWorkflow" xml:space="preserve"><value>प्रविष्टि कार्यप्रवाह</value></data>
+  <data name="RecurringChooseOccurrence" xml:space="preserve"><value>प्रविष्टि चुनें</value></data>
+  <data name="RecurringDue" xml:space="preserve"><value>देय:</value></data>
+  <data name="RecurringPostponedTo" xml:space="preserve"><value>स्थगित तारीख:</value></data>
+  <data name="RecurringScheduled" xml:space="preserve"><value>निर्धारित:</value></data>
+  <data name="RecurringPaid" xml:space="preserve"><value>भुगतान:</value></data>
+  <data name="RecurringPaidAmount" xml:space="preserve"><value>भुगतान राशि (पूर्ण या आंशिक)</value></data>
+  <data name="RecurringMarkPaidPartial" xml:space="preserve"><value>भुगतान / आंशिक भुगतान चिह्नित करें</value></data>
+  <data name="RecurringSkip" xml:space="preserve"><value>छोड़ें</value></data>
+  <data name="RecurringReopen" xml:space="preserve"><value>फिर खोलें</value></data>
+  <data name="RecurringReopenDescription" xml:space="preserve"><value>चुनी हुई छोड़ी गई आवर्ती प्रविष्टि को लंबित स्थिति में फिर खोलें</value></data>
+  <data name="RecurringPostponeSelectedDate" xml:space="preserve"><value>चुनी हुई तारीख तक स्थगित करें</value></data>
+  <data name="RecurringCreateItem" xml:space="preserve"><value>आवर्ती मद बनाएँ</value></data>
+  <data name="RecurringName" xml:space="preserve"><value>नाम</value></data>
+  <data name="RecurringFrequencyTitle" xml:space="preserve"><value>आवृत्ति</value></data>
+  <data name="RecurringRepeatInterval" xml:space="preserve"><value>हर N आवृत्ति इकाइयों में दोहराएँ</value></data>
+  <data name="RecurringDestinationAccount" xml:space="preserve"><value>गंतव्य अकाउंट</value></data>
+  <data name="RecurringCategory" xml:space="preserve"><value>श्रेणी</value></data>
+  <data name="RecurringAmountDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में आवर्ती राशि</value></data>
+  <data name="RecurringMerchantPayee" xml:space="preserve"><value>व्यापारी / प्राप्तकर्ता</value></data>
+  <data name="RecurringStartDate" xml:space="preserve"><value>शुरुआत की तारीख</value></data>
+  <data name="RecurringUseEndDate" xml:space="preserve"><value>समाप्ति तारीख उपयोग करें</value></data>
+  <data name="RecurringGracePeriodDays" xml:space="preserve"><value>अनुग्रह अवधि (दिन)</value></data>
+  <data name="RecurringReminderLeadMinutes" xml:space="preserve"><value>रिमाइंडर अग्रिम समय (मिनट)</value></data>
+  <data name="RecurringSaveItem" xml:space="preserve"><value>आवर्ती मद सहेजें</value></data>
+  <data name="RecurringChooseAccountError" xml:space="preserve"><value>एक अकाउंट चुनें।</value></data>
+  <data name="RecurringRuleNameRequired" xml:space="preserve"><value>नियम का नाम आवश्यक है।</value></data>
+  <data name="RecurringPositiveAmountError" xml:space="preserve"><value>शून्य से अधिक राशि दर्ज करें।</value></data>
+  <data name="RecurringEndBeforeStartError" xml:space="preserve"><value>समाप्ति तारीख शुरुआत की तारीख से पहले नहीं हो सकती।</value></data>
+  <data name="RecurringDestinationAccountError" xml:space="preserve"><value>स्थानांतरण के लिए अलग गंतव्य अकाउंट चुनें।</value></data>
+  <data name="RecurringCurrencyMatchError" xml:space="preserve"><value>आवर्ती स्थानांतरण के लिए फिलहाल दोनों अकाउंट की मुद्रा समान होनी चाहिए।</value></data>
+  <data name="RecurringItemSaved" xml:space="preserve"><value>आवर्ती मद सहेजी गई।</value></data>
+  <data name="RecurringPreparedFormat" xml:space="preserve"><value>{0} देय प्रविष्टि तैयार की गई। जब तक आप किसी प्रविष्टि को भुगतान किया हुआ चिह्नित नहीं करते, कोई लेन-देन नहीं बनाया जाता।</value></data>
+  <data name="RecurringRulePaused" xml:space="preserve"><value>आवर्ती नियम रोक दिया गया।</value></data>
+  <data name="RecurringRuleResumed" xml:space="preserve"><value>आवर्ती नियम फिर शुरू किया गया।</value></data>
+  <data name="RecurringRuleArchived" xml:space="preserve"><value>आवर्ती नियम संग्रहित किया गया। मौजूदा प्रविष्टि इतिहास सुरक्षित रखा गया।</value></data>
+  <data name="RecurringChooseRuleError" xml:space="preserve"><value>एक आवर्ती नियम चुनें।</value></data>
+  <data name="RecurringChooseDueOccurrence" xml:space="preserve"><value>एक देय प्रविष्टि चुनें।</value></data>
+  <data name="RecurringPositivePaidAmount" xml:space="preserve"><value>शून्य से अधिक भुगतान राशि दर्ज करें।</value></data>
+  <data name="RecurringOccurrencePaid" xml:space="preserve"><value>प्रविष्टि को भुगतान किया हुआ चिह्नित किया गया।</value></data>
+  <data name="RecurringPartialPayment" xml:space="preserve"><value>आंशिक भुगतान दर्ज किया गया।</value></data>
+  <data name="RecurringOccurrenceSkipped" xml:space="preserve"><value>लेन-देन बनाए बिना प्रविष्टि छोड़ी गई।</value></data>
+  <data name="RecurringPostponedFormat" xml:space="preserve"><value>प्रविष्टि {0:d} तक स्थगित की गई।</value></data>
+  <data name="RecurringChooseSkippedOccurrence" xml:space="preserve"><value>एक छोड़ी गई प्रविष्टि चुनें।</value></data>
+  <data name="RecurringOccurrenceReopened" xml:space="preserve"><value>छोड़ी गई प्रविष्टि फिर से लंबित स्थिति में खोली गई।</value></data>
+</root>
