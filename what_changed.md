@@ -225,6 +225,47 @@ For the current Finora 0.2.0 scope, the repository-engineering phase is closed.
 
 ---
 
+## 173. Security-regression continuation after closure audit
+
+A new continuation review was performed from main commit `b94fb403a2805b0fb581c649f25e931641d622df` against the Finora master build requirements. The review did not duplicate features already present in production source. Instead, it identified security-sensitive implementation surfaces that existed but were not all represented in the UI/source-contract suite.
+
+Working branch:
+
+`continue-hardening-2026-08-19`
+
+Granular commits added in this continuation before CI validation:
+
+- `fdb4ab559a0378c6b8ae1a74abfacac6075adbc4` — stage app/security lifecycle production files as read-only UI-contract inputs;
+- `a33cf9fbb0a3885a35552e50721472037d54240f` — add PIN/app-lock lifecycle source contracts;
+- `53f7e1003775dd0402624404bff5f1efd01b96bf` — add sensitive-screen/capture-protection source contracts;
+- `e58317b1d6f6defa0ce77a0f2400c7491ce7eafe` — stage `LockPage.xaml` as a source-contract input;
+- `06e2fe9c739f2815273750e204a15483de34a420` — add biometric/Windows Hello + PIN-fallback source contracts;
+- `a17319cdfe1ac96bfc28c41a95a8acc8f435d641` — add local-premium/demo entitlement-boundary source contracts;
+- `413c4f56c817737610773f0ee1f836f299b3970d` — add `docs/testing/SECURITY_ACCEPTANCE.md` with automated/native evidence boundaries.
+
+The new automated source contracts protect these existing production requirements from silent regression:
+
+- PBKDF2-SHA256 local PIN derivation and fixed-time verifier comparison;
+- secure-storage-backed PIN verifier material and managed cryptographic buffer clearing;
+- fail-closed behavior for an enabled lock when secure storage cannot be read;
+- startup lock routing and inactivity-based re-lock wiring;
+- permanent masked numeric PIN fallback on the lock screen;
+- biometric preference/native-availability gating and failed-authentication handling;
+- Android biometric prompt with explicit `Use PIN` fallback;
+- Apple LocalAuthentication integration;
+- Windows Hello integration;
+- Android `FLAG_SECURE` and Windows display-affinity capture protection;
+- explicit non-support behavior instead of claiming universal screenshot blocking;
+- reapplication of capture protection at startup/activation;
+- hidden local premium demo flag and its explicit non-commercial/tamperable entitlement wording;
+- separation of optional Buy Me a Coffee support from feature entitlement.
+
+`docs/testing/SECURITY_ACCEPTANCE.md` additionally records native validation that source-contract tests cannot prove, including physical/native biometric prompts, secure-storage lifecycle behavior, screen-capture behavior, suspend/resume timing, and lock-screen accessibility.
+
+No source-contract test in this continuation is represented as physical-device evidence. GitHub Actions results for the exact continuation head will be recorded in a later ledger section after execution.
+
+---
+
 ## Historical ledger integrity
 
 Sections **1–163** remain available in full, unchanged form at `docs/history/what_changed_through_2026-08-18.md`. This split was performed only because the cumulative file was too large for a safe single contents-API append while GitHub-hosted runners were unavailable. No historical section was discarded.
