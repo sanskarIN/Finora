@@ -27,6 +27,8 @@ Use:
 - Infrastructure for EF Core, files, crypto, import/export/reporting and platform-neutral workflow implementations;
 - App for MAUI UI, Preferences/SecureStorage and native platform adapters.
 
+Use `docs/development/CODE_MAP.md` for fast navigation and `docs/development/REPOSITORY_FILE_REFERENCE.md` for the exhaustive tracked-file ownership/change-impact map.
+
 ## 3. Money checklist
 
 If the feature touches money:
@@ -195,11 +197,22 @@ Add tests at all applicable layers:
 - accessibility;
 - packaging/signing.
 
-## 13. Structural preflight checklist
+## 13. Structural and repository-QA checklist
 
 If an invariant can be checked dependency-free and is high value, extend `verify_structure.py`.
 
-Keep checks deterministic and repository-structural. Never label them compiler/native tests.
+Keep structural checks deterministic and repository-focused. Never label them compiler/native tests.
+
+Before finalizing a normal change, run:
+
+```bash
+python build/scripts/verify_structure.py
+python scripts/run_repo_qa.py
+```
+
+`run_repo_qa.py` executes Python developer-tool tests, `scripts/check_documentation_coverage.py`, and localization validation. The documentation-coverage step reads `git ls-files` and requires every tracked file to be represented by an exact entry or a meaningful narrow directory entry in `docs/development/REPOSITORY_FILE_REFERENCE.md`.
+
+Do not make the coverage check pass by adding a broad top-level prefix such as `src/`, `docs/`, `tests/`, `scripts/`, or `.github/`; those declarations are intentionally rejected.
 
 ## 14. Documentation checklist
 
@@ -217,6 +230,8 @@ Update all affected docs, not only README:
 - changelog/project status;
 - `what_changed.md`.
 
+For every added, moved, or deleted tracked file, also verify the file reference's ownership/change-impact description remains accurate. A narrow directory entry may already cover the new path, but the text must still truthfully describe the area's responsibility.
+
 ## 15. Commit checklist
 
 Prefer focused commits in logical order:
@@ -225,7 +240,7 @@ Prefer focused commits in logical order:
 2. implementation;
 3. DI/presentation;
 4. tests;
-5. structural guard;
+5. structural/repository QA guard;
 6. docs;
 7. final status ledger.
 
@@ -238,6 +253,7 @@ Before declaring completion, answer separately:
 - Is the feature implemented in source?
 - Are automated tests present?
 - Did the relevant tests actually run?
+- Did repository documentation coverage pass for the exact candidate?
 - Did native build run?
 - Did device/platform behavior run?
 - Is signing/store evidence available?
