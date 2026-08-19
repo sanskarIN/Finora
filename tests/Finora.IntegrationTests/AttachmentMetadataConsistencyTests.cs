@@ -43,7 +43,7 @@ public sealed class AttachmentMetadataConsistencyTests : IAsyncLifetime
         Assert.True(local.IsSuccess);
         Assert.Equal(".png", Path.GetExtension(local.Value));
         Assert.Equal("image/png", added.Value.ContentType);
-        Assert.Equal("receipt.pdf", added.Value.OriginalFileName);
+        Assert.Equal("receipt.pdf", added.Value.FileName);
     }
 
     [Fact]
