@@ -166,7 +166,7 @@ def main() -> int:
     if args.list_missing:
         for path in missing:
             print(path)
-        return 1 if missing or invalid else 0
+        return 1 if missing or stale or invalid else 0
 
     if missing or stale or invalid:
         print(render_failure(missing, stale, invalid), file=sys.stderr)
