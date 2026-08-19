@@ -27,6 +27,7 @@ REQUIRED_FILES = (
     "global.json",
     "Directory.Build.props",
     "docs/NEXT_STEPS.md",
+    "docs/FINAL_REPOSITORY_CLOSURE.md",
     "docs/localization/LOCALIZATION_IMPLEMENTATION.md",
     "docs/accessibility/NATIVE_ACCESSIBILITY_QA.md",
     "docs/testing/NATIVE_UI_AUTOMATION.md",
