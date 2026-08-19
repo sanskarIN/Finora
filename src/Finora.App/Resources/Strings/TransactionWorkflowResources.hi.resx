@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="TransactionDetailTitle" xml:space="preserve"><value>लेन-देन विवरण</value></data>
+  <data name="TransactionDetailNotice" xml:space="preserve"><value>लिंक किए गए स्थानांतरण दोनों पक्षों को संतुलित रखते हैं। सामान्य लेन-देन हर संपादन से पहले एक लोकल संशोधन स्नैपशॉट सुरक्षित रखते हैं।</value></data>
+  <data name="TransactionDetailCategory" xml:space="preserve"><value>श्रेणी</value></data>
+  <data name="TransactionDetailPaymentMethod" xml:space="preserve"><value>भुगतान विधि</value></data>
+  <data name="TransactionDetailManualLocation" xml:space="preserve"><value>मैन्युअली दर्ज स्थान</value></data>
+  <data name="TransactionDetailSplits" xml:space="preserve"><value>विभाजन</value></data>
+  <data name="TransactionDetailSplitCategory" xml:space="preserve"><value>विभाजन श्रेणी</value></data>
+  <data name="TransactionDetailSplitAmount" xml:space="preserve"><value>विभाजन राशि</value></data>
+  <data name="TransactionDetailSplitAmountDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में विभाजन राशि</value></data>
+  <data name="TransactionDetailSplitNote" xml:space="preserve"><value>विभाजन नोट</value></data>
+  <data name="TransactionDetailAddSplit" xml:space="preserve"><value>विभाजन जोड़ें</value></data>
+  <data name="TransactionDetailSelectedSplit" xml:space="preserve"><value>चुना हुआ विभाजन</value></data>
+  <data name="TransactionDetailRemoveSplit" xml:space="preserve"><value>चुना हुआ विभाजन हटाएँ</value></data>
+  <data name="TransactionDetailTags" xml:space="preserve"><value>टैग</value></data>
+  <data name="TransactionDetailSaveChanges" xml:space="preserve"><value>बदलाव सहेजें</value></data>
+  <data name="TransactionDetailReceipts" xml:space="preserve"><value>रसीद अटैचमेंट</value></data>
+  <data name="TransactionDetailAddReceipt" xml:space="preserve"><value>रसीद जोड़ें</value></data>
+  <data name="TransactionDetailOpenSelected" xml:space="preserve"><value>चुना हुआ खोलें</value></data>
+  <data name="TransactionDetailSelectedAttachment" xml:space="preserve"><value>चुना हुआ अटैचमेंट</value></data>
+  <data name="TransactionDetailDeleteAttachment" xml:space="preserve"><value>चुना हुआ अटैचमेंट हटाएँ</value></data>
+  <data name="TransactionDetailEditHistory" xml:space="preserve"><value>संपादन इतिहास</value></data>
+  <data name="TransactionDetailNoRevisions" xml:space="preserve"><value>कोई पिछला संशोधन नहीं है।</value></data>
+  <data name="TransactionDetailDeleteUndo" xml:space="preserve"><value>हटाएँ / पूर्ववत करें</value></data>
+  <data name="TransactionDetailRefresh" xml:space="preserve"><value>रीफ़्रेश करें</value></data>
+  <data name="TransactionDetailUncategorized" xml:space="preserve"><value>बिना श्रेणी</value></data>
+  <data name="TransactionDetailChooseAccount" xml:space="preserve"><value>एक अकाउंट चुनें।</value></data>
+  <data name="TransactionDetailNonZeroAmount" xml:space="preserve"><value>शून्य से अलग राशि दर्ज करें।</value></data>
+  <data name="TransactionDetailAmountOutOfRange" xml:space="preserve"><value>लेन-देन राशि समर्थित सीमा से बाहर है।</value></data>
+  <data name="TransactionDetailFutureTime" xml:space="preserve"><value>लेन-देन का समय भविष्य में नहीं हो सकता।</value></data>
+  <data name="TransactionDetailEachSplitPositive" xml:space="preserve"><value>हर विभाजन की राशि शून्य से अधिक होनी चाहिए।</value></data>
+  <data name="TransactionDetailEachSplitRepresentable" xml:space="preserve"><value>हर विभाजन की राशि शून्य से अधिक और मुद्रा में दर्शाने योग्य होनी चाहिए।</value></data>
+  <data name="TransactionDetailSavedRevision" xml:space="preserve"><value>लेन-देन संशोधन इतिहास के साथ सहेजा गया।</value></data>
+  <data name="TransactionDetailChooseAccountFirst" xml:space="preserve"><value>पहले एक अकाउंट चुनें।</value></data>
+  <data name="TransactionDetailPositiveSplit" xml:space="preserve"><value>शून्य से अधिक विभाजन राशि दर्ज करें।</value></data>
+  <data name="TransactionDetailRepresentableSplit" xml:space="preserve"><value>ऐसी विभाजन राशि दर्ज करें जो अकाउंट की मुद्रा में दर्शाई जा सके।</value></data>
+  <data name="TransactionDetailChooseSplitRemove" xml:space="preserve"><value>हटाने के लिए एक विभाजन चुनें।</value></data>
+  <data name="TransactionDetailDeleted" xml:space="preserve"><value>लेन-देन हटाया गया। जब तक यह लोकल डेटाबेस में है, आप इसे इसी स्क्रीन से पुनर्स्थापित कर सकते हैं।</value></data>
+  <data name="TransactionDetailRestored" xml:space="preserve"><value>लेन-देन पुनर्स्थापित किया गया।</value></data>
+  <data name="TransactionToolsTitle" xml:space="preserve"><value>लेन-देन उपकरण</value></data>
+  <data name="TransactionToolsNotice" xml:space="preserve"><value>बल्क श्रेणीकरण और डुप्लिकेट पहचान रिकॉर्ड को अपने-आप कभी नहीं हटाते। विनाशकारी बदलाव करने से पहले हर परिणाम की समीक्षा करें।</value></data>
+  <data name="TransactionToolsStartDateDescription" xml:space="preserve"><value>लेन-देन उपकरण की शुरुआत तारीख</value></data>
+  <data name="TransactionToolsEndDateDescription" xml:space="preserve"><value>लेन-देन उपकरण की समाप्ति तारीख</value></data>
+  <data name="TransactionToolsRefreshPeriod" xml:space="preserve"><value>अवधि रीफ़्रेश करें</value></data>
+  <data name="TransactionToolsBulkCategorization" xml:space="preserve"><value>बल्क श्रेणीकरण</value></data>
+  <data name="TransactionToolsNewCategory" xml:space="preserve"><value>नई श्रेणी (श्रेणी हटाने के लिए खाली छोड़ें)</value></data>
+  <data name="TransactionToolsNoTransactions" xml:space="preserve"><value>इस अवधि में कोई लेन-देन नहीं है।</value></data>
+  <data name="TransactionToolsApplyCategory" xml:space="preserve"><value>चुने हुए लेन-देन पर श्रेणी लागू करें</value></data>
+  <data name="TransactionToolsExportCsv" xml:space="preserve"><value>चुने हुए CSV के रूप में एक्सपोर्ट करें</value></data>
+  <data name="TransactionToolsExportPdf" xml:space="preserve"><value>चुने हुए PDF के रूप में एक्सपोर्ट करें</value></data>
+  <data name="TransactionToolsDuplicateReview" xml:space="preserve"><value>डुप्लिकेट समीक्षा</value></data>
+  <data name="TransactionToolsScanDuplicates" xml:space="preserve"><value>संभावित डुप्लिकेट खोजें</value></data>
+  <data name="TransactionToolsNoDuplicates" xml:space="preserve"><value>कोई संभावित डुप्लिकेट नहीं मिला।</value></data>
+  <data name="TransactionToolsAmountPrefix" xml:space="preserve"><value>राशि:</value></data>
+  <data name="TransactionToolsDatePrefix" xml:space="preserve"><value>तारीख:</value></data>
+  <data name="TransactionToolsSimilarityPrefix" xml:space="preserve"><value>समानता विश्वसनीयता:</value></data>
+  <data name="TransactionToolsDuplicateHelp" xml:space="preserve"><value>पहले लेन-देन की समीक्षा के लिए टैप करें। तुलना के लिए संभावित डुप्लिकेट ID सुरक्षित रहती है।</value></data>
+  <data name="TransactionToolsSelectOne" xml:space="preserve"><value>कम से कम एक लेन-देन चुनें।</value></data>
+  <data name="TransactionToolsUpdatedFormat" xml:space="preserve"><value>{0} लेन-देन अपडेट किए गए। संशोधन इतिहास सुरक्षित रखा गया।</value></data>
+  <data name="TransactionToolsNoDuplicatesPeriod" xml:space="preserve"><value>इस अवधि में कोई संभावित डुप्लिकेट नहीं मिला।</value></data>
+  <data name="TransactionToolsFoundDuplicatesFormat" xml:space="preserve"><value>{0} संभावित डुप्लिकेट जोड़े मिले। कुछ भी हटाने से पहले समीक्षा करें।</value></data>
+  <data name="TransactionToolsEndBeforeStart" xml:space="preserve"><value>समाप्ति तारीख शुरुआत की तारीख से पहले नहीं हो सकती।</value></data>
+  <data name="ReconciliationTitle" xml:space="preserve"><value>अकाउंट मिलान</value></data>
+  <data name="ReconciliationNotice" xml:space="preserve"><value>Finora के बुक बैलेंस की बैंक/कार्ड स्टेटमेंट से तुलना करें। अंतर डेटा के रूप में कभी नहीं छिपाया जाता; गोपनीयता मोड केवल दिखाई जाने वाली राशि को छिपा सकता है। अंतर को मैन्युअली हल करें या स्पष्ट समायोजन बनाएँ।</value></data>
+  <data name="ReconciliationStatementBalance" xml:space="preserve"><value>स्टेटमेंट अंतिम शेष</value></data>
+  <data name="ReconciliationStatementBalanceDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में स्टेटमेंट अंतिम शेष</value></data>
+  <data name="ReconciliationOptionalNote" xml:space="preserve"><value>वैकल्पिक मिलान नोट</value></data>
+  <data name="ReconciliationPreview" xml:space="preserve"><value>मिलान पूर्वावलोकन</value></data>
+  <data name="ReconciliationCreateAdjustment" xml:space="preserve"><value>ज़रूरत होने पर स्पष्ट समायोजन बनाएँ</value></data>
+  <data name="ReconciliationComplete" xml:space="preserve"><value>मिलान पूरा करें</value></data>
+  <data name="ReconciliationHistory" xml:space="preserve"><value>इतिहास</value></data>
+  <data name="ReconciliationNoHistory" xml:space="preserve"><value>इस अकाउंट के लिए कोई मिलान इतिहास नहीं है।</value></data>
+  <data name="ReconciliationStatementPrefix" xml:space="preserve"><value>स्टेटमेंट:</value></data>
+  <data name="ReconciliationDifferencePrefix" xml:space="preserve"><value>अंतर:</value></data>
+  <data name="ReconciliationAdjustmentCreatedPrefix" xml:space="preserve"><value>समायोजन बनाया:</value></data>
+  <data name="ReconciliationChooseInput" xml:space="preserve"><value>एक अकाउंट चुनें और स्टेटमेंट शेष दर्ज करें।</value></data>
+  <data name="ReconciliationBookBalanceFormat" xml:space="preserve"><value>बुक शेष: {0}</value></data>
+  <data name="ReconciliationStatementBalanceFormat" xml:space="preserve"><value>स्टेटमेंट शेष: {0}</value></data>
+  <data name="ReconciliationDifferenceFormat" xml:space="preserve"><value>अंतर: {0}</value></data>
+  <data name="ReconciliationCompletedAdjustment" xml:space="preserve"><value>स्पष्ट समायोजन लेन-देन के साथ मिलान पूरा हुआ।</value></data>
+  <data name="ReconciliationCompleted" xml:space="preserve"><value>मिलान पूरा हुआ।</value></data>
+  <data name="ReconciliationChooseAccount" xml:space="preserve"><value>एक अकाउंट चुनें।</value></data>
+  <data name="ReconciliationInvalidBalance" xml:space="preserve"><value>मान्य स्टेटमेंट शेष दर्ज करें।</value></data>
+</root>
