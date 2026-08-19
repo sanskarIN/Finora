@@ -20,20 +20,33 @@ python scripts/check_release_readiness.py --json
 
 ### Required project/release files
 
-The guard requires the core repository, legal, security, contributor, QA, roadmap, and change-ledger files used by the current Finora release process.
+The guard requires the core repository, legal, security, contributor, QA, roadmap, change-ledger, SDK-policy, package-audit, funding, and developer-tool index files used by the current Finora release process.
 
 It also requires the validation workflows for:
 
-- normal CI,
+- normal CI and all supported source-build targets,
+- CodeQL security analysis,
+- Dependency Review,
 - localization,
 - deterministic sample data,
 - CSV diagnostics,
 - export artifact checks,
 - backup artifact checks,
 - native UI harness syntax/parser checks,
+- performance validation,
 - repository release readiness.
 
 Missing or empty required files fail the guard.
+
+### SDK and package-security policy
+
+`global.json` defines the supported .NET 10 SDK family so developer and CI toolchains resolve within the intended major SDK line instead of silently floating to another major version.
+
+`Directory.Build.props` keeps NuGet vulnerability auditing explicitly enabled for direct and transitive packages at the repository level. Restore/build warnings remain errors under the normal Finora policy.
+
+### Repository funding metadata
+
+`.github/FUNDING.yml` points only to Finora's canonical optional Buy Me a Coffee support URL. Funding metadata is repository presentation; it must remain separate from application entitlement, finance behavior, support priority, and security-report handling.
 
 ### Tracked secret/signing/database artifacts
 
@@ -66,9 +79,13 @@ A conflict marker fails the check before packaging.
 
 `what_changed.md` and `docs/NEXT_STEPS.md` must exist and contain substantive content. The guard cannot determine whether every sentence is current; maintainers must still update both ledgers as project work changes.
 
+The final repository-level closure boundary is recorded in `docs/FINAL_REPOSITORY_CLOSURE.md`. External signing, store, device, accessibility, and other release-owner evidence remains external validation rather than hidden unfinished source work.
+
 ## CI
 
 `.github/workflows/release-readiness.yml` runs the guard and its unit tests for changes to source, tests, scripts, docs, GitHub configuration, legal/security files, contributor guidance, and the project change ledger.
+
+The guard also verifies that the repository still carries the CodeQL, Dependency Review, performance, localization, sample-data, artifact-verification, native-UI-harness, and normal CI workflows expected by the current release process.
 
 ## Recommended pre-release sequence
 
