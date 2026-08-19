@@ -1,1 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><root><resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><data name="AppName" xml:space="preserve"><value>Finora</value></data><data name="LocalFirstSummary" xml:space="preserve"><value>आपके वित्तीय डेटा इस डिवाइस पर रहते हैं।</value></data><data name="MadeBy" xml:space="preserve"><value>Made by the Sanskar</value></data></root>
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="AppName" xml:space="preserve"><value>Finora</value></data>
+  <data name="LocalFirstSummary" xml:space="preserve"><value>आपका वित्तीय डेटा इसी डिवाइस पर रहता है।</value></data>
+  <data name="MadeBy" xml:space="preserve"><value>Made by the Sanskar</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>डैशबोर्ड</value></data>
+  <data name="Transactions" xml:space="preserve"><value>लेन-देन</value></data>
+  <data name="Budgets" xml:space="preserve"><value>बजट</value></data>
+  <data name="Goals" xml:space="preserve"><value>लक्ष्य</value></data>
+  <data name="Settings" xml:space="preserve"><value>सेटिंग्स</value></data>
+  <data name="SupportFinoraExternalDescription" xml:space="preserve"><value>Buy Me a Coffee पर Finora के विकास का समर्थन करें। बाहरी सहायता पेज सिस्टम ब्राउज़र में खुलेगा।</value></data>
+</root>
