@@ -30,7 +30,25 @@ public sealed class LockViewModel : ViewModelBase
     public System.Windows.Input.ICommand BiometricCommand { get; }
 
     private async Task LoadBiometricAvailabilityAsync()
-        => CanUseBiometrics = _settings.BiometricUnlockEnabled && await _biometric.GetAvailabilityAsync() == BiometricAvailability.Available;
+    {
+        if (!_settings.BiometricUnlockEnabled)
+        {
+            CanUseBiometrics = false;
+            return;
+        }
+
+        try
+        {
+            CanUseBiometrics = await _biometric.GetAvailabilityAsync() == BiometricAvailability.Available;
+        }
+        catch (Exception)
+        {
+            // Native availability APIs can fail transiently during activation or when a
+            // platform credential provider is unavailable. Keep the PIN path usable and
+            // do not allow a fire-and-forget availability probe to fault unobserved.
+            CanUseBiometrics = false;
+        }
+    }
 
     private Task BiometricAsync() => RunAsync(async () =>
     {
