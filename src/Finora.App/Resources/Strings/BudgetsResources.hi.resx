@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="ViewPeriod" xml:space="preserve"><value>अवधि देखें</value></data>
+  <data name="NoBudgetsForPeriod" xml:space="preserve"><value>इस अवधि के लिए कोई बजट नहीं है।</value></data>
+  <data name="AvailablePlan" xml:space="preserve"><value>उपलब्ध योजना:</value></data>
+  <data name="ActualSpending" xml:space="preserve"><value>वास्तविक खर्च:</value></data>
+  <data name="WarningAt" xml:space="preserve"><value>चेतावनी सीमा</value></data>
+  <data name="CreateBudget" xml:space="preserve"><value>बजट बनाएँ</value></data>
+  <data name="BudgetName" xml:space="preserve"><value>बजट का नाम</value></data>
+  <data name="Limit" xml:space="preserve"><value>सीमा</value></data>
+  <data name="BudgetLimitDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में बजट सीमा</value></data>
+  <data name="Cadence" xml:space="preserve"><value>आवृत्ति</value></data>
+  <data name="CustomPeriodStart" xml:space="preserve"><value>कस्टम अवधि की शुरुआत</value></data>
+  <data name="CustomPeriodEnd" xml:space="preserve"><value>कस्टम अवधि का अंत</value></data>
+  <data name="CategoryOverallOptional" xml:space="preserve"><value>श्रेणी (कुल बजट के लिए खाली छोड़ें)</value></data>
+  <data name="RolloverUnusedBudget" xml:space="preserve"><value>अप्रयुक्त साप्ताहिक/मासिक बजट आगे जोड़ें</value></data>
+  <data name="WarningThresholdPercent" xml:space="preserve"><value>चेतावनी सीमा (%)</value></data>
+  <data name="SaveBudget" xml:space="preserve"><value>बजट सहेजें</value></data>
+  <data name="BudgetActualsNotice" xml:space="preserve"><value>बजट का वास्तविक खर्च लेन-देन विभाजन और अधीनस्थ श्रेणियों को शामिल करता है। उपलब्ध होने पर रोलओवर स्पष्ट बजट अवधियों से गणना किया जाता है।</value></data>
+</root>
