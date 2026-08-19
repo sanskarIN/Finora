@@ -24,4 +24,20 @@
   <data name="ContributionNote" xml:space="preserve"><value>Contribution note</value></data>
   <data name="ApplySelectedGoal" xml:space="preserve"><value>Apply to selected goal</value></data>
   <data name="ReducedMotionGoalNotice" xml:space="preserve"><value>The completion message uses no forced animation, so reduced-motion preferences are respected.</value></data>
+  <data name="SelectGoalForecast" xml:space="preserve"><value>Select a goal to see its forecast.</value></data>
+  <data name="GoalNameRequired" xml:space="preserve"><value>Goal name is required.</value></data>
+  <data name="EnterPositiveTarget" xml:space="preserve"><value>Enter a positive target.</value></data>
+  <data name="StartingAmountNotNegative" xml:space="preserve"><value>Starting amount cannot be negative.</value></data>
+  <data name="StartingAmountNotExceedTarget" xml:space="preserve"><value>Starting amount cannot exceed the target amount.</value></data>
+  <data name="ChooseSavingsGoal" xml:space="preserve"><value>Choose a savings goal.</value></data>
+  <data name="EnterNonZeroContribution" xml:space="preserve"><value>Enter a non-zero contribution or withdrawal.</value></data>
+  <data name="ContributionRecorded" xml:space="preserve"><value>Contribution recorded.</value></data>
+  <data name="WithdrawalRecorded" xml:space="preserve"><value>Withdrawal recorded.</value></data>
+  <data name="NextMilestoneFormat" xml:space="preserve"><value>Next milestone: {0}%.</value></data>
+  <data name="MilestonesAchievedAll" xml:space="preserve"><value>Milestones achieved: 25%, 50%, 75%, 100%.</value></data>
+  <data name="AchievedNextFormat" xml:space="preserve"><value>Achieved: {0}. Next: {1}%.</value></data>
+  <data name="TargetReached" xml:space="preserve"><value>Target reached.</value></data>
+  <data name="AddTargetDateForecast" xml:space="preserve"><value>Add a target date to calculate a contribution forecast.</value></data>
+  <data name="ForecastPrivacyFormat" xml:space="preserve"><value>To reach the target by {0:d}, the monthly contribution estimate is hidden by privacy mode. {1} day(s) remain.</value></data>
+  <data name="ForecastAmountFormat" xml:space="preserve"><value>To reach the target by {0:d}, aim for about {1} per month over the remaining {2} day(s).</value></data>
 </root>
