@@ -45,6 +45,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: finora-release-readiness-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   structural-readiness:
     runs-on: ubuntu-latest
