@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="CategoriesTagsTitle" xml:space="preserve"><value>श्रेणियाँ और टैग</value></data>
+  <data name="CategoriesSection" xml:space="preserve"><value>श्रेणियाँ</value></data>
+  <data name="CategoriesSelected" xml:space="preserve"><value>चुनी हुई श्रेणी</value></data>
+  <data name="CategoriesName" xml:space="preserve"><value>श्रेणी का नाम</value></data>
+  <data name="CategoriesParentOptional" xml:space="preserve"><value>मूल श्रेणी (वैकल्पिक)</value></data>
+  <data name="CategoriesCreate" xml:space="preserve"><value>श्रेणी बनाएँ</value></data>
+  <data name="CategoriesUpdateSelected" xml:space="preserve"><value>चुनी हुई प्रविष्टि अपडेट करें</value></data>
+  <data name="CategoriesMoveUp" xml:space="preserve"><value>ऊपर ले जाएँ</value></data>
+  <data name="CategoriesMoveDown" xml:space="preserve"><value>नीचे ले जाएँ</value></data>
+  <data name="CategoriesMergeTarget" xml:space="preserve"><value>मर्ज/पुनः असाइन लक्ष्य</value></data>
+  <data name="CategoriesMerge" xml:space="preserve"><value>मर्ज करें</value></data>
+  <data name="CategoriesArchive" xml:space="preserve"><value>संग्रहित करें</value></data>
+  <data name="CategoriesRestore" xml:space="preserve"><value>पुनर्स्थापित करें</value></data>
+  <data name="CategoriesNoItems" xml:space="preserve"><value>कोई श्रेणी नहीं है।</value></data>
+  <data name="CategoriesParentPrefix" xml:space="preserve"><value>मूल:</value></data>
+  <data name="CategoriesArchivedPrefix" xml:space="preserve"><value>संग्रहित:</value></data>
+  <data name="TagsSection" xml:space="preserve"><value>टैग</value></data>
+  <data name="TagsSelected" xml:space="preserve"><value>चुना हुआ टैग</value></data>
+  <data name="TagsName" xml:space="preserve"><value>टैग का नाम</value></data>
+  <data name="TagsOptionalColor" xml:space="preserve"><value>वैकल्पिक रंग लेबल</value></data>
+  <data name="TagsCreate" xml:space="preserve"><value>टैग बनाएँ</value></data>
+  <data name="TagsArchive" xml:space="preserve"><value>टैग संग्रहित करें</value></data>
+  <data name="TagsRestore" xml:space="preserve"><value>टैग पुनर्स्थापित करें</value></data>
+  <data name="TagsNoItems" xml:space="preserve"><value>कोई टैग नहीं है।</value></data>
+  <data name="TagsTransactionCountFormat" xml:space="preserve"><value>{0} लेन-देन</value></data>
+  <data name="CategoriesCreated" xml:space="preserve"><value>श्रेणी बनाई गई।</value></data>
+  <data name="CategoriesChooseUpdate" xml:space="preserve"><value>अपडेट करने के लिए एक श्रेणी चुनें।</value></data>
+  <data name="CategoriesUpdated" xml:space="preserve"><value>श्रेणी अपडेट की गई।</value></data>
+  <data name="CategoriesChooseArchive" xml:space="preserve"><value>संग्रहित करने के लिए एक श्रेणी चुनें।</value></data>
+  <data name="CategoriesArchived" xml:space="preserve"><value>श्रेणी संग्रहित की गई।</value></data>
+  <data name="CategoriesChooseRestore" xml:space="preserve"><value>पुनर्स्थापित करने के लिए एक श्रेणी चुनें।</value></data>
+  <data name="CategoriesRestored" xml:space="preserve"><value>श्रेणी पुनर्स्थापित की गई।</value></data>
+  <data name="CategoriesChooseMove" xml:space="preserve"><value>स्थान बदलने के लिए एक श्रेणी चुनें।</value></data>
+  <data name="CategoriesMovedUp" xml:space="preserve"><value>श्रेणी ऊपर ले जाई गई।</value></data>
+  <data name="CategoriesMovedDown" xml:space="preserve"><value>श्रेणी नीचे ले जाई गई।</value></data>
+  <data name="CategoriesChooseMerge" xml:space="preserve"><value>स्रोत और लक्ष्य श्रेणियाँ चुनें।</value></data>
+  <data name="CategoriesMerged" xml:space="preserve"><value>श्रेणी रिकॉर्ड मर्ज किए गए और स्रोत श्रेणी संग्रहित की गई।</value></data>
+  <data name="TagsCreated" xml:space="preserve"><value>टैग बनाया गया।</value></data>
+  <data name="TagsChooseUpdate" xml:space="preserve"><value>अपडेट करने के लिए एक टैग चुनें।</value></data>
+  <data name="TagsUpdated" xml:space="preserve"><value>टैग अपडेट किया गया।</value></data>
+  <data name="TagsChooseArchive" xml:space="preserve"><value>संग्रहित करने के लिए एक टैग चुनें।</value></data>
+  <data name="TagsArchived" xml:space="preserve"><value>टैग संग्रहित किया गया। मौजूदा लेन-देन लिंक सुरक्षित रखे गए।</value></data>
+  <data name="TagsChooseRestore" xml:space="preserve"><value>पुनर्स्थापित करने के लिए एक टैग चुनें।</value></data>
+  <data name="TagsRestored" xml:space="preserve"><value>टैग पुनर्स्थापित किया गया।</value></data>
+</root>
