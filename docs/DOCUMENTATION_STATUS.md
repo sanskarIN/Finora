@@ -9,6 +9,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Public project overview | `README.md` | Current |
 | Documentation index | `docs/README.md` | Current |
 | Documentation completeness | `docs/DOCUMENTATION_STATUS.md` | Current |
+| Tracked-file responsibility reference | `docs/development/REPOSITORY_FILE_REFERENCE.md` | Current — mechanically checked against `git ls-files` by repository QA/CI |
 | Final repository closure | `docs/FINAL_REPOSITORY_CLOSURE.md` | Current — repository engineering closure and external release-evidence boundary recorded 2026-08-19 |
 | Prioritized next steps | `docs/NEXT_STEPS.md` | Current — repository backlog closed; remaining release/native/full-profile items are external evidence, optional polish, or later-version scope |
 | End-user workflows | `docs/USER_GUIDE.md` | Current |
@@ -35,6 +36,7 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Feature-change procedure | `docs/development/ADDING_A_FEATURE.md` | Current |
 | Test plan | `docs/TEST_PLAN.md` | Current |
 | Practical testing guide | `docs/testing/TESTING_GUIDE.md` | Current |
+| Repository QA | `docs/testing/REPOSITORY_QA.md` | Current — Python tool tests, tracked-file documentation coverage, and localization validation integrated into CI preflight |
 | Performance benchmarking | `docs/testing/PERFORMANCE_BENCHMARKING.md` | Current — synthetic harness + exact verified bounded 10k smoke + full-profile evidence boundary documented |
 | Dated CI/check-run evidence | `docs/testing/CI_EVIDENCE.md` | Current — strict 2026-08-18 performance-tooling candidate recorded with 319 tests, four native source builds, CodeQL, Dependency Review and bounded 10k smoke |
 | Native validation matrix | `docs/testing/NATIVE_VALIDATION_MATRIX.md` | Current |
@@ -57,6 +59,18 @@ This matrix tracks documentation coverage for the current Finora 0.2.0 (build 2)
 | Code of conduct | `CODE_OF_CONDUCT.md` | Current |
 | Third-party notices | `THIRD_PARTY_NOTICES.md` | Current subject to release-time exact dependency audit |
 | License | `LICENSE` | Apache-2.0 |
+
+## Tracked-file completeness rule
+
+`docs/development/REPOSITORY_FILE_REFERENCE.md` is the exhaustive repository responsibility map. It complements behavioral manuals with ownership/change-impact documentation for root files and narrowly scoped repository areas.
+
+`scripts/check_documentation_coverage.py` reads `git ls-files` and fails when:
+
+- a tracked file is not represented by the reference;
+- a declared file/directory entry no longer covers any tracked path; or
+- the inventory uses a broad top-level catch-all directory such as `src/`, `docs/`, or `tests/` rather than a meaningful narrow area.
+
+The checker is unit-tested, runs through `scripts/run_repo_qa.py`, and is included in the primary Finora CI structural preflight. A passing coverage check means every tracked file has a documented repository responsibility; it does not prove that every file's runtime behavior has been exercised on every target platform.
 
 ## Documentation source rules
 
@@ -83,9 +97,11 @@ Documentation and UI must not describe that link as premium entitlement, subscri
 
 `build/scripts/verify_structure.py` treats the core documentation tree as required repository structure and validates repository-relative Markdown file links without network access.
 
-The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md` and `docs/testing/PERFORMANCE_BENCHMARKING.md`, so the link validator also protects indexed documents that are not separately enumerated in the hard required-path list.
+The documentation index itself links the remaining cross-cutting manuals, including `docs/testing/CI_EVIDENCE.md`, `docs/testing/PERFORMANCE_BENCHMARKING.md`, and `docs/development/REPOSITORY_FILE_REFERENCE.md`, so the link validator protects indexed documents that are not separately enumerated in the hard required-path list.
 
-The link check deliberately does not prove:
+The separate tracked-file documentation coverage check protects all Git-tracked files/areas, including source, tests, workflows, scripts, resources, legal/community files, and documentation.
+
+The link/coverage checks deliberately do not prove:
 
 - external URLs are reachable;
 - section anchors exist;
@@ -129,6 +145,8 @@ Do not add speculative current-version features merely to keep the repository ch
 ## Update policy
 
 When code changes, update all relevant documentation in the same workstream.
+
+When any tracked file is added, moved, or deleted, also verify `docs/development/REPOSITORY_FILE_REFERENCE.md` remains accurate and run `python scripts/check_documentation_coverage.py`.
 
 Examples:
 
