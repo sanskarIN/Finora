@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SearchMerchantNoteAccountCategory" xml:space="preserve"><value>Search merchant, note, account or category</value></data>
+  <data name="Search" xml:space="preserve"><value>Search</value></data>
+  <data name="AdvancedFilters" xml:space="preserve"><value>Advanced filters</value></data>
+  <data name="ClearFilters" xml:space="preserve"><value>Clear filters</value></data>
+  <data name="AccountAll" xml:space="preserve"><value>Account: all</value></data>
+  <data name="CategoryAll" xml:space="preserve"><value>Category: all</value></data>
+  <data name="TransactionType" xml:space="preserve"><value>Transaction type</value></data>
+  <data name="Through" xml:space="preserve"><value>Through</value></data>
+  <data name="ApplyFilters" xml:space="preserve"><value>Apply filters</value></data>
+  <data name="SortHistory" xml:space="preserve"><value>Sort history</value></data>
+  <data name="SortHistoryDescription" xml:space="preserve"><value>Choose transaction history sort order</value></data>
+  <data name="ApplySort" xml:space="preserve"><value>Apply sort</value></data>
+  <data name="ImportCsv" xml:space="preserve"><value>Import CSV</value></data>
+  <data name="Tools" xml:space="preserve"><value>Tools</value></data>
+  <data name="QuickAdd" xml:space="preserve"><value>Quick add</value></data>
+  <data name="Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Account" xml:space="preserve"><value>Account</value></data>
+  <data name="CategoryOptional" xml:space="preserve"><value>Category (optional)</value></data>
+  <data name="Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Time" xml:space="preserve"><value>Time</value></data>
+  <data name="TransactionAmountDescription" xml:space="preserve"><value>Transaction amount in major currency units</value></data>
+  <data name="CalculatorKeypad" xml:space="preserve"><value>Calculator keypad</value></data>
+  <data name="ExpressionPrefix" xml:space="preserve"><value>Expression: </value></data>
+  <data name="Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="UseResult" xml:space="preserve"><value>= Use result</value></data>
+  <data name="MerchantPayee" xml:space="preserve"><value>Merchant or payee</value></data>
+  <data name="PaymentMethodOptional" xml:space="preserve"><value>Payment method (optional)</value></data>
+  <data name="LocationOptionalManual" xml:space="preserve"><value>Location (optional, manually entered only)</value></data>
+  <data name="Note" xml:space="preserve"><value>Note</value></data>
+  <data name="SaveTransaction" xml:space="preserve"><value>Save transaction</value></data>
+  <data name="History" xml:space="preserve"><value>History</value></data>
+  <data name="NoMatchingTransactions" xml:space="preserve"><value>No matching transactions.</value></data>
+  <data name="TransactionTapHelp" xml:space="preserve"><value>Tap to edit, split, tag, attach receipts, or inspect revision history.</value></data>
+  <data name="LoadMoreTransactions" xml:space="preserve"><value>Load more transactions</value></data>
+  <data name="LoadMoreTransactionsDescription" xml:space="preserve"><value>Load the next 50 matching transactions</value></data>
+</root>
