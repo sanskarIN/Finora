@@ -39,11 +39,12 @@ public sealed class AttachmentMetadataConsistencyTests : IAsyncLifetime
         var added = await service.AddAttachmentAsync(transaction.Id, content, "receipt.pdf", "image/png");
 
         Assert.True(added.IsSuccess);
-        var local = await service.GetLocalPathAsync(added.Value!.Id);
+        var attachment = added.Value!;
+        var local = await service.GetLocalPathAsync(attachment.Id);
         Assert.True(local.IsSuccess);
-        Assert.Equal(".png", Path.GetExtension(local.Value));
-        Assert.Equal("image/png", added.Value.ContentType);
-        Assert.Equal("receipt.pdf", added.Value.FileName);
+        Assert.Equal(".png", Path.GetExtension(local.Value!));
+        Assert.Equal("image/png", attachment.ContentType);
+        Assert.Equal("receipt.pdf", attachment.FileName);
     }
 
     [Fact]
