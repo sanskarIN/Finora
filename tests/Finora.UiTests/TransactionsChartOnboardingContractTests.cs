@@ -1,3 +1,5 @@
+using System.Xml.Linq;
+
 namespace Finora.UiTests;
 
 public sealed class TransactionsChartOnboardingContractTests
@@ -33,13 +35,21 @@ public sealed class TransactionsChartOnboardingContractTests
     }
 
     [Fact]
-    public void Onboarding_ExposesPrivacyTermsAndRevisitGuidance()
+    public void Onboarding_ExposesLocalizedPrivacyTermsAndRevisitGuidance()
     {
         var xaml = ReadContract("OnboardingPage.xaml");
         var links = ReadContract("OnboardingPage.Links.cs");
+        var english = ReadResx("AppResources.resx");
+        var hindi = ReadResx("AppResources.hi.resx");
 
-        Assert.Contains("Nothing is uploaded automatically", xaml, StringComparison.Ordinal);
-        Assert.Contains("revisit onboarding from Settings", xaml, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("{DynamicResource Text.LocalFirstPrivacyBody}", xaml, StringComparison.Ordinal);
+        Assert.Contains("{DynamicResource Text.OnboardingSharingNotice}", xaml, StringComparison.Ordinal);
+        Assert.Contains("{DynamicResource Text.Privacy}", xaml, StringComparison.Ordinal);
+        Assert.Contains("{DynamicResource Text.Terms}", xaml, StringComparison.Ordinal);
+        Assert.Contains("Nothing is uploaded automatically", english["LocalFirstPrivacyBody"], StringComparison.Ordinal);
+        Assert.Contains("revisit onboarding from Settings", english["OnboardingSharingNotice"], StringComparison.OrdinalIgnoreCase);
+        Assert.False(string.IsNullOrWhiteSpace(hindi["LocalFirstPrivacyBody"]));
+        Assert.False(string.IsNullOrWhiteSpace(hindi["OnboardingSharingNotice"]));
         Assert.Contains("Clicked=\"OnOnboardingPrivacyClicked\"", xaml, StringComparison.Ordinal);
         Assert.Contains("Clicked=\"OnOnboardingTermsClicked\"", xaml, StringComparison.Ordinal);
         Assert.Contains("document=terms", links, StringComparison.Ordinal);
@@ -47,4 +57,13 @@ public sealed class TransactionsChartOnboardingContractTests
 
     private static string ReadContract(string fileName)
         => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Contracts", fileName));
+
+    private static IReadOnlyDictionary<string, string> ReadResx(string fileName)
+        => XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Contracts", fileName))
+            .Root!
+            .Elements("data")
+            .ToDictionary(
+                element => (string)element.Attribute("name")!,
+                element => (string?)element.Element("value") ?? string.Empty,
+                StringComparer.Ordinal);
 }
