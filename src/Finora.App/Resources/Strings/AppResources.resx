@@ -11,4 +11,30 @@
   <data name="Goals" xml:space="preserve"><value>Goals</value></data>
   <data name="Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="SupportFinoraExternalDescription" xml:space="preserve"><value>Support Finora development on Buy Me a Coffee. Opens the external support page in the system browser.</value></data>
+  <data name="WelcomeToFinora" xml:space="preserve"><value>Welcome to Finora</value></data>
+  <data name="LocalFirstPrivacy" xml:space="preserve"><value>Local-first privacy</value></data>
+  <data name="LocalFirstPrivacyBody" xml:space="preserve"><value>Finora works without an account. Financial records are stored on this device in this release. Nothing is uploaded automatically. Back up your data before uninstalling the app.</value></data>
+  <data name="SupportFinoraDevelopment" xml:space="preserve"><value>Support Finora development</value></data>
+  <data name="SupportFinoraCardDescription" xml:space="preserve"><value>Optional Buy Me a Coffee support for Finora development</value></data>
+  <data name="SupportFinoraImageDescription" xml:space="preserve"><value>Support Finora on Buy Me a Coffee</value></data>
+  <data name="SupportFinoraBody" xml:space="preserve"><value>Buy Me a Coffee is an optional external way to support ongoing Finora development. Supporting the project never unlocks app features, changes support priority, or replaces store entitlement rules.</value></data>
+  <data name="BuyMeCoffeeButton" xml:space="preserve"><value>☕ Buy Me a Coffee · Support Finora</value></data>
+  <data name="BuyMeCoffeeBrowserDescription" xml:space="preserve"><value>Open the Sanskar Buy Me a Coffee support page in the system browser</value></data>
+  <data name="DefaultCurrency" xml:space="preserve"><value>Default currency</value></data>
+  <data name="DefaultCurrencyDescription" xml:space="preserve"><value>Default Finora currency code</value></data>
+  <data name="Locale" xml:space="preserve"><value>Locale</value></data>
+  <data name="LocaleDescription" xml:space="preserve"><value>Locale used for dates and number formatting</value></data>
+  <data name="FinancialMonthStartDay" xml:space="preserve"><value>Financial month start day (1–28)</value></data>
+  <data name="SelectedFinancialMonthStartDay" xml:space="preserve"><value>Selected financial month start day</value></data>
+  <data name="OptionalOpeningBalance" xml:space="preserve"><value>Optional opening balance</value></data>
+  <data name="OpeningBalanceDescription" xml:space="preserve"><value>Optional opening balance in major currency units. It is used only when there are no existing accounts.</value></data>
+  <data name="SampleDataOptIn" xml:space="preserve"><value>Add explicit opt-in sample data</value></data>
+  <data name="SampleDataDescription" xml:space="preserve"><value>Create synthetic sample data only when Finora has no existing accounts</value></data>
+  <data name="OnboardingSharingNotice" xml:space="preserve"><value>You can revisit onboarding from Settings. Location is never collected in the background; attachments, backups, and exports remain local unless you explicitly share them.</value></data>
+  <data name="Privacy" xml:space="preserve"><value>Privacy</value></data>
+  <data name="PrivacyDescription" xml:space="preserve"><value>Read Finora privacy information</value></data>
+  <data name="Terms" xml:space="preserve"><value>Terms</value></data>
+  <data name="TermsDescription" xml:space="preserve"><value>Read Finora terms</value></data>
+  <data name="StartUsingFinora" xml:space="preserve"><value>Start using Finora</value></data>
+  <data name="StartUsingFinoraDescription" xml:space="preserve"><value>Save onboarding preferences and open the dashboard</value></data>
 </root>
