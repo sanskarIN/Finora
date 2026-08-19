@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SavingsGoals" xml:space="preserve"><value>बचत लक्ष्य</value></data>
+  <data name="CreateSavingsGoalBelow" xml:space="preserve"><value>नीचे एक बचत लक्ष्य बनाएँ।</value></data>
+  <data name="Saved" xml:space="preserve"><value>बचत:</value></data>
+  <data name="Target" xml:space="preserve"><value>लक्ष्य:</value></data>
+  <data name="TargetDate" xml:space="preserve"><value>लक्ष्य तारीख:</value></data>
+  <data name="Planning" xml:space="preserve"><value>योजना</value></data>
+  <data name="Goal" xml:space="preserve"><value>लक्ष्य</value></data>
+  <data name="GoalCompletedCongratulations" xml:space="preserve"><value>लक्ष्य पूरा हुआ — बधाई!</value></data>
+  <data name="CreateGoal" xml:space="preserve"><value>लक्ष्य बनाएँ</value></data>
+  <data name="GoalName" xml:space="preserve"><value>लक्ष्य का नाम</value></data>
+  <data name="IconName" xml:space="preserve"><value>आइकन का नाम</value></data>
+  <data name="TargetAmount" xml:space="preserve"><value>लक्ष्य राशि</value></data>
+  <data name="SavingsTargetDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में बचत लक्ष्य</value></data>
+  <data name="StartingAmount" xml:space="preserve"><value>प्रारंभिक राशि</value></data>
+  <data name="StartingSavingsDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में प्रारंभिक बचत राशि</value></data>
+  <data name="Notes" xml:space="preserve"><value>नोट्स</value></data>
+  <data name="AddContributionWithdrawal" xml:space="preserve"><value>योगदान या निकासी जोड़ें</value></data>
+  <data name="ContributionAmountHint" xml:space="preserve"><value>राशि; निकासी के लिए ऋण चिह्न का उपयोग करें</value></data>
+  <data name="LinkExistingTransactionOptional" xml:space="preserve"><value>मौजूदा अकाउंट लेन-देन लिंक करें (वैकल्पिक)</value></data>
+  <data name="ContributionNote" xml:space="preserve"><value>योगदान नोट</value></data>
+  <data name="ApplySelectedGoal" xml:space="preserve"><value>चुने हुए लक्ष्य पर लागू करें</value></data>
+  <data name="ReducedMotionGoalNotice" xml:space="preserve"><value>पूर्णता संदेश में कोई बाध्य एनिमेशन नहीं है, इसलिए कम गति की प्राथमिकता का सम्मान होता है।</value></data>
+</root>
