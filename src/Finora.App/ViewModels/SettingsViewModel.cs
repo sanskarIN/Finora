@@ -89,7 +89,8 @@ public sealed class SettingsViewModel : ViewModelBase
             var normalized = CultureSettings.NormalizeOrFallback(value, _locale);
             if (!SetProperty(ref _locale, normalized)) return;
             _settings.Locale = normalized;
-            CultureSettings.TryApply(normalized);
+            if (CultureSettings.TryApply(normalized) && Microsoft.Maui.Controls.Application.Current?.Resources is { } resources)
+                LocalizationResources.Apply(resources);
             OnPropertyChanged(nameof(NumberFormatPreview));
         }
     }
