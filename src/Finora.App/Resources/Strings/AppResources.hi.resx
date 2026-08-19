@@ -11,4 +11,30 @@
   <data name="Goals" xml:space="preserve"><value>लक्ष्य</value></data>
   <data name="Settings" xml:space="preserve"><value>सेटिंग्स</value></data>
   <data name="SupportFinoraExternalDescription" xml:space="preserve"><value>Buy Me a Coffee पर Finora के विकास का समर्थन करें। बाहरी सहायता पेज सिस्टम ब्राउज़र में खुलेगा।</value></data>
+  <data name="WelcomeToFinora" xml:space="preserve"><value>Finora में आपका स्वागत है</value></data>
+  <data name="LocalFirstPrivacy" xml:space="preserve"><value>लोकल-फर्स्ट गोपनीयता</value></data>
+  <data name="LocalFirstPrivacyBody" xml:space="preserve"><value>Finora बिना अकाउंट के काम करता है। इस रिलीज़ में वित्तीय रिकॉर्ड इसी डिवाइस पर संग्रहीत होते हैं। कुछ भी अपने-आप अपलोड नहीं होता। ऐप हटाने से पहले अपने डेटा का बैकअप बना लें।</value></data>
+  <data name="SupportFinoraDevelopment" xml:space="preserve"><value>Finora के विकास का समर्थन करें</value></data>
+  <data name="SupportFinoraCardDescription" xml:space="preserve"><value>Finora के विकास के लिए वैकल्पिक Buy Me a Coffee समर्थन</value></data>
+  <data name="SupportFinoraImageDescription" xml:space="preserve"><value>Buy Me a Coffee पर Finora का समर्थन करें</value></data>
+  <data name="SupportFinoraBody" xml:space="preserve"><value>Buy Me a Coffee, Finora के निरंतर विकास का समर्थन करने का एक वैकल्पिक बाहरी तरीका है। प्रोजेक्ट का समर्थन करने से ऐप की सुविधाएँ अनलॉक नहीं होतीं, सहायता की प्राथमिकता नहीं बदलती और स्टोर के पात्रता नियम नहीं बदलते।</value></data>
+  <data name="BuyMeCoffeeButton" xml:space="preserve"><value>☕ Buy Me a Coffee · Finora का समर्थन करें</value></data>
+  <data name="BuyMeCoffeeBrowserDescription" xml:space="preserve"><value>Sanskar का Buy Me a Coffee सहायता पेज सिस्टम ब्राउज़र में खोलें</value></data>
+  <data name="DefaultCurrency" xml:space="preserve"><value>डिफ़ॉल्ट मुद्रा</value></data>
+  <data name="DefaultCurrencyDescription" xml:space="preserve"><value>Finora का डिफ़ॉल्ट मुद्रा कोड</value></data>
+  <data name="Locale" xml:space="preserve"><value>लोकेल</value></data>
+  <data name="LocaleDescription" xml:space="preserve"><value>तारीख और संख्या फ़ॉर्मेटिंग के लिए उपयोग होने वाला लोकेल</value></data>
+  <data name="FinancialMonthStartDay" xml:space="preserve"><value>वित्तीय महीने की शुरुआत का दिन (1–28)</value></data>
+  <data name="SelectedFinancialMonthStartDay" xml:space="preserve"><value>चुना गया वित्तीय महीने की शुरुआत का दिन</value></data>
+  <data name="OptionalOpeningBalance" xml:space="preserve"><value>वैकल्पिक प्रारंभिक शेष</value></data>
+  <data name="OpeningBalanceDescription" xml:space="preserve"><value>मुख्य मुद्रा इकाइयों में वैकल्पिक प्रारंभिक शेष। इसका उपयोग केवल तब होता है जब कोई मौजूदा अकाउंट नहीं है।</value></data>
+  <data name="SampleDataOptIn" xml:space="preserve"><value>स्पष्ट सहमति से नमूना डेटा जोड़ें</value></data>
+  <data name="SampleDataDescription" xml:space="preserve"><value>केवल तब कृत्रिम नमूना डेटा बनाएँ जब Finora में कोई मौजूदा अकाउंट न हो</value></data>
+  <data name="OnboardingSharingNotice" xml:space="preserve"><value>आप Settings से ऑनबोर्डिंग दोबारा खोल सकते हैं। स्थान की जानकारी पृष्ठभूमि में कभी एकत्र नहीं की जाती; अटैचमेंट, बैकअप और एक्सपोर्ट तब तक लोकल रहते हैं जब तक आप उन्हें स्पष्ट रूप से साझा न करें।</value></data>
+  <data name="Privacy" xml:space="preserve"><value>गोपनीयता</value></data>
+  <data name="PrivacyDescription" xml:space="preserve"><value>Finora की गोपनीयता जानकारी पढ़ें</value></data>
+  <data name="Terms" xml:space="preserve"><value>शर्तें</value></data>
+  <data name="TermsDescription" xml:space="preserve"><value>Finora की शर्तें पढ़ें</value></data>
+  <data name="StartUsingFinora" xml:space="preserve"><value>Finora का उपयोग शुरू करें</value></data>
+  <data name="StartUsingFinoraDescription" xml:space="preserve"><value>ऑनबोर्डिंग प्राथमिकताएँ सहेजें और डैशबोर्ड खोलें</value></data>
 </root>
