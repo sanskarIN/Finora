@@ -127,6 +127,7 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
     {
         string? stagedDirectory = null;
         string? rollbackDirectory = null;
+        var attachmentsPromoted = false;
         Snapshot? snapshot = null;
         try
         {
@@ -187,10 +188,15 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             db.AuditEntries.Add(new AuditEntry { EntityType = "Backup", EntityId = Guid.NewGuid(), Action = "RestoredEncryptedBackup" });
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            rollbackDirectory = PathSafety.ResolveDescendantWithoutLinks(_appDataRoot, $"attachments.rollback.{Guid.NewGuid():N}", "Restore rollback path is invalid.");
-            if (Directory.Exists(AttachmentRoot)) Directory.Move(AttachmentRoot, rollbackDirectory);
+            var rollbackCandidate = PathSafety.ResolveDescendantWithoutLinks(_appDataRoot, $"attachments.rollback.{Guid.NewGuid():N}", "Restore rollback path is invalid.");
+            if (Directory.Exists(AttachmentRoot))
+            {
+                Directory.Move(AttachmentRoot, rollbackCandidate);
+                rollbackDirectory = rollbackCandidate;
+            }
             Directory.Move(stagedDirectory, AttachmentRoot);
             stagedDirectory = null;
+            attachmentsPromoted = true;
             try
             {
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
@@ -199,25 +205,26 @@ public sealed class BackupService(IDbContextFactory<FinoraDbContext> factory, st
             }
             catch
             {
-                if (!RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory))
-                    throw new IOException("Restore database commit failed and receipt rollback could not be placed back into live storage.");
+                if (!RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory, attachmentsPromoted))
+                    throw new IOException("Restore database commit failed and receipt storage could not be returned to its pre-restore state.");
+                attachmentsPromoted = false;
                 throw;
             }
             return Result.Success();
         }
         catch (OperationCanceledException)
         {
-            _ = RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory);
+            _ = RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory, attachmentsPromoted);
             Cleanup(stagedDirectory);
             throw;
         }
         catch (Exception ex) when (ex is CryptographicException or JsonException or InvalidDataException or DbUpdateException or ArgumentException or IOException or UnauthorizedAccessException or InvalidOperationException or OverflowException)
         {
-            var receiptsRestored = RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory);
+            var receiptsRestored = RestoreDirectoryRecovery.TryRestore(AttachmentRoot, ref rollbackDirectory, attachmentsPromoted);
             Cleanup(stagedDirectory);
             return receiptsRestored
                 ? Result.Failure("Restore failed safely; the existing database and receipt storage were not left in a partial restored state.")
-                : Result.Failure("Restore failed; the previous receipt directory was preserved in rollback storage because it could not be returned to the live path automatically.");
+                : Result.Failure("Restore failed; receipt storage could not be returned automatically to its pre-restore state. Recovery data was preserved where available.");
         }
         finally
         {
