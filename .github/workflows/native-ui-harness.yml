@@ -1,0 +1,50 @@
+name: Native UI harness validation
+
+on:
+  push:
+    paths:
+      - "scripts/android_ui_smoke.py"
+      - "scripts/windows_ui_smoke.ps1"
+      - "scripts/tests/test_android_ui_smoke.py"
+      - ".github/workflows/native-ui-harness.yml"
+  pull_request:
+    paths:
+      - "scripts/android_ui_smoke.py"
+      - "scripts/windows_ui_smoke.ps1"
+      - "scripts/tests/test_android_ui_smoke.py"
+      - ".github/workflows/native-ui-harness.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test Android hierarchy smoke logic
+        run: python -m unittest discover -s scripts/tests -p "test_android_ui_smoke.py" -v
+
+      - name: Parse Windows PowerShell harness
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'scripts/windows_ui_smoke.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+          Write-Host 'Windows UI smoke harness parsed successfully.'
