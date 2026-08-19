@@ -375,6 +375,51 @@ Remaining gates continue to be native/release-owner evidence: signed packages, i
 
 ---
 
+## 176. Exhaustive repository documentation coverage closure
+
+After PR #26 merged, a second final documentation/tooling branch was reviewed and merged through PR #27 to make repository-file ownership mechanically complete rather than relying only on human memory.
+
+### Repository-file reference and QA gate
+
+- Added `docs/development/REPOSITORY_FILE_REFERENCE.md` as the exhaustive tracked-file responsibility and change-impact map.
+- Added `scripts/check_documentation_coverage.py`, backed by `git ls-files`, so ignored/untracked local files do not enter the public documentation contract.
+- The checker rejects tracked files missing from the reference, stale entries that cover no tracked file, and overly broad one-component directory declarations such as `src/`, `docs/`, `tests/`, `.github/`, or `scripts/`.
+- Integrated the coverage checker into `scripts/run_repo_qa.py` and the primary CI structural preflight.
+- Added/updated contributor, build, developer, code-map, documentation-status, repository-QA, scripts, and pull-request guidance so new/moved/deleted files carry explicit documentation ownership.
+- Updated the inventory to cover `docs/FINAL_HARDENING_2026-08-19.md` after synchronizing the documentation branch with the already-merged hardening work.
+
+### Checker defects found during final review
+
+Two real defects were identified before merge and fixed as separate granular commits:
+
+1. a successful run using an absolute temporary/external `--reference` path could throw `ValueError` while formatting the success message because it unconditionally attempted `reference.relative_to(REPO_ROOT)`;
+2. `--list-missing` could return exit code 0 when the only defect was a stale/unused reference entry, inconsistent with the strict normal-mode coverage contract.
+
+The success-message path now safely displays repository-local or external references, and list mode now returns failure for missing, stale, or invalid coverage. Regression coverage protects both behaviors, including the existing temporary-reference main-path test and a dedicated stale-only list-mode test.
+
+### Merge and evidence state
+
+PR #27 was synchronized to the PR #26 hardening result and was **25 commits ahead / 0 behind** current `main` immediately before merge. It was rebase-merged successfully; the returned merged head was:
+
+`f4aa57ef7815cc81a067ad1013f83081b3f18bbc`
+
+The last exact pre-merge PR #27 head observed was:
+
+`59b6689bc0b416f4cde7638f9bd045ec74f192ff`
+
+Its hosted workflows were observed with no failure conclusion but still queued:
+
+- Finora CI — run `32243298450` — queued;
+- Repository release readiness — run `32243298475` — queued;
+- CodeQL — run `32243298484` — queued;
+- Dependency Review — run `32243298500` — queued.
+
+Queued checks are not represented as successful runtime evidence. The older exact verified candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` remains the recorded 319/319 automated-test + four-platform Release source-build + CodeQL + Dependency Review baseline.
+
+The repository-engineering completion claim remains bounded: native signing/package installation, physical-device behavior, accessibility, interrupted-process/low-disk restore injection, store-console policy review, signing-key custody, and store approval are external release evidence, not hidden repository implementation work.
+
+---
+
 ## Historical ledger integrity
 
 Sections **1–163** remain available in full, unchanged form at `docs/history/what_changed_through_2026-08-18.md`. This split was performed only because the cumulative file was too large for a safe single contents-API append while GitHub-hosted runners were unavailable. No historical section was discarded.
