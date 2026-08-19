@@ -141,6 +141,32 @@ Inline `not-a-table-entry.md` is intentionally ignored.
             ):
                 self.assertEqual(1, coverage.main())
 
+    def test_list_missing_mode_fails_when_only_stale_entries_exist(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            reference = Path(directory) / "reference.md"
+            reference.write_text(
+                "| File or area | Purpose |\n"
+                "|---|---|\n"
+                "| `README.md` | overview |\n"
+                "| `docs/legacy/` | stale |\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(
+                sys,
+                "argv",
+                [
+                    "check_documentation_coverage.py",
+                    "--reference",
+                    str(reference),
+                    "--list-missing",
+                ],
+            ), mock.patch.object(
+                coverage,
+                "tracked_files",
+                return_value=["README.md"],
+            ):
+                self.assertEqual(1, coverage.main())
+
 
 if __name__ == "__main__":
     unittest.main()
