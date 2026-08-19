@@ -2,9 +2,13 @@
 """Verify that Finora's repository file reference covers every tracked file.
 
 The canonical inventory lives in docs/development/REPOSITORY_FILE_REFERENCE.md.
-Every tracked path must appear as the first cell of a Markdown table row. The
-check is intentionally dependency-free and uses `git ls-files`, so ignored or
-untracked local files never become part of the public documentation contract.
+The first cell of each inventory table row is either an exact tracked file path
+or a granular directory prefix ending in `/`. Directory prefixes deliberately
+must contain at least two path components, preventing broad declarations such as
+`src/` or `docs/` from making the coverage check meaningless.
+
+The check is dependency-free and uses `git ls-files`, so ignored or untracked
+local files never become part of the public documentation contract.
 """
 from __future__ import annotations
 
@@ -49,30 +53,62 @@ def tracked_files(repo_root: Path = REPO_ROOT) -> list[str]:
     return normalize_paths(raw_paths)
 
 
-def documented_files(markdown: str) -> list[str]:
-    """Extract literal file paths from the first column of inventory tables."""
+def documented_entries(markdown: str) -> list[str]:
+    """Extract exact paths and granular directory prefixes from inventory tables."""
     return normalize_paths(TABLE_PATH_PATTERN.findall(markdown))
+
+
+def validate_entries(entries: Sequence[str]) -> list[str]:
+    """Return invalid coverage declarations.
+
+    Prefix declarations must be narrow enough to identify a concrete repository
+    area (for example `docs/security/` or `src/Finora.Domain/`). Top-level
+    prefixes such as `docs/`, `src/`, `tests/`, or `.github/` are rejected.
+    """
+    invalid: list[str] = []
+    for entry in normalize_paths(entries):
+        if not entry.endswith("/"):
+            continue
+        components = [component for component in entry.rstrip("/").split("/") if component]
+        if len(components) < 2:
+            invalid.append(entry)
+    return invalid
+
+
+def entry_covers(entry: str, path: str) -> bool:
+    if entry.endswith("/"):
+        return path.startswith(entry)
+    return path == entry
 
 
 def compare_coverage(
     tracked: Sequence[str], documented: Sequence[str]
 ) -> tuple[list[str], list[str]]:
-    """Return (missing_documentation, stale_documentation)."""
-    tracked_set = set(normalize_paths(tracked))
-    documented_set = set(normalize_paths(documented))
-    return (
-        sorted(tracked_set - documented_set),
-        sorted(documented_set - tracked_set),
-    )
+    """Return (missing_documentation, stale_or_unused_entries)."""
+    tracked_paths = normalize_paths(tracked)
+    entries = normalize_paths(documented)
+
+    missing = [
+        path for path in tracked_paths if not any(entry_covers(entry, path) for entry in entries)
+    ]
+    stale = [
+        entry for entry in entries if not any(entry_covers(entry, path) for path in tracked_paths)
+    ]
+    return missing, stale
 
 
-def render_failure(missing: Sequence[str], stale: Sequence[str]) -> str:
+def render_failure(
+    missing: Sequence[str], stale: Sequence[str], invalid: Sequence[str] = ()
+) -> str:
     lines = ["Finora repository documentation coverage failed."]
+    if invalid:
+        lines.append("\nInvalid broad directory coverage entries:")
+        lines.extend(f"  - {path}" for path in invalid)
     if missing:
         lines.append("\nTracked files missing from the reference:")
         lines.extend(f"  - {path}" for path in missing)
     if stale:
-        lines.append("\nReference entries that are no longer tracked:")
+        lines.append("\nReference entries that cover no tracked file:")
         lines.extend(f"  - {path}" for path in stale)
     lines.append(
         "\nUpdate docs/development/REPOSITORY_FILE_REFERENCE.md in the same change."
@@ -115,21 +151,23 @@ def main() -> int:
         return 2
 
     markdown = reference.read_text(encoding="utf-8-sig")
-    documented = documented_files(markdown)
-    missing, stale = compare_coverage(tracked, documented)
+    entries = documented_entries(markdown)
+    invalid = validate_entries(entries)
+    missing, stale = compare_coverage(tracked, entries)
 
     if args.list_missing:
         for path in missing:
             print(path)
-        return 1 if missing else 0
+        return 1 if missing or invalid else 0
 
-    if missing or stale:
-        print(render_failure(missing, stale), file=sys.stderr)
+    if missing or stale or invalid:
+        print(render_failure(missing, stale, invalid), file=sys.stderr)
         return 1
 
     print(
-        f"Documentation coverage OK: {len(tracked)} tracked files are represented "
-        f"in {reference.relative_to(REPO_ROOT).as_posix()}."
+        f"Documentation coverage OK: {len(tracked)} tracked files are covered by "
+        f"{len(entries)} reference entries in "
+        f"{reference.relative_to(REPO_ROOT).as_posix()}."
     )
     return 0
 
