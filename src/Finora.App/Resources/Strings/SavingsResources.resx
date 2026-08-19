@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SavingsGoals" xml:space="preserve"><value>Savings goals</value></data>
+  <data name="CreateSavingsGoalBelow" xml:space="preserve"><value>Create a savings goal below.</value></data>
+  <data name="Saved" xml:space="preserve"><value>Saved:</value></data>
+  <data name="Target" xml:space="preserve"><value>Target:</value></data>
+  <data name="TargetDate" xml:space="preserve"><value>Target date:</value></data>
+  <data name="Planning" xml:space="preserve"><value>Planning</value></data>
+  <data name="Goal" xml:space="preserve"><value>Goal</value></data>
+  <data name="GoalCompletedCongratulations" xml:space="preserve"><value>Goal completed — congratulations!</value></data>
+  <data name="CreateGoal" xml:space="preserve"><value>Create goal</value></data>
+  <data name="GoalName" xml:space="preserve"><value>Goal name</value></data>
+  <data name="IconName" xml:space="preserve"><value>Icon name</value></data>
+  <data name="TargetAmount" xml:space="preserve"><value>Target amount</value></data>
+  <data name="SavingsTargetDescription" xml:space="preserve"><value>Savings target in major currency units</value></data>
+  <data name="StartingAmount" xml:space="preserve"><value>Starting amount</value></data>
+  <data name="StartingSavingsDescription" xml:space="preserve"><value>Starting savings amount in major currency units</value></data>
+  <data name="Notes" xml:space="preserve"><value>Notes</value></data>
+  <data name="AddContributionWithdrawal" xml:space="preserve"><value>Add contribution or withdrawal</value></data>
+  <data name="ContributionAmountHint" xml:space="preserve"><value>Amount; use a minus sign for withdrawal</value></data>
+  <data name="LinkExistingTransactionOptional" xml:space="preserve"><value>Link an existing account transaction (optional)</value></data>
+  <data name="ContributionNote" xml:space="preserve"><value>Contribution note</value></data>
+  <data name="ApplySelectedGoal" xml:space="preserve"><value>Apply to selected goal</value></data>
+  <data name="ReducedMotionGoalNotice" xml:space="preserve"><value>The completion message uses no forced animation, so reduced-motion preferences are respected.</value></data>
+</root>
