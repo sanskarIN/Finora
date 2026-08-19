@@ -65,6 +65,41 @@ class ReleaseReadinessGuardTests(unittest.TestCase):
         ):
             self.assertIn(path, checker.REQUIRED_WORKFLOWS)
 
+    def test_action_major_policy_rejects_outdated_runtime_actions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            create_required_tree(root)
+            workflow = root / ".github/workflows/ci.yml"
+            workflow.write_text(
+                "steps:\n  - uses: actions/checkout@v4\n  - uses: actions/setup-python@v5\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(checker, "git_tracked_files", return_value=[]):
+                report = checker.check_release_readiness(root)
+
+        outdated = [item for item in report.findings if item.code == "outdated_action_major"]
+        self.assertEqual(2, len(outdated))
+        self.assertTrue(any("actions/checkout@v4" in item.message for item in outdated))
+        self.assertTrue(any("actions/setup-python@v5" in item.message for item in outdated))
+
+    def test_current_action_majors_are_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            create_required_tree(root)
+            workflow = root / ".github/workflows/ci.yml"
+            workflow.write_text(
+                "steps:\n"
+                "  - uses: actions/checkout@v7\n"
+                "  - uses: actions/setup-python@v7\n"
+                "  - uses: actions/setup-dotnet@v6\n"
+                "  - uses: actions/upload-artifact@v7\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(checker, "git_tracked_files", return_value=[]):
+                report = checker.check_release_readiness(root)
+
+        self.assertFalse(any(item.code == "outdated_action_major" for item in report.findings))
+
     def test_missing_required_file_fails(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
