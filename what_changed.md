@@ -266,6 +266,54 @@ No source-contract test in this continuation is represented as physical-device e
 
 ---
 
+## 174. Merged security continuation and biometric availability resilience
+
+The security-regression continuation was merged through PR #24 with all eight branch commits preserved plus merge commit:
+
+`99a6016abf2ed85e9f89363386f6e42e28d40d50`
+
+During the post-merge source review, a concrete production robustness issue was identified in `LockViewModel`: biometric availability discovery was launched fire-and-forget from the constructor, so a transient exception from a native credential provider could fault that task unobserved.
+
+A second focused branch and PR fixed that path with three granular commits:
+
+- `0475f784a062d6098f615ca627964fbce3df5d85` — `fix(security): contain biometric availability faults`;
+- `0e571c65fb5605651db1030e3164d4d2e3e5a59d` — `test(security): guard biometric availability fallback`;
+- `0b920f960bb15e6785d719f4a33570e11c965104` — `docs(security): document biometric availability resilience`.
+
+The production behavior now:
+
+- skips the native biometric availability probe when biometric unlock is disabled;
+- contains native availability exceptions;
+- leaves `CanUseBiometrics` false on an availability failure;
+- keeps the normal PIN path available;
+- prevents the constructor-started availability task from becoming an unobserved fault solely because a native provider is temporarily unavailable.
+
+PR #25 preserved those three commits and merged with merge commit:
+
+`6ffe43563302476f5c8ebe6b025539ce04516d79`
+
+### GitHub Actions evidence state at this checkpoint
+
+PR #24 exact head `b80e65219b2e50d247cfa44298b1f8dfbe70399c` created these hosted runs:
+
+- Finora CI — run `32239329398`;
+- Repository release readiness — run `32239329379`;
+- Dependency Review — run `32239329278`;
+- CodeQL — run `32239329520`.
+
+PR #25 exact head `0b920f960bb15e6785d719f4a33570e11c965104` created these hosted runs:
+
+- Finora CI — run `32239596350`;
+- Repository release readiness — run `32239596378`;
+- Dependency Review — run `32239596321`;
+- CodeQL — run `32239596331`.
+
+At the last observation during this continuation, every run listed above was **queued** with no conclusion. None was observed failed, but none is represented as passed. The earlier verified 319/319 and four-platform source-build evidence remains tied only to its historically recorded candidate and is not reused as runtime proof for these new commits.
+
+The new source assertions were manually cross-checked against the exact production source they protect before merge. That source review is useful regression review evidence, but it remains distinct from hosted build/test execution and native-device validation.
+
+---
+
 ## Historical ledger integrity
 
 Sections **1–163** remain available in full, unchanged form at `docs/history/what_changed_through_2026-08-18.md`. This split was performed only because the cumulative file was too large for a safe single contents-API append while GitHub-hosted runners were unavailable. No historical section was discarded.
