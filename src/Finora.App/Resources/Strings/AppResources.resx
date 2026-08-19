@@ -1,1 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><root><resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><data name="AppName" xml:space="preserve"><value>Finora</value></data><data name="LocalFirstSummary" xml:space="preserve"><value>Your money stays on this device.</value></data><data name="MadeBy" xml:space="preserve"><value>Made by the Sanskar</value></data></root>
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="AppName" xml:space="preserve"><value>Finora</value></data>
+  <data name="LocalFirstSummary" xml:space="preserve"><value>Your money stays on this device.</value></data>
+  <data name="MadeBy" xml:space="preserve"><value>Made by the Sanskar</value></data>
+  <data name="Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Transactions" xml:space="preserve"><value>Transactions</value></data>
+  <data name="Budgets" xml:space="preserve"><value>Budgets</value></data>
+  <data name="Goals" xml:space="preserve"><value>Goals</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="SupportFinoraExternalDescription" xml:space="preserve"><value>Support Finora development on Buy Me a Coffee. Opens the external support page in the system browser.</value></data>
+</root>
