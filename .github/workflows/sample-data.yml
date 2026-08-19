@@ -1,0 +1,38 @@
+name: Sample data validation
+
+on:
+  push:
+    paths:
+      - "scripts/generate_sample_finance_csv.py"
+      - "scripts/tests/test_generate_sample_finance_csv.py"
+      - ".github/workflows/sample-data.yml"
+  pull_request:
+    paths:
+      - "scripts/generate_sample_finance_csv.py"
+      - "scripts/tests/test_generate_sample_finance_csv.py"
+      - ".github/workflows/sample-data.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run deterministic sample generator tests
+        run: python -m unittest discover -s scripts/tests -p "test_generate_sample_finance_csv.py" -v
+
+      - name: Generate representative fixture
+        run: python scripts/generate_sample_finance_csv.py artifacts/ci_sample.csv --rows 1000 --seed 20260819
+
+      - name: Generate minor-unit fixture
+        run: python scripts/generate_sample_finance_csv.py artifacts/ci_sample_jpy.csv --rows 250 --seed 20260819 --currency JPY --minor-units
