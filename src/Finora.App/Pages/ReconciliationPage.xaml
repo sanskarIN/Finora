@@ -5,20 +5,20 @@
              xmlns:local="clr-namespace:Finora.App"
              xmlns:application="clr-namespace:Finora.Application;assembly=Finora.Application"
              x:DataType="local:ReconciliationViewModel"
-             Title="Reconcile Account">
+             Title="{DynamicResource Text.ReconciliationTitle}">
   <ScrollView><VerticalStackLayout Padding="20" Spacing="14">
-    <Label Text="Reconcile account" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
-    <Label Text="Compare Finora's book balance with a bank/card statement. A difference is never hidden as data; privacy mode can mask the displayed amount. You can resolve a difference manually or create an explicit adjustment." />
-    <Picker Title="Account" ItemsSource="{Binding Accounts}" SelectedItem="{Binding Account}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:AccountSummary" /></Picker.ItemDisplayBinding></Picker>
-    <Entry Placeholder="Statement ending balance" Keyboard="Numeric" Text="{Binding StatementBalance}" SemanticProperties.Description="Statement ending balance in major currency units" />
+    <Label Text="{DynamicResource Text.ReconciliationTitle}" Style="{StaticResource Title}" SemanticProperties.HeadingLevel="Level1" />
+    <Label Text="{DynamicResource Text.ReconciliationNotice}" />
+    <Picker Title="{DynamicResource Text.Account}" ItemsSource="{Binding Accounts}" SelectedItem="{Binding Account}"><Picker.ItemDisplayBinding><Binding Path="Name" x:DataType="application:AccountSummary" /></Picker.ItemDisplayBinding></Picker>
+    <Entry Placeholder="{DynamicResource Text.ReconciliationStatementBalance}" Keyboard="Numeric" Text="{Binding StatementBalance}" SemanticProperties.Description="{DynamicResource Text.ReconciliationStatementBalanceDescription}" />
     <DatePicker Date="{Binding StatementDate}" />
-    <Editor Placeholder="Optional reconciliation note" Text="{Binding Note}" AutoSize="TextChanges" />
-    <Button Text="Preview reconciliation" Command="{Binding PreviewCommand}" />
+    <Editor Placeholder="{DynamicResource Text.ReconciliationOptionalNote}" Text="{Binding Note}" AutoSize="TextChanges" />
+    <Button Text="{DynamicResource Text.ReconciliationPreview}" Command="{Binding PreviewCommand}" />
     <Border Style="{StaticResource Card}"><Label Text="{Binding PreviewText}" /></Border>
-    <Grid ColumnDefinitions="*,Auto"><Label Text="Create explicit adjustment if needed" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding CreateAdjustment}" /></Grid>
-    <Button Text="Complete reconciliation" Command="{Binding CompleteCommand}" />
-    <Label Text="History" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
-    <CollectionView ItemsSource="{Binding History}" EmptyView="No reconciliation history for this account." HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate x:DataType="local:ReconciliationHistoryDisplayItem"><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><Label Text="{Binding StatementDateUtc, StringFormat='Statement: {0:d}'}" FontAttributes="Bold" /><Label Text="{Binding Difference, StringFormat='Difference: {0}'}" /><Label Text="{Binding AdjustmentCreated, StringFormat='Adjustment created: {0}'}" /><Label Text="{Binding Note}" FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
+    <Grid ColumnDefinitions="*,Auto"><Label Text="{DynamicResource Text.ReconciliationCreateAdjustment}" VerticalOptions="Center" /><Switch Grid.Column="1" IsToggled="{Binding CreateAdjustment}" /></Grid>
+    <Button Text="{DynamicResource Text.ReconciliationComplete}" Command="{Binding CompleteCommand}" />
+    <Label Text="{DynamicResource Text.ReconciliationHistory}" Style="{StaticResource SectionTitle}" SemanticProperties.HeadingLevel="Level2" />
+    <CollectionView ItemsSource="{Binding History}" EmptyView="{DynamicResource Text.ReconciliationNoHistory}" HeightRequest="260"><CollectionView.ItemTemplate><DataTemplate x:DataType="local:ReconciliationHistoryDisplayItem"><Border Style="{StaticResource Card}" Margin="0,4"><VerticalStackLayout><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.ReconciliationStatementPrefix}" FontAttributes="Bold" /><Label Text="{Binding StatementDateUtc, StringFormat='{0:d}'}" FontAttributes="Bold" /></HorizontalStackLayout><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.ReconciliationDifferencePrefix}" /><Label Text="{Binding Difference}" /></HorizontalStackLayout><HorizontalStackLayout Spacing="4"><Label Text="{DynamicResource Text.ReconciliationAdjustmentCreatedPrefix}" /><Label Text="{Binding AdjustmentCreated}" /></HorizontalStackLayout><Label Text="{Binding Note}" FontSize="12" /></VerticalStackLayout></Border></DataTemplate></CollectionView.ItemTemplate></CollectionView>
     <Label Text="{Binding Status}" />
     <Label Text="{Binding ErrorMessage}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" />
   </VerticalStackLayout></ScrollView>
