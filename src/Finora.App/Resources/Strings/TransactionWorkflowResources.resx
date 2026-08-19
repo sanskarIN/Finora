@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="TransactionDetailTitle" xml:space="preserve"><value>Transaction details</value></data>
+  <data name="TransactionDetailNotice" xml:space="preserve"><value>Linked transfers keep both sides balanced. Standard transactions preserve a local revision snapshot before every edit.</value></data>
+  <data name="TransactionDetailCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="TransactionDetailPaymentMethod" xml:space="preserve"><value>Payment method</value></data>
+  <data name="TransactionDetailManualLocation" xml:space="preserve"><value>Manually entered location</value></data>
+  <data name="TransactionDetailSplits" xml:space="preserve"><value>Splits</value></data>
+  <data name="TransactionDetailSplitCategory" xml:space="preserve"><value>Split category</value></data>
+  <data name="TransactionDetailSplitAmount" xml:space="preserve"><value>Split amount</value></data>
+  <data name="TransactionDetailSplitAmountDescription" xml:space="preserve"><value>Split amount in major currency units</value></data>
+  <data name="TransactionDetailSplitNote" xml:space="preserve"><value>Split note</value></data>
+  <data name="TransactionDetailAddSplit" xml:space="preserve"><value>Add split</value></data>
+  <data name="TransactionDetailSelectedSplit" xml:space="preserve"><value>Selected split</value></data>
+  <data name="TransactionDetailRemoveSplit" xml:space="preserve"><value>Remove selected split</value></data>
+  <data name="TransactionDetailTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="TransactionDetailSaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="TransactionDetailReceipts" xml:space="preserve"><value>Receipt attachments</value></data>
+  <data name="TransactionDetailAddReceipt" xml:space="preserve"><value>Add receipt</value></data>
+  <data name="TransactionDetailOpenSelected" xml:space="preserve"><value>Open selected</value></data>
+  <data name="TransactionDetailSelectedAttachment" xml:space="preserve"><value>Selected attachment</value></data>
+  <data name="TransactionDetailDeleteAttachment" xml:space="preserve"><value>Delete selected attachment</value></data>
+  <data name="TransactionDetailEditHistory" xml:space="preserve"><value>Edit history</value></data>
+  <data name="TransactionDetailNoRevisions" xml:space="preserve"><value>No prior revisions.</value></data>
+  <data name="TransactionDetailDeleteUndo" xml:space="preserve"><value>Delete / undo</value></data>
+  <data name="TransactionDetailRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="TransactionDetailUncategorized" xml:space="preserve"><value>Uncategorized</value></data>
+  <data name="TransactionDetailChooseAccount" xml:space="preserve"><value>Choose an account.</value></data>
+  <data name="TransactionDetailNonZeroAmount" xml:space="preserve"><value>Enter a non-zero amount.</value></data>
+  <data name="TransactionDetailAmountOutOfRange" xml:space="preserve"><value>Transaction amount is outside the supported range.</value></data>
+  <data name="TransactionDetailFutureTime" xml:space="preserve"><value>Transaction time cannot be in the future.</value></data>
+  <data name="TransactionDetailEachSplitPositive" xml:space="preserve"><value>Each split must have a positive amount.</value></data>
+  <data name="TransactionDetailEachSplitRepresentable" xml:space="preserve"><value>Each split must have a positive representable amount.</value></data>
+  <data name="TransactionDetailSavedRevision" xml:space="preserve"><value>Transaction saved with revision history.</value></data>
+  <data name="TransactionDetailChooseAccountFirst" xml:space="preserve"><value>Choose an account first.</value></data>
+  <data name="TransactionDetailPositiveSplit" xml:space="preserve"><value>Enter a positive split amount.</value></data>
+  <data name="TransactionDetailRepresentableSplit" xml:space="preserve"><value>Enter a split amount that is representable in the account currency.</value></data>
+  <data name="TransactionDetailChooseSplitRemove" xml:space="preserve"><value>Choose a split to remove.</value></data>
+  <data name="TransactionDetailDeleted" xml:space="preserve"><value>Transaction deleted. You can restore it from this screen while it remains in the local database.</value></data>
+  <data name="TransactionDetailRestored" xml:space="preserve"><value>Transaction restored.</value></data>
+  <data name="TransactionToolsTitle" xml:space="preserve"><value>Transaction tools</value></data>
+  <data name="TransactionToolsNotice" xml:space="preserve"><value>Bulk categorization and duplicate detection never delete records automatically. Review each result before making destructive changes.</value></data>
+  <data name="TransactionToolsStartDateDescription" xml:space="preserve"><value>Transaction tools start date</value></data>
+  <data name="TransactionToolsEndDateDescription" xml:space="preserve"><value>Transaction tools end date</value></data>
+  <data name="TransactionToolsRefreshPeriod" xml:space="preserve"><value>Refresh period</value></data>
+  <data name="TransactionToolsBulkCategorization" xml:space="preserve"><value>Bulk categorization</value></data>
+  <data name="TransactionToolsNewCategory" xml:space="preserve"><value>New category (leave blank to uncategorize)</value></data>
+  <data name="TransactionToolsNoTransactions" xml:space="preserve"><value>No transactions in this period.</value></data>
+  <data name="TransactionToolsApplyCategory" xml:space="preserve"><value>Apply category to selected</value></data>
+  <data name="TransactionToolsExportCsv" xml:space="preserve"><value>Export selected CSV</value></data>
+  <data name="TransactionToolsExportPdf" xml:space="preserve"><value>Export selected PDF</value></data>
+  <data name="TransactionToolsDuplicateReview" xml:space="preserve"><value>Duplicate review</value></data>
+  <data name="TransactionToolsScanDuplicates" xml:space="preserve"><value>Scan for likely duplicates</value></data>
+  <data name="TransactionToolsNoDuplicates" xml:space="preserve"><value>No likely duplicates found.</value></data>
+  <data name="TransactionToolsAmountPrefix" xml:space="preserve"><value>Amount:</value></data>
+  <data name="TransactionToolsDatePrefix" xml:space="preserve"><value>Date:</value></data>
+  <data name="TransactionToolsSimilarityPrefix" xml:space="preserve"><value>Similarity confidence:</value></data>
+  <data name="TransactionToolsDuplicateHelp" xml:space="preserve"><value>Tap to review the first transaction. The possible duplicate ID is retained for comparison.</value></data>
+  <data name="TransactionToolsSelectOne" xml:space="preserve"><value>Select at least one transaction.</value></data>
+  <data name="TransactionToolsUpdatedFormat" xml:space="preserve"><value>Updated {0} transaction(s). Revision history was preserved.</value></data>
+  <data name="TransactionToolsNoDuplicatesPeriod" xml:space="preserve"><value>No likely duplicates found in this period.</value></data>
+  <data name="TransactionToolsFoundDuplicatesFormat" xml:space="preserve"><value>Found {0} possible duplicate pair(s). Review before deleting anything.</value></data>
+  <data name="TransactionToolsEndBeforeStart" xml:space="preserve"><value>The end date cannot be earlier than the start date.</value></data>
+  <data name="ReconciliationTitle" xml:space="preserve"><value>Reconcile account</value></data>
+  <data name="ReconciliationNotice" xml:space="preserve"><value>Compare Finora's book balance with a bank/card statement. A difference is never hidden as data; privacy mode can mask the displayed amount. You can resolve a difference manually or create an explicit adjustment.</value></data>
+  <data name="ReconciliationStatementBalance" xml:space="preserve"><value>Statement ending balance</value></data>
+  <data name="ReconciliationStatementBalanceDescription" xml:space="preserve"><value>Statement ending balance in major currency units</value></data>
+  <data name="ReconciliationOptionalNote" xml:space="preserve"><value>Optional reconciliation note</value></data>
+  <data name="ReconciliationPreview" xml:space="preserve"><value>Preview reconciliation</value></data>
+  <data name="ReconciliationCreateAdjustment" xml:space="preserve"><value>Create explicit adjustment if needed</value></data>
+  <data name="ReconciliationComplete" xml:space="preserve"><value>Complete reconciliation</value></data>
+  <data name="ReconciliationHistory" xml:space="preserve"><value>History</value></data>
+  <data name="ReconciliationNoHistory" xml:space="preserve"><value>No reconciliation history for this account.</value></data>
+  <data name="ReconciliationStatementPrefix" xml:space="preserve"><value>Statement:</value></data>
+  <data name="ReconciliationDifferencePrefix" xml:space="preserve"><value>Difference:</value></data>
+  <data name="ReconciliationAdjustmentCreatedPrefix" xml:space="preserve"><value>Adjustment created:</value></data>
+  <data name="ReconciliationChooseInput" xml:space="preserve"><value>Choose an account and enter the statement balance.</value></data>
+  <data name="ReconciliationBookBalanceFormat" xml:space="preserve"><value>Book balance: {0}</value></data>
+  <data name="ReconciliationStatementBalanceFormat" xml:space="preserve"><value>Statement balance: {0}</value></data>
+  <data name="ReconciliationDifferenceFormat" xml:space="preserve"><value>Difference: {0}</value></data>
+  <data name="ReconciliationCompletedAdjustment" xml:space="preserve"><value>Reconciliation completed with an explicit adjustment transaction.</value></data>
+  <data name="ReconciliationCompleted" xml:space="preserve"><value>Reconciliation completed.</value></data>
+  <data name="ReconciliationChooseAccount" xml:space="preserve"><value>Choose an account.</value></data>
+  <data name="ReconciliationInvalidBalance" xml:space="preserve"><value>Enter a valid statement balance.</value></data>
+</root>
