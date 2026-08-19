@@ -1,0 +1,47 @@
+name: Kick final Finora ledger update
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/finalize-ledger.yml"
+      - ".github/workflows/kick-final-ledger.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: finora-final-ledger-pr
+  cancel-in-progress: true
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out writable ledger branch
+        uses: actions/checkout@v7
+        with:
+          ref: work/final-ledger-20260819
+          fetch-depth: 0
+
+      - name: Execute the staged in-place ledger updater
+        shell: bash
+        run: |
+          awk '
+            /python - <<'"'"'PY'"'"'/ {capture=1; next}
+            capture && /^[[:space:]]*PY$/ {exit}
+            capture {sub(/^          /, ""); print}
+          ' .github/workflows/finalize-ledger.yml > /tmp/finalize_finora.py
+          python /tmp/finalize_finora.py
+
+      - name: Commit final records and remove temporary runners
+        shell: bash
+        run: |
+          git config user.name "sanskarIN"
+          git config user.email "sanskarin@outlook.in"
+          git add what_changed.md CHANGELOG.md PROJECT_STATUS.md docs/NEXT_STEPS.md docs/FINAL_REPOSITORY_CLOSURE.md
+          git rm .github/workflows/finalize-ledger.yml .github/workflows/kick-final-ledger.yml
+          git commit -m "docs(final): close Finora repository ledger"
+          git push origin HEAD:work/final-ledger-20260819
