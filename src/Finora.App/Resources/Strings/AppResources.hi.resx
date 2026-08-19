@@ -37,4 +37,18 @@
   <data name="TermsDescription" xml:space="preserve"><value>Finora की शर्तें पढ़ें</value></data>
   <data name="StartUsingFinora" xml:space="preserve"><value>Finora का उपयोग शुरू करें</value></data>
   <data name="StartUsingFinoraDescription" xml:space="preserve"><value>ऑनबोर्डिंग प्राथमिकताएँ सहेजें और डैशबोर्ड खोलें</value></data>
+  <data name="FinoraLocked" xml:space="preserve"><value>Finora लॉक है</value></data>
+  <data name="FinoraLockStatusDescription" xml:space="preserve"><value>Finora लॉक की स्थिति</value></data>
+  <data name="UnlockWithBiometrics" xml:space="preserve"><value>बायोमेट्रिक्स / Windows Hello से अनलॉक करें</value></data>
+  <data name="UnlockWithBiometricsDescription" xml:space="preserve"><value>उपलब्ध बायोमेट्रिक या Windows Hello विधि से Finora अनलॉक करें। PIN बैकअप विकल्प के रूप में उपलब्ध रहेगा।</value></data>
+  <data name="PinPlaceholder" xml:space="preserve"><value>PIN</value></data>
+  <data name="PinEntryDescription" xml:space="preserve"><value>अपना 4 से 12 अंकों वाला Finora PIN दर्ज करें। PIN छिपा हुआ दिखेगा।</value></data>
+  <data name="UnlockWithPin" xml:space="preserve"><value>PIN से अनलॉक करें</value></data>
+  <data name="UnlockWithPinDescription" xml:space="preserve"><value>दर्ज किए गए Finora PIN की पुष्टि करके ऐप अनलॉक करें</value></data>
+  <data name="EnterFinoraPin" xml:space="preserve"><value>अपना Finora PIN दर्ज करें।</value></data>
+  <data name="BiometricUnavailable" xml:space="preserve"><value>बायोमेट्रिक अनलॉक उपलब्ध या सक्षम नहीं है।</value></data>
+  <data name="BiometricPrompt" xml:space="preserve"><value>अपने लोकल Finora वित्तीय डेटा को अनलॉक करें।</value></data>
+  <data name="BiometricNotCompleted" xml:space="preserve"><value>बायोमेट्रिक सत्यापन पूरा नहीं हुआ। आगे बढ़ने के लिए अपना Finora PIN उपयोग करें।</value></data>
+  <data name="IncorrectPin" xml:space="preserve"><value>PIN गलत है। फिर से प्रयास करें।</value></data>
+  <data name="LockoutMinutes" xml:space="preserve"><value>बहुत अधिक प्रयास हुए। {0} मिनट बाद फिर प्रयास करें।</value></data>
 </root>
