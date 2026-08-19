@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="SettingsDefaultCurrencyCodeDescription" xml:space="preserve"><value>डिफ़ॉल्ट ISO-जैसा मुद्रा कोड</value></data>
+  <data name="SettingsFormattingLocaleDescription" xml:space="preserve"><value>संख्या और तारीख फ़ॉर्मेटिंग के लिए BCP-47 लोकेल टैग</value></data>
+  <data name="SettingsNumberDatePreviewDescription" xml:space="preserve"><value>संख्या और तारीख फ़ॉर्मेटिंग पूर्वावलोकन</value></data>
+  <data name="SettingsBackupReminderTime" xml:space="preserve"><value>बैकअप रिमाइंडर समय</value></data>
+  <data name="SettingsRequestSyncNotifications" xml:space="preserve"><value>सूचनाएँ अनुरोध / सिंक करें</value></data>
+  <data name="SettingsCleanupReceipts" xml:space="preserve"><value>पुरानी रसीद प्रतियाँ साफ़ करें</value></data>
+  <data name="SettingsEncryptedBackupPassword" xml:space="preserve"><value>एन्क्रिप्टेड बैकअप पासवर्ड</value></data>
+  <data name="SettingsBackupPasswordNotice" xml:space="preserve"><value>बैकअप पासवर्ड केवल सुरक्षित डिवाइस स्टोरेज में रखा जाता है। इसका उपयोग एन्क्रिप्टेड बैकअप बनाने और पुनर्स्थापित करने में होता है।</value></data>
+  <data name="SettingsBackupPassword" xml:space="preserve"><value>बैकअप पासवर्ड</value></data>
+  <data name="SettingsBmcSupportNotice" xml:space="preserve"><value>Buy Me a Coffee प्रोजेक्ट का समर्थन करने का वैकल्पिक बाहरी तरीका है। योगदान ऐप सुविधाएँ अनलॉक नहीं करते, सहायता प्राथमिकता नहीं बदलते और स्टोर पात्रता नियमों की जगह नहीं लेते।</value></data>
+  <data name="SettingsOpenProjectRepository" xml:space="preserve"><value>Finora स्रोत रिपॉज़िटरी खोलें</value></data>
+  <data name="SettingsContactFinora" xml:space="preserve"><value>Finora से संपर्क करें</value></data>
+  <data name="SettingsSetUpdatePin" xml:space="preserve"><value>Finora PIN सेट / अपडेट करें</value></data>
+  <data name="SettingsRemovePin" xml:space="preserve"><value>Finora PIN हटाएँ</value></data>
+  <data name="SettingsCheckDataIntegrity" xml:space="preserve"><value>डेटा अखंडता जाँचें</value></data>
+  <data name="SettingsExportDiagnostics" xml:space="preserve"><value>डायग्नोस्टिक्स बंडल एक्सपोर्ट करें</value></data>
+  <data name="SettingsDeleteAllFinanceData" xml:space="preserve"><value>सारा वित्तीय डेटा हटाएँ</value></data>
+  <data name="SettingsDeleteAllFinanceDataDescription" xml:space="preserve"><value>ऑनबोर्डिंग, लोकेल, थीम और सुरक्षा प्राथमिकताएँ रखते हुए वित्तीय रिकॉर्ड स्थायी रूप से हटाएँ</value></data>
+  <data name="SettingsDeveloperOptions" xml:space="preserve"><value>डेवलपर विकल्प</value></data>
+  <data name="SettingsDeveloperNotice" xml:space="preserve"><value>डेवलपर-केवल रीसेट तब तक छिपा रहता है जब तक Developer options स्पष्ट रूप से सक्षम न हों। सामान्य रिकवरी में एन्क्रिप्टेड बैकअप पुनर्स्थापन या सुरक्षित वित्तीय-डेटा हटाने की क्रिया को प्राथमिकता दें।</value></data>
+  <data name="SettingsDeveloperResetAll" xml:space="preserve"><value>डेवलपर: पूरा लोकल ऐप स्टेट रीसेट करें</value></data>
+  <data name="SettingsNoPinConfigured" xml:space="preserve"><value>अभी कोई Finora PIN कॉन्फ़िगर नहीं है।</value></data>
+  <data name="SettingsRemovePinTitle" xml:space="preserve"><value>Finora PIN हटाएँ</value></data>
+  <data name="SettingsRemovePinMessage" xml:space="preserve"><value>लोकल PIN लॉक हटाएँ? वित्तीय डेटा इसी डिवाइस पर रहेगा।</value></data>
+  <data name="SettingsRemovePinAction" xml:space="preserve"><value>PIN हटाएँ</value></data>
+  <data name="SettingsSecuritySettingFailed" xml:space="preserve"><value>सुरक्षा सेटिंग विफल हुई</value></data>
+  <data name="SettingsDeleteFinanceTitle" xml:space="preserve"><value>सारा वित्तीय डेटा हटाएँ</value></data>
+  <data name="SettingsDeleteFinanceMessage" xml:space="preserve"><value>यह सभी वित्तीय रिकॉर्ड, अटैचमेंट, लोकल बैकअप, आवर्ती नियम और वित्त इतिहास हटाता है, लेकिन ऑनबोर्डिंग, लोकेल, थीम और सुरक्षा प्राथमिकताएँ रखता है। इसे पूर्ववत नहीं किया जा सकता।</value></data>
+  <data name="SettingsDeleteFinancePromptTitle" xml:space="preserve"><value>पुष्टि के लिए DELETE लिखें</value></data>
+  <data name="SettingsDeleteFinancePromptMessage" xml:space="preserve"><value>लोकल वित्तीय डेटा स्थायी रूप से हटाने के लिए ठीक DELETE लिखें।</value></data>
+  <data name="SettingsDeleteAction" xml:space="preserve"><value>हटाएँ</value></data>
+  <data name="SettingsDeleteConfirmationMismatch" xml:space="preserve"><value>पुष्टि पाठ मेल नहीं खाता। कुछ भी नहीं हटाया गया।</value></data>
+  <data name="SettingsFinanceDataDeletedTitle" xml:space="preserve"><value>वित्तीय डेटा हटा दिया गया</value></data>
+  <data name="SettingsFinanceDataDeletedMessage" xml:space="preserve"><value>सभी वित्तीय रिकॉर्ड, लोकल बैकअप, अटैचमेंट, डायग्नोस्टिक्स इवेंट इतिहास और वित्त-विशिष्ट प्राथमिकताएँ हटा दी गईं। ऐप रूप, लोकेल, ऑनबोर्डिंग स्थिति और PIN/बायोमेट्रिक सेटिंग्स सुरक्षित रहीं।</value></data>
+  <data name="SettingsDeleteFailedTitle" xml:space="preserve"><value>हटाना विफल हुआ</value></data>
+  <data name="SettingsDeveloperResetTitle" xml:space="preserve"><value>डेवलपर रीसेट</value></data>
+  <data name="SettingsDeveloperResetMessage" xml:space="preserve"><value>यह डेवलपर-केवल विनाशकारी रीसेट है। यह इस डिवाइस का सारा लोकल वित्तीय डेटा, बैकअप, अटैचमेंट, सुरक्षा सेटिंग्स, ऑनबोर्डिंग स्थिति और प्राथमिकताएँ हटाता है। इसे पूर्ववत नहीं किया जा सकता।</value></data>
+  <data name="SettingsResetEverything" xml:space="preserve"><value>सब कुछ रीसेट करें</value></data>
+  <data name="SettingsResetFailedTitle" xml:space="preserve"><value>रीसेट विफल हुआ</value></data>
+  <data name="SettingsProjectRepoLinkFailed" xml:space="preserve"><value>प्रोजेक्ट रिपॉज़िटरी इस डिवाइस पर नहीं खुल सकी।</value></data>
+  <data name="SettingsContactLinkFailed" xml:space="preserve"><value>संपर्क लिंक इस डिवाइस पर नहीं खुल सका।</value></data>
+  <data name="SettingsSystemRejectedLink" xml:space="preserve"><value>सिस्टम ने बाहरी लिंक स्वीकार नहीं किया।</value></data>
+</root>
