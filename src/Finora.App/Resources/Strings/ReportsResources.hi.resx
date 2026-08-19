@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <data name="ReportStartDateDescription" xml:space="preserve"><value>रिपोर्ट की शुरुआत तारीख</value></data>
+  <data name="ReportEndDateDescription" xml:space="preserve"><value>रिपोर्ट की समाप्ति तारीख</value></data>
+  <data name="ReportRefresh" xml:space="preserve"><value>रिपोर्ट रीफ़्रेश करें</value></data>
+  <data name="ReportCurrencyBehaviorDescription" xml:space="preserve"><value>रिपोर्टिंग मुद्रा, गोपनीयता और बहु-मुद्रा व्यवहार</value></data>
+  <data name="ReportSpendingByCategory" xml:space="preserve"><value>श्रेणी के अनुसार खर्च</value></data>
+  <data name="ReportIncomeVersusExpense" xml:space="preserve"><value>आय बनाम खर्च</value></data>
+  <data name="ReportMonthlyNetComparison" xml:space="preserve"><value>12-महीने का शुद्ध बदलाव तुलना</value></data>
+  <data name="ReportMonthlyChartDescription" xml:space="preserve"><value>मासिक शुद्ध बदलाव तुलना चार्ट; समान मान नीचे सूची में दिए गए हैं</value></data>
+  <data name="ReportNoMonthlyData" xml:space="preserve"><value>कोई मासिक तुलना डेटा नहीं है।</value></data>
+  <data name="ReportYearlyNetComparison" xml:space="preserve"><value>5-वर्ष का शुद्ध बदलाव तुलना</value></data>
+  <data name="ReportYearlyChartDescription" xml:space="preserve"><value>वार्षिक शुद्ध बदलाव तुलना चार्ट; समान मान नीचे सूची में दिए गए हैं</value></data>
+  <data name="ReportNoYearlyData" xml:space="preserve"><value>कोई वार्षिक तुलना डेटा नहीं है।</value></data>
+  <data name="ReportMerchantPayee" xml:space="preserve"><value>व्यापारी / प्राप्तकर्ता रिपोर्ट</value></data>
+  <data name="ReportNoMerchantData" xml:space="preserve"><value>कोई व्यापारी डेटा नहीं है।</value></data>
+  <data name="ReportSpent" xml:space="preserve"><value>खर्च</value></data>
+  <data name="ReportBudgetPerformance" xml:space="preserve"><value>बजट प्रदर्शन</value></data>
+  <data name="ReportNoActiveBudgets" xml:space="preserve"><value>चुनी हुई तारीख के लिए कोई सक्रिय बजट नहीं है।</value></data>
+  <data name="ReportPlanned" xml:space="preserve"><value>योजना</value></data>
+  <data name="ReportActual" xml:space="preserve"><value>वास्तविक</value></data>
+  <data name="ReportVariance" xml:space="preserve"><value>अंतर</value></data>
+  <data name="ReportRecurringObligations" xml:space="preserve"><value>आवर्ती दायित्व</value></data>
+  <data name="ReportNoRecurringObligations" xml:space="preserve"><value>कोई आवर्ती दायित्व नहीं है।</value></data>
+  <data name="ReportStatus" xml:space="preserve"><value>स्थिति:</value></data>
+  <data name="ReportNextDue" xml:space="preserve"><value>अगली देय तारीख:</value></data>
+  <data name="ReportEnd" xml:space="preserve"><value>समाप्ति:</value></data>
+  <data name="ReportSavingsProgress" xml:space="preserve"><value>बचत प्रगति</value></data>
+  <data name="ReportNoSavingsGoals" xml:space="preserve"><value>कोई बचत लक्ष्य नहीं है।</value></data>
+  <data name="ReportTargetDate" xml:space="preserve"><value>लक्ष्य तारीख:</value></data>
+  <data name="ReportCurrent" xml:space="preserve"><value>वर्तमान:</value></data>
+  <data name="ReportTarget" xml:space="preserve"><value>लक्ष्य:</value></data>
+  <data name="ReportAccountBalanceTrends" xml:space="preserve"><value>अकाउंट शेष रुझान</value></data>
+  <data name="ReportNoAccountTrendData" xml:space="preserve"><value>कोई अकाउंट रुझान डेटा नहीं है।</value></data>
+  <data name="ReportExportCsv" xml:space="preserve"><value>CSV एक्सपोर्ट करें</value></data>
+  <data name="ReportExportPdf" xml:space="preserve"><value>PDF एक्सपोर्ट करें</value></data>
+  <data name="ReportChartAccessibilityNotice" xml:space="preserve"><value>जब गोपनीयता मोड राशि छिपाता है, तो मात्रात्मक चार्ट भी छिपते हैं। अन्यथा हर चार्ट के समान पाठ या सारणीबद्ध मान दिए जाते हैं और हस्ताक्षरित चार्ट वास्तविक शून्य आधाररेखा उपयोग करते हैं।</value></data>
+  <data name="ReportEndBeforeStart" xml:space="preserve"><value>रिपोर्ट की समाप्ति तारीख शुरुआत तारीख से पहले नहीं हो सकती।</value></data>
+  <data name="ReportCurrencyPrivacyFormat" xml:space="preserve"><value>रिपोर्ट राशि और मात्रात्मक चार्ट गोपनीयता मोड के कारण छिपे हैं। समेकित रिपोर्ट {0} का उपयोग करती हैं; पंक्तियाँ अपनी मुद्रा रखती हैं और Finora मुद्राओं के बीच चुपचाप रूपांतरण नहीं करता।</value></data>
+  <data name="ReportCurrencyNormalFormat" xml:space="preserve"><value>समेकित खर्च, आय, व्यापारी, मासिक और वार्षिक तुलना {0} का उपयोग करती हैं। अकाउंट, बजट, आवर्ती और बचत पंक्तियाँ अपनी मुद्रा रखती हैं; Finora मुद्राओं के बीच चुपचाप रूपांतरण नहीं करता।</value></data>
+  <data name="ReportNoNextDueDate" xml:space="preserve"><value>अगली देय तारीख नहीं है</value></data>
+  <data name="ReportNoEndDate" xml:space="preserve"><value>समाप्ति तारीख नहीं है</value></data>
+  <data name="ReportNoTargetDate" xml:space="preserve"><value>लक्ष्य तारीख नहीं है</value></data>
+  <data name="ReportCompleted" xml:space="preserve"><value>पूरा</value></data>
+  <data name="ReportInProgress" xml:space="preserve"><value>प्रगति में</value></data>
+  <data name="ReportPrivacySummaryFormat" xml:space="preserve"><value>{0:d}–{1:d}: मौद्रिक मान गोपनीयता मोड के कारण छिपे हैं।</value></data>
+  <data name="ReportSummaryFormat" xml:space="preserve"><value>{0:d}–{1:d}: आय {2}, खर्च {3}, शुद्ध {4}।</value></data>
+  <data name="ReportNoCategorySpending" xml:space="preserve"><value>इस अवधि के लिए कोई श्रेणी खर्च नहीं है।</value></data>
+  <data name="ReportCategoryPrivacy" xml:space="preserve"><value>श्रेणी खर्च की राशि गोपनीयता मोड के कारण छिपी है।</value></data>
+  <data name="ReportCategorySummaryPrefix" xml:space="preserve"><value>श्रेणी के अनुसार खर्च: </value></data>
+  <data name="ReportIncomeExpensePrivacy" xml:space="preserve"><value>आय और खर्च की राशि गोपनीयता मोड के कारण छिपी है।</value></data>
+  <data name="ReportIncomeExpenseSummaryFormat" xml:space="preserve"><value>आय {0}; खर्च {1}।</value></data>
+  <data name="ReportIncomeLabel" xml:space="preserve"><value>आय</value></data>
+  <data name="ReportExpenseLabel" xml:space="preserve"><value>खर्च</value></data>
+  <data name="ReportTransactionTypeExpense" xml:space="preserve"><value>खर्च</value></data>
+  <data name="ReportTransactionTypeIncome" xml:space="preserve"><value>आय</value></data>
+  <data name="ReportTransactionTypeTransfer" xml:space="preserve"><value>स्थानांतरण</value></data>
+  <data name="ReportTransactionTypeRefund" xml:space="preserve"><value>वापसी</value></data>
+  <data name="ReportTransactionTypeAdjustment" xml:space="preserve"><value>समायोजन</value></data>
+  <data name="ReportRecurrenceStatusActive" xml:space="preserve"><value>सक्रिय</value></data>
+  <data name="ReportRecurrenceStatusPaused" xml:space="preserve"><value>रुका हुआ</value></data>
+  <data name="ReportRecurrenceStatusArchived" xml:space="preserve"><value>संग्रहित</value></data>
+</root>
