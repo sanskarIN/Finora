@@ -4,8 +4,8 @@ This companion inventory extends [`REPOSITORY_FILE_REFERENCE.md`](REPOSITORY_FIL
 
 | File or area | Purpose |
 |---|---|
-| `Finora.CrossPlatform.slnx` | .NET solution definition that groups the existing MAUI/core projects with the universal desktop and WebAssembly hosts. |
-| `scripts/check_cross_platform.py` | Dependency-free cross-platform source-contract checker for package pins, target frameworks, native desktop host coverage, WebAssembly/PWA wiring, browser persistence safety boundary, CI matrix, and platform documentation. |
+| `Finora.CrossPlatform.slnx` | .NET solution definition grouping the established Shared/Domain/Application/Infrastructure/MAUI projects, all three universal hosts, Unit/Integration/UI tests, and `tools/Finora.Performance`. |
+| `scripts/check_cross_platform.py` | Dependency-free cross-platform source-contract checker for complete solution inventory, package pins, target frameworks, compiled bindings, native desktop host coverage, WebAssembly/PWA wiring, browser persistence safety boundary, CI matrix, and platform documentation. |
 | `src/Finora.Universal/` | Platform-neutral Avalonia presentation shell, runtime capability contract, shared desktop/single-view application lifetime wiring, and universal views/view-models. |
 | `src/Finora.Universal.Desktop/` | Native Avalonia desktop host for Linux, Windows, and macOS; initializes Finora's existing local SQLite/EF Core finance store in an OS-local application-data directory. |
 | `src/Finora.Universal.Browser/` | Avalonia WebAssembly/PWA host for modern browsers and ChromeOS-capable browser delivery. Native SQLite persistence is intentionally excluded until the browser-specific encrypted persistence adapter meets parity and privacy requirements. |
