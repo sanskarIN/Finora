@@ -10,7 +10,7 @@ Finora uses two presentation/runtime families so that the finance core can reach
 | iPhone / iPad | .NET MAUI (`net10.0-ios`) | Existing native target | Local SQLite/EF Core | Existing MAUI surface; Apple signing/device validation still required |
 | Windows 10/11 | .NET MAUI + Avalonia desktop | Existing MAUI target plus universal desktop host | Local SQLite/EF Core | MAUI remains the primary release path; Avalonia host expands desktop portability |
 | macOS | .NET MAUI Mac Catalyst + Avalonia desktop | Existing Mac Catalyst target plus universal desktop host | Local SQLite/EF Core | Native release validation/signing still required |
-| Linux | Avalonia desktop (`net10.0`) | Universal desktop host added | Local SQLite/EF Core | Runtime/storage foundation present; full MAUI-screen UI parity remains work |
+| Linux | Avalonia desktop (`net10.0`) | Universal desktop host added | Local SQLite/EF Core foundation; landing UI does not read finance rows | Runtime/storage foundation present; app-lock/privacy and full MAUI-screen UI parity remain work |
 | Web / modern browsers | Avalonia WebAssembly (`net10.0-browser`) | Browser host added | **Disabled by design in this phase** | UI/build path exists; secure browser-local finance persistence and full feature parity remain blockers |
 | ChromeOS | Android package and/or Web/PWA path | Delivery paths present | Android uses SQLite; Web follows browser boundary | Dedicated ChromeOS-native validation remains required |
 
@@ -33,7 +33,7 @@ The following projects remain platform-neutral and are shared by all presentatio
 ### Universal Avalonia path
 
 - `src/Finora.Universal/` contains the platform-neutral Avalonia application/view layer and the `IUniversalRuntime` capability boundary.
-- `src/Finora.Universal.Desktop/` hosts the UI on Linux, Windows, and macOS and initializes the existing local SQLite finance store in the operating system's local application-data directory.
+- `src/Finora.Universal.Desktop/` hosts the UI on Linux, Windows, and macOS and initializes the existing local SQLite finance-store/storage boundary in the operating system's local application-data directory. The current landing surface intentionally does not query or display finance rows until app-lock, privacy-mode, and feature parity are implemented and validated for that host.
 - `src/Finora.Universal.Browser/` hosts the same universal view in WebAssembly and provides an installable web-app manifest.
 
 ## Why browser persistence is gated
