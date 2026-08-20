@@ -6,7 +6,7 @@ using Finora.Universal.Views;
 
 namespace Finora.Universal;
 
-public partial class App : Application
+public partial class App : Avalonia.Application
 {
     public static IUniversalRuntime Runtime { get; set; } = new UnconfiguredUniversalRuntime();
 
