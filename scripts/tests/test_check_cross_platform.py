@@ -64,6 +64,21 @@ class CrossPlatformContractTests(unittest.TestCase):
         main_view = checker.read("src/Finora.Universal/Views/MainView.axaml")
         self.assertIn('x:DataType="vm:MainViewModel"', main_view)
 
+    def test_universal_landing_does_not_read_or_bind_finance_metadata(self) -> None:
+        desktop_runtime = checker.read(
+            "src/Finora.Universal.Desktop/DesktopUniversalRuntime.cs"
+        )
+        runtime_contract = checker.read("src/Finora.Universal/UniversalRuntime.cs")
+        main_view_model = checker.read(
+            "src/Finora.Universal/ViewModels/MainViewModel.cs"
+        )
+        main_view = checker.read("src/Finora.Universal/Views/MainView.axaml")
+
+        self.assertNotIn("GetAccountsAsync", desktop_runtime)
+        self.assertNotIn("AccountCount", runtime_contract)
+        self.assertNotIn("AccountSummary", main_view_model)
+        self.assertNotIn("AccountSummary", main_view)
+
     def test_current_repository_contract_passes(self) -> None:
         self.assertEqual([], checker.validate())
 
