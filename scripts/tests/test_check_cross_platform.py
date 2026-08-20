@@ -42,7 +42,7 @@ class CrossPlatformContractTests(unittest.TestCase):
             checker.solution_projects("Finora.CrossPlatform.slnx"),
         )
         self.assertIn(
-            "tests/Finora.Performance/Finora.Performance.csproj",
+            "tools/Finora.Performance/Finora.Performance.csproj",
             checker.EXPECTED_SOLUTION_PROJECTS,
         )
 
