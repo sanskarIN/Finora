@@ -10,10 +10,10 @@ At startup the host:
 2. creates a Finora-specific subdirectory when needed;
 3. opens `finora.db3` through EF Core SQLite;
 4. runs the same `DatabaseInitializer` used by the existing application infrastructure;
-5. exposes the finance store through the universal runtime boundary;
-6. loads a privacy-safe account count into the universal landing surface.
+5. initializes the native finance-store/storage boundary without loading finance rows into the universal landing surface;
+6. exposes only platform/storage capability status while app-lock, privacy-mode, and full feature parity are still incomplete.
 
-The host does not require a Finora account or cloud service.
+The host does not require a Finora account or cloud service. The current landing surface deliberately does not query account lists, balances, transaction rows, or other finance-derived metadata merely to demonstrate that the native storage foundation works.
 
 ## Build
 
@@ -46,6 +46,7 @@ Linux currently has the native runtime/storage foundation, not a claim that ever
 - encrypted backup/restore picker/save/share UX;
 - receipt/document attachment picker/open behavior;
 - desktop secure-storage strategy for app-lock secrets;
+- app-lock and privacy-mode enforcement before any finance-derived content is exposed;
 - notification integration or an explicitly documented no-notification mode;
 - sensitive-screen/privacy limitations under common desktop environments;
 - keyboard navigation, screen readers, scaling, high contrast and reduced motion;
