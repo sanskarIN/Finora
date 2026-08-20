@@ -10,7 +10,7 @@ public static class LocalizationResources
 
     private const string ResourceNamespacePrefix = "Finora.App.Resources.Strings.";
     private const string CompiledResourceSuffix = ".resources";
-    private static readonly IReadOnlyList<ResourceManager> Managers = CreateManagers();
+    private static readonly ResourceManager[] Managers = CreateManagers();
 
     public static string Get(string key)
     {
@@ -49,7 +49,7 @@ public static class LocalizationResources
         }
     }
 
-    private static IReadOnlyList<ResourceManager> CreateManagers()
+    private static ResourceManager[] CreateManagers()
     {
         var assembly = typeof(LocalizationResources).Assembly;
         var baseNames = assembly.GetManifestResourceNames()
