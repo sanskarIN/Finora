@@ -20,6 +20,27 @@ The browser project includes:
 - the shared Avalonia `App`/single-view UI;
 - a browser runtime capability implementation.
 
+## Publish a static WebAssembly candidate
+
+Create the optimized publish output with:
+
+```bash
+dotnet publish src/Finora.Universal.Browser/Finora.Universal.Browser.csproj -c Release
+```
+
+For the current `net10.0-browser` target, the static site is emitted below the project's Release publish output, with the deployable browser files under `wwwroot`. Serve that directory through an HTTP(S) static-file server for validation; do not open `index.html` directly from a `file://` URL and treat that as browser-runtime evidence.
+
+A publish artifact is only a candidate. Before hosting it publicly, verify at minimum:
+
+- application startup through the generated WebAssembly runtime;
+- direct and refreshed navigation to the deployed base path;
+- manifest/icon resolution and install behavior where the browser exposes PWA installation;
+- keyboard and screen-reader behavior;
+- text scaling, zoom, high-contrast/forced-color behavior where available;
+- browser-console output for accidental private-data disclosure;
+- no finance records or secrets are persisted by the current disabled-persistence host;
+- cache/CDN headers do not create a false claim of durable offline finance storage.
+
 ## Persistence status
 
 **Finance persistence is intentionally disabled in the browser host in this phase.**
@@ -31,6 +52,8 @@ The browser runtime returns a capability state explaining that a dedicated encry
 ## PWA / ChromeOS
 
 `manifest.webmanifest` enables an installable-app presentation where the browser/platform supports installation. ChromeOS users also have the Android delivery path through Finora's existing Android target. Browser/PWA installation does not change the persistence boundary described above.
+
+The current manifest is installation metadata; it is not a statement that finance persistence, background synchronization, or a service-worker-backed offline finance runtime is complete.
 
 ## Security requirements before finance data is enabled
 
