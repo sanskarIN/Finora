@@ -6,11 +6,12 @@
 
 This directory is the documentation entry point for the current Finora 0.2.0 (build 2) source line and database schema 2.
 
-Finora is a local-first personal-finance application built with .NET MAUI, C#, XAML, SQLite/EF Core, and MVVM-style presentation/service separation. The current release requires no Finora account or login, core finance workflows are offline-capable, backups are user-triggered, and the application does not silently aggregate unlike currencies or invent exchange rates.
+Finora is a local-first personal-finance application with a mature .NET MAUI application path plus an additive Avalonia universal path for Linux desktop and WebAssembly/browser reach. Shared finance rules remain in platform-neutral C# projects; native persistence uses SQLite/EF Core, and the browser host keeps finance persistence disabled until a dedicated browser-local adapter passes parity, recovery, and privacy validation. The current release requires no Finora account or login, core native finance workflows are offline-capable, backups are user-triggered, and the application does not silently aggregate unlike currencies or invent exchange rates.
 
 ## Start here
 
 - [Project README](../README.md) — product overview, current capabilities, privacy boundary, build entry points, contacts, and release status.
+- [Cross-Platform Support Matrix](platforms/CROSS_PLATFORM.md) — Android, iOS/iPadOS, Windows, macOS, Linux, Web/WASM, PWA, and ChromeOS delivery paths plus parity boundaries.
 - [Final Repository Closure](FINAL_REPOSITORY_CLOSURE.md) — final 2026-08-19 repository-engineering closure statement and the boundary between completed source work and external release evidence.
 - [Final Hardening — 2026-08-19](FINAL_HARDENING_2026-08-19.md) — post-closure correctness, restore-safety, receipt-consistency, regression-coverage, backlog, evidence-boundary, and branch-governance audit.
 - [Documentation Status](DOCUMENTATION_STATUS.md) — coverage/completeness matrix and documentation update policy.
@@ -45,6 +46,7 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 - [Developer Guide](development/DEVELOPER_GUIDE.md)
 - [Repository Code Map](development/CODE_MAP.md) — concise layer/area navigation guide.
 - [Repository File Reference](development/REPOSITORY_FILE_REFERENCE.md) — exhaustive tracked-file responsibility/ownership reference, mechanically checked against `git ls-files`.
+- [Cross-Platform File Reference](development/CROSS_PLATFORM_FILE_REFERENCE.md) — scoped inventory extension for the universal UI, native desktop host, WebAssembly host, and cross-platform solution.
 - [Adding or Changing a Feature](development/ADDING_A_FEATURE.md)
 - [Main Branch Protection Policy](development/BRANCH_PROTECTION.md) — intended GitHub ruleset/check policy and validation steps; current protection state is documented explicitly rather than assumed.
 - [Engineering Decisions](../DECISIONS.md)
@@ -77,9 +79,13 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 
 ## Platform documentation
 
+- [Cross-Platform Support Matrix](platforms/CROSS_PLATFORM.md)
 - [Android](platforms/ANDROID.md)
 - [Windows](platforms/WINDOWS.md)
 - [iOS and Mac Catalyst](platforms/APPLE.md)
+- [Linux](platforms/LINUX.md)
+- [Web / WebAssembly / PWA](platforms/WEB.md)
+- [ChromeOS](platforms/CHROMEOS.md)
 
 ## Release documentation
 
@@ -100,11 +106,11 @@ Finora is a local-first personal-finance application built with .NET MAUI, C#, X
 
 ## Documentation completeness contract
 
-The focused manuals above describe behavior. [Repository File Reference](development/REPOSITORY_FILE_REFERENCE.md) describes tracked-file ownership and change impact.
+The focused manuals above describe behavior. [Repository File Reference](development/REPOSITORY_FILE_REFERENCE.md) describes the established tracked-file ownership/change impact, while [Cross-Platform File Reference](development/CROSS_PLATFORM_FILE_REFERENCE.md) extends that inventory for the universal host family.
 
-`python scripts/check_documentation_coverage.py` compares that reference with the exact `git ls-files` set. It fails when a tracked file is uncovered, when a declared area no longer contains a tracked file, or when the reference attempts to hide detail behind a broad one-component catch-all such as `src/` or `docs/`. The same check is part of `scripts/run_repo_qa.py` and the primary CI structural preflight.
+`python scripts/check_documentation_coverage.py` compares the combined approved reference set with the exact `git ls-files` set. It fails when a tracked file is uncovered, when a declared area no longer contains a tracked file, or when a reference attempts to hide detail behind a broad one-component catch-all such as `src/` or `docs/`. The same check is part of `scripts/run_repo_qa.py` and the primary CI structural preflight.
 
-This coverage contract makes it difficult for a new source, test, workflow, script, asset, platform resource, or policy file to exist without an explicit documented responsibility. It does **not** turn documentation into runtime evidence; target-platform/native/store validation remains separate.
+This coverage contract makes it difficult for a new source, test, workflow, script, asset, platform resource, or policy file to exist without an explicit documented responsibility. It does **not** turn documentation into runtime evidence; target-platform/native/store/browser validation remains separate.
 
 ## Product identity
 
@@ -123,6 +129,8 @@ The Buy Me a Coffee link is an optional external support/contribution link. It d
 
 The current local-first source line intentionally does not claim remote Finora accounts, cloud synchronization, collaboration, server-backed commercial entitlement, automatic exchange-rate conversion, or default analytics/advertising telemetry. Those are later-version product decisions and require new architecture, privacy, security, migration, and release review before implementation.
 
+The new universal host source also does not claim browser finance-persistence parity or completed Linux UI parity. Those status boundaries are explicitly documented in the platform matrix so build-target reach is not confused with release readiness.
+
 ## Validation statement
 
-Documentation describes implemented source and required validation. Current commit-specific automated evidence is recorded in [CI Evidence](testing/CI_EVIDENCE.md). A successful source build is not automatically a verified store-ready package. Android, Windows, iOS, and Mac Catalyst package signing, device behavior, notification APIs, biometrics, screenshot protection, accessibility, file sharing, interrupted-restore behavior, and store declarations require evidence on the corresponding platform/toolchain before release.
+Documentation describes implemented source and required validation. Current commit-specific automated evidence is recorded in [CI Evidence](testing/CI_EVIDENCE.md). A successful source build is not automatically a verified store-ready package. Android, Windows, iOS/iPadOS, macOS/Mac Catalyst, Linux, WebAssembly/PWA, and ChromeOS delivery paths require the corresponding platform/toolchain evidence for packaging, signing where applicable, device/runtime behavior, storage durability, privacy, accessibility, file sharing, notifications/biometrics where applicable, interrupted-recovery behavior, and store/browser policy before release claims are made.
