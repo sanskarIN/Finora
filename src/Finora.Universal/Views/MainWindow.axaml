@@ -1,0 +1,11 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:Finora.Universal.Views"
+        x:Class="Finora.Universal.Views.MainWindow"
+        Title="Finora"
+        Width="1100"
+        Height="760"
+        MinWidth="720"
+        MinHeight="520">
+  <views:MainView />
+</Window>
