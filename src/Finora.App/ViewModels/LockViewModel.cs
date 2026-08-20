@@ -1,4 +1,3 @@
-using System.Globalization;
 using Finora.Application;
 
 namespace Finora.App;
@@ -88,7 +87,7 @@ public sealed class LockViewModel : ViewModelBase
     {
         var lockout = _lock.RemainingLockout;
         Status = lockout > TimeSpan.Zero
-            ? string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get("LockoutMinutes"), Math.Ceiling(lockout.TotalMinutes))
+            ? LocalizationResources.Format("LockoutMinutes", Math.Ceiling(lockout.TotalMinutes))
             : LocalizationResources.Get("EnterFinoraPin");
     }
 }
