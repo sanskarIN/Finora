@@ -51,7 +51,7 @@ class CrossPlatformContractTests(unittest.TestCase):
         for package in checker.AVALONIA_PACKAGES:
             self.assertEqual(checker.AVALONIA_VERSION, versions.get(package))
 
-    def test_universal_ui_uses_compiled_binding_contract(self) -> None:
+    def test_universal_ui_uses_explicit_avalonia_app_and_compiled_bindings(self) -> None:
         self.assertEqual(
             "true",
             checker.project_property(
@@ -59,6 +59,8 @@ class CrossPlatformContractTests(unittest.TestCase):
                 "AvaloniaUseCompiledBindingsByDefault",
             ),
         )
+        app_code = checker.read("src/Finora.Universal/App.axaml.cs")
+        self.assertIn("public partial class App : Avalonia.Application", app_code)
         main_view = checker.read("src/Finora.Universal/Views/MainView.axaml")
         self.assertIn('x:DataType="vm:MainViewModel"', main_view)
 
