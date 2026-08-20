@@ -16,12 +16,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public MainViewModel(IUniversalRuntime runtime)
     {
         _runtime = runtime;
+        ProductName = AppConstants.ProductName;
+        Attribution = AppConstants.Watermark;
+        RepositoryUrl = AppConstants.RepositoryUrl;
         _ = InitializeAsync();
     }
 
-    public string ProductName => AppConstants.ProductName;
-    public string Attribution => AppConstants.Watermark;
-    public string RepositoryUrl => AppConstants.RepositoryUrl;
+    public string ProductName { get; }
+    public string Attribution { get; }
+    public string RepositoryUrl { get; }
 
     public string PlatformName
     {
