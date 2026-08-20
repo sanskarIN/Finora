@@ -1,6 +1,7 @@
 using Finora.Application;
 using Finora.Infrastructure;
 using Finora.Shared;
+using Finora.Universal;
 using Microsoft.EntityFrameworkCore;
 
 namespace Finora.Universal.Desktop;
@@ -26,7 +27,7 @@ internal sealed class DesktopUniversalRuntime : IUniversalRuntime
         return new UniversalRuntimeState(
             GetPlatformName(),
             true,
-            $"Private SQLite data: {dataDirectory}",
+            "Private SQLite data is stored in the operating system's local application-data directory.",
             accounts.Count,
             "Native desktop storage is initialized. Finora finance data remains local to this device unless the user explicitly exports or backs it up.");
     }
