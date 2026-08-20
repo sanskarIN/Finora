@@ -4,14 +4,16 @@
 
 > **☕ Support Finora development:** [Buy Me a Coffee — sanskarIN](https://buymeacoffee.com/sanskarIN). Support is optional and never unlocks features, changes support priority, or replaces store/server-backed entitlement validation.
 
-**Finora** is an open-source, local-first personal finance application built with .NET MAUI, C#, XAML, SQLite/Entity Framework Core, and MVVM-oriented presentation architecture.
+**Finora** is an open-source, local-first personal finance application built on .NET 10 and C#. Its established application path uses .NET MAUI, XAML, SQLite/Entity Framework Core, and MVVM-oriented presentation architecture for Android, iOS/iPadOS, Mac Catalyst, and Windows. An additive Avalonia universal path extends the source toward Linux desktop, additional Windows/macOS desktop hosting, and WebAssembly/PWA delivery without moving finance rules into platform-specific UI code.
 
 > **Made by the Sanskar**
 
 Current source version: **0.2.0 (build 2)**  
 Current database schema: **2**
 
-Finora's current product model requires no Finora account, login, email address, phone number, subscription account, or internet connection for core finance functionality. Financial records remain on the user's device unless the user explicitly imports, exports, shares, or saves an encrypted backup.
+Finora's current product model requires no Finora account, login, email address, phone number, subscription account, or internet connection for core native finance functionality. Financial records remain on the user's device unless the user explicitly imports, exports, shares, or saves an encrypted backup.
+
+The universal browser host is intentionally more restrictive than the native application: it exposes the WebAssembly/PWA presentation foundation but keeps finance persistence disabled until a browser-local encrypted storage adapter passes the repository's parity, migration, recovery, integrity, privacy, quota/eviction, backup/restore, and offline validation requirements. A successful Web build is therefore not represented as full browser finance parity.
 
 ## Product goals
 
@@ -28,7 +30,7 @@ Finora is designed to help users:
 - import CSV files through mapping/preview/validation;
 - export finance records to CSV/PDF;
 - create encrypted backups and restore them safely;
-- keep working fully offline without an account requirement.
+- keep working fully offline without an account requirement on supported native finance paths.
 
 ## Current source highlights
 
@@ -40,6 +42,8 @@ Finora is designed to help users:
 - Manual-only transaction location text; no background location collection.
 - Explicit system picker/share/save boundaries for import/export/backup/receipts.
 - Android source explicitly disables ordinary app backup and ships cloud/device-transfer exclusion rules for private app data.
+- Native universal desktop storage remains OS-local through the existing SQLite/EF Core infrastructure.
+- Browser finance persistence is disabled rather than silently downgrading native durability/privacy semantics.
 - Uninstall/reset can remove local data, so users should save a verified external encrypted backup when needed.
 
 ### Privacy-mode amount hiding
@@ -320,7 +324,7 @@ Finora cannot recover a forgotten backup password.
 - Accessible recurring-rule lifecycle controls.
 - Accessible Dashboard period selection, transaction sort/load-more, Settings security/destructive/About controls, and Onboarding Privacy/Terms controls in source.
 
-Full screen-by-screen Hindi localization and final native accessibility validation are not represented as complete.
+Full screen-by-screen Hindi localization and final native accessibility validation are not represented as complete. The current Avalonia universal landing surface is also a platform foundation, not a claim that every MAUI screen/localization/accessibility behavior has already reached universal-host parity.
 
 ### Settings, onboarding and developer tools
 
@@ -366,16 +370,22 @@ Generated CSV/PDF/backup/integrity-report share copies are cache artifacts, not 
 
 ```text
 src/
-  Finora.App/                 # .NET MAUI UI, resources, platform integrations
+  Finora.App/                 # Established .NET MAUI UI, resources, platform integrations
+  Finora.Universal/           # Shared Avalonia UI/runtime capability boundary
+  Finora.Universal.Desktop/   # Linux/Windows/macOS Avalonia desktop host
+  Finora.Universal.Browser/   # WebAssembly/PWA host; finance persistence currently disabled
   Finora.Domain/              # Entities, money/domain rules, dashboard/budget policies
   Finora.Application/         # Use-case/report contracts and DTOs
-  Finora.Infrastructure/      # SQLite, files, reports, backup, import/export, diagnostics
+  Finora.Infrastructure/      # Native SQLite, files, reports, backup, import/export, diagnostics
   Finora.Shared/              # Shared constants/primitives/local-date policy
 
 tests/
   Finora.UnitTests/
   Finora.IntegrationTests/
   Finora.UiTests/
+
+tools/
+  Finora.Performance/         # Synthetic performance/correctness harness
 
 docs/
   accessibility/
@@ -395,6 +405,7 @@ build/
 ```
 
 Documentation hub: [`docs/README.md`](docs/README.md)  
+Cross-platform matrix: [`docs/platforms/CROSS_PLATFORM.md`](docs/platforms/CROSS_PLATFORM.md)  
 Next steps: [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md)  
 Architecture details: [`docs/architecture/OVERVIEW.md`](docs/architecture/OVERVIEW.md)  
 Database schema: [`docs/architecture/DATABASE_SCHEMA.md`](docs/architecture/DATABASE_SCHEMA.md)  
@@ -402,34 +413,58 @@ Engineering decisions: [`DECISIONS.md`](DECISIONS.md)
 
 ## Build and validation
 
-Dependency-free structural check:
+Dependency-free repository structural check:
 
 ```bash
 python build/scripts/verify_structure.py
 ```
 
+Dependency-free cross-platform contract check:
+
+```bash
+python scripts/check_cross_platform.py
+```
+
 The structural verifier checks repository/documentation structure and local links, product/support identity including BMC discovery surfaces, XML/XAML/project wiring, version/schema drift, floating-point monetary fields, raw minor-unit user-facing labels, selected Android privacy/backup rules, masked secret fields, complete-reset handler wiring, biometric provider-text redaction, and raw exception-alert regressions.
 
-Full compiler/test verification requires a compatible .NET 10/MAUI environment and platform SDK/workloads described in [`docs/setup/BUILD.md`](docs/setup/BUILD.md).
+The cross-platform checker validates the universal solution/project inventory, centrally pinned Avalonia packages, target frameworks, compiled-binding contract, native desktop runtime wiring, browser persistence safety boundary, PWA manifest semantics, workflow matrix, and platform documentation before more expensive .NET builds run.
 
-The implementation environment used in the current ChatGPT continuation does **not** provide a local `dotnet` executable, so this repository does not claim a local `dotnet build` or `dotnet test` pass from this session.
+Representative universal builds:
+
+```bash
+dotnet restore src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj
+dotnet build src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj -c Release --no-restore
+
+dotnet workload install wasm-tools
+dotnet restore src/Finora.Universal.Browser/Finora.Universal.Browser.csproj
+dotnet build src/Finora.Universal.Browser/Finora.Universal.Browser.csproj -c Release --no-restore
+```
+
+Full compiler/test verification requires a compatible .NET 10 environment plus the target-specific MAUI/WebAssembly/platform SDKs and workloads described in [`docs/setup/BUILD.md`](docs/setup/BUILD.md).
+
+Commit-specific validation claims belong in the CI/release evidence documentation and must name the exact candidate/run that executed. Source presence, a queued workflow, or an older successful candidate is not reused as proof for a newer head.
 
 ## Target platforms
 
-The MAUI application project currently declares:
+Finora currently has these delivery/source paths:
 
-- Android: `net10.0-android`
-- iOS: `net10.0-ios`
-- Mac Catalyst: `net10.0-maccatalyst`
-- Windows: `net10.0-windows10.0.19041.0`
+- Android — established MAUI target `net10.0-android`;
+- iOS / iPadOS — established MAUI target `net10.0-ios`;
+- Windows 10/11 — established MAUI target `net10.0-windows10.0.19041.0` plus the Avalonia desktop host;
+- macOS — established Mac Catalyst target `net10.0-maccatalyst` plus the Avalonia desktop host;
+- Linux — Avalonia desktop host targeting `net10.0`; full MAUI-screen feature parity and native packaging/runtime validation remain explicit work;
+- Web / modern browsers — Avalonia WebAssembly host targeting `net10.0-browser`; finance persistence is intentionally disabled in this phase;
+- ChromeOS — Android delivery where supported and/or the Web/PWA path; dedicated ChromeOS-path validation remains required.
 
-Platform source presence is **not** proof of a successful native release. Final notification/biometric/screen-protection/file-picker behavior, local-calendar/time-zone behavior, privacy display, chart rendering, packaging, signing, accessibility, upgrade, and store compliance must be tested with appropriate SDK/host/device.
+For Linux, the current host follows the stable Avalonia X11 baseline through normal platform detection. Native Wayland is not represented as validated by this branch unless a later candidate explicitly enables and validates that separate path.
 
-Use [`docs/releases/STORE_READINESS.md`](docs/releases/STORE_READINESS.md) and [`docs/releases/RELEASE_CHECKLIST.md`](docs/releases/RELEASE_CHECKLIST.md).
+Platform source presence is **not** proof of a successful release. Final notification/biometric/screen-protection/file-picker behavior, local-calendar/time-zone behavior, privacy display, chart rendering, storage/recovery behavior, packaging, signing where applicable, accessibility, upgrade, browser/PWA behavior, and store/browser policy must be tested with the appropriate SDK/host/device/runtime.
+
+Use [`docs/platforms/CROSS_PLATFORM.md`](docs/platforms/CROSS_PLATFORM.md), [`docs/releases/STORE_READINESS.md`](docs/releases/STORE_READINESS.md), and [`docs/releases/RELEASE_CHECKLIST.md`](docs/releases/RELEASE_CHECKLIST.md).
 
 ## Current source validation status
 
-See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for distinction between implemented source and external compiler/device/store gates.
+See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for distinction between implemented source and external compiler/device/store gates, and [`what_changed.md`](what_changed.md) for the latest continuation-specific evidence boundary.
 
 No claim is made that Finora is bug-free.
 
@@ -437,13 +472,15 @@ No claim is made that Finora is bug-free.
 
 The prioritized execution roadmap is [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md).
 
-The strongest next milestone is a reproducible Finora 0.2.0 release candidate with evidence for structural verification, dependency/workload restore, automated tests, all native builds, schema migration, backup/restore and interruption recovery, finance-data integrity, privacy mode, currency/date correctness, notifications, app lock/biometrics, accessibility, complete local data deletion, packaging/signing, and store-policy review.
+The strongest next milestone is a reproducible Finora 0.2.0 release candidate with evidence for structural verification, dependency/workload restore, automated tests, all native builds, universal desktop/WebAssembly builds, schema migration, backup/restore and interruption recovery, finance-data integrity, privacy mode, currency/date correctness, notifications, app lock/biometrics, accessibility, complete local data deletion, packaging/signing, and store/browser-policy review.
 
-Large later-version features such as remote accounts, cloud sync, collaboration, secure commercial entitlement, automatic FX, or telemetry should not displace unresolved P0 correctness/release blockers.
+For the universal path, the next engineering milestones are full Linux finance-screen parity and native integration validation, plus a deliberately designed/tested encrypted browser-local persistence layer before browser finance workflows are enabled.
+
+Large later-version features such as remote accounts, cloud sync, collaboration, secure commercial entitlement, automatic FX, or telemetry should not displace unresolved correctness/release/cross-platform parity blockers.
 
 ## Testing
 
-See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Current automated/source-contract areas include money/currency, domain/persistence metadata, linked transfers, split/category behavior, recurrence payment/rule lifecycle, account/reconciliation dependencies, custom budget periods, Dashboard periods, local-date UTC conversion, complete report matrix, future-date comparison exclusion, currency-aware import/reporting, encrypted backup graph validation, crash-safe restore recovery, schema migration, expanded integrity diagnostics, privacy-safe amount surfaces, signed chart baseline, transaction sorting/incremental display, adaptive navigation, reset safety, onboarding/About controls, BMC support visibility/trust boundaries, and platform privacy source contracts.
+See [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md). Current automated/source-contract areas include money/currency, domain/persistence metadata, linked transfers, split/category behavior, recurrence payment/rule lifecycle, account/reconciliation dependencies, custom budget periods, Dashboard periods, local-date UTC conversion, complete report matrix, future-date comparison exclusion, currency-aware import/reporting, encrypted backup graph validation, crash-safe restore recovery, schema migration, expanded integrity diagnostics, privacy-safe amount surfaces, signed chart baseline, transaction sorting/incremental display, adaptive navigation, reset safety, onboarding/About controls, BMC support visibility/trust boundaries, platform privacy source contracts, and universal-host repository/build contracts.
 
 ## Security
 

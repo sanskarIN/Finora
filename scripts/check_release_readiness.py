@@ -110,7 +110,9 @@ TEXT_EXTENSIONS = {
     ".yml",
 }
 
-CONFLICT_MARKERS = ("<<<<<<< ", ">>>>>>> ", "||||||| ")
+# Build the raw VCS marker prefixes without embedding those prefixes literally in
+# this checker. Otherwise a repository-wide scan would report its own constants.
+CONFLICT_MARKERS = tuple(character * 7 + " " for character in ("<", ">", "|"))
 
 
 @dataclass(frozen=True)

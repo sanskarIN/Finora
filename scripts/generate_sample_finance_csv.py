@@ -54,6 +54,13 @@ MERCHANTS = (
 PAYMENT_METHODS = ("Card", "UPI", "Cash")
 TAGS = ("sample", "qa", "fixture", "demo")
 
+# Keep deterministic QA formatting aligned with Finora.Domain.CurrencyMinorUnits.
+ZERO_DECIMAL_CURRENCIES = frozenset(
+    {"BIF", "CLP", "DJF", "GNF", "ISK", "JPY", "KMF", "KRW", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF"}
+)
+THREE_DECIMAL_CURRENCIES = frozenset({"BHD", "IQD", "JOD", "KWD", "LYD", "OMR", "TND"})
+FOUR_DECIMAL_CURRENCIES = frozenset({"CLF"})
+
 
 @dataclass(frozen=True)
 class SampleOptions:
@@ -105,11 +112,27 @@ def validate_options(options: SampleOptions) -> None:
         raise ValueError("currency must be a three-letter alphabetic code")
 
 
-def format_amount(amount: Decimal, *, minor_units: bool) -> str:
-    normalized = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+def currency_decimal_places(currency: str) -> int:
+    normalized = currency.strip().upper()
+    if len(normalized) != 3 or not normalized.isalpha():
+        raise ValueError("currency must be a three-letter alphabetic code")
+    if normalized in ZERO_DECIMAL_CURRENCIES:
+        return 0
+    if normalized in THREE_DECIMAL_CURRENCIES:
+        return 3
+    if normalized in FOUR_DECIMAL_CURRENCIES:
+        return 4
+    return 2
+
+
+def format_amount(amount: Decimal, *, currency: str, minor_units: bool) -> str:
+    decimal_places = currency_decimal_places(currency)
+    quantum = Decimal(1).scaleb(-decimal_places)
+    normalized = amount.quantize(quantum, rounding=ROUND_HALF_UP)
     if minor_units:
-        return str(int((normalized * 100).to_integral_value(rounding=ROUND_HALF_UP)))
-    return f"{normalized:.2f}"
+        scale = Decimal(10) ** decimal_places
+        return str(int((normalized * scale).to_integral_value(rounding=ROUND_HALF_UP)))
+    return f"{normalized:.{decimal_places}f}"
 
 
 def expense_row(rng: random.Random, index: int, when: date, options: SampleOptions) -> dict[str, str]:
@@ -122,7 +145,11 @@ def expense_row(rng: random.Random, index: int, when: date, options: SampleOptio
     return {
         "Date": when.isoformat(),
         "Type": "Expense",
-        "Amount": format_amount(amount, minor_units=options.minor_units),
+        "Amount": format_amount(
+            amount,
+            currency=options.currency,
+            minor_units=options.minor_units,
+        ),
         "Account": account,
         "Currency": options.currency.upper(),
         "Category": category,
@@ -141,7 +168,11 @@ def income_row(rng: random.Random, index: int, when: date, options: SampleOption
     return {
         "Date": when.isoformat(),
         "Type": "Income",
-        "Amount": format_amount(amount, minor_units=options.minor_units),
+        "Amount": format_amount(
+            amount,
+            currency=options.currency,
+            minor_units=options.minor_units,
+        ),
         "Account": "Everyday",
         "Currency": options.currency.upper(),
         "Category": "Income",
@@ -164,7 +195,11 @@ def transfer_rows(
     source, destination = rng.sample(ACCOUNTS[:2], 2)
     amount = Decimal(rng.randint(50000, 250000)) / Decimal(100)
     group = f"SAMPLE-TRANSFER-{pair_index:05d}"
-    amount_text = format_amount(amount, minor_units=options.minor_units)
+    amount_text = format_amount(
+        amount,
+        currency=options.currency,
+        minor_units=options.minor_units,
+    )
     common = {
         "Date": when.isoformat(),
         "Type": "Transfer",

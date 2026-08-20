@@ -61,7 +61,7 @@ At this checkpoint:
 - repository issue search returns no open non-PR issues;
 - the only open PR is the final-hardening PR containing this work;
 - the changed-file set is limited to the intended correctness/safety implementation, tests, and documentation;
-- prior debt-marker searches for TODO/FIXME/NotImplementedException/HACK/XXX did not identify a current source backlog, subject to normal search/index limitations.
+- prior searches using the repository's configured unfinished-work/debt-marker set did not identify a current source backlog, subject to normal search/index limitations.
 
 This is an audit result, not a guarantee that undiscovered bugs cannot exist.
 

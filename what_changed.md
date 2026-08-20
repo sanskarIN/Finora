@@ -1,8 +1,8 @@
 # What Changed — Finora
 
-Last continuation: **2026-08-19**  
+Last continuation: **2026-08-20**  
 Repository: https://github.com/sanskarIN/Finora  
-Current branch: **main**  
+Current branch: **feat/cross-platform-support-2026-08-20**  
 Current source line: **Finora 0.2.0 (build 2)**  
 Current database schema: **2**
 
@@ -417,6 +417,129 @@ Its hosted workflows were observed with no failure conclusion but still queued:
 Queued checks are not represented as successful runtime evidence. The older exact verified candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` remains the recorded 319/319 automated-test + four-platform Release source-build + CodeQL + Dependency Review baseline.
 
 The repository-engineering completion claim remains bounded: native signing/package installation, physical-device behavior, accessibility, interrupted-process/low-disk restore injection, store-console policy review, signing-key custody, and store approval are external release evidence, not hidden repository implementation work.
+
+---
+
+## 177. 2026-08-20 universal cross-platform continuation and validation hardening
+
+The supported-platform/toolchain continuation reopened repository engineering through PR #29 on branch `feat/cross-platform-support-2026-08-20`. The branch extends Finora beyond its established MAUI application without replacing that application or weakening the local-first/privacy model.
+
+### Cross-platform source foundation
+
+The PR adds and documents:
+
+- `Finora.Universal`, an Avalonia 12.1.1 shared presentation/runtime-capability layer;
+- `Finora.Universal.Desktop`, a `net10.0` desktop host for Linux, Windows, and macOS;
+- native desktop reuse of the existing EF Core/SQLite finance store and `DatabaseInitializer`;
+- `Finora.Universal.Browser`, a `net10.0-browser` WebAssembly host;
+- an installable PWA manifest and Finora web icon;
+- a strict browser boundary that leaves finance persistence disabled until a browser-local encrypted persistence adapter passes migration, recovery, integrity, privacy, quota/eviction, backup/restore, attachment, and offline validation;
+- `Finora.CrossPlatform.slnx`, now including Shared, Domain, Application, Infrastructure, MAUI App, all three universal projects, Unit/Integration/UI tests, and the performance harness;
+- a dedicated cross-platform workflow with dependency-free preflight, desktop Release builds on Ubuntu/Windows/macOS, and a WebAssembly Release build;
+- Linux, Web/PWA, ChromeOS, support-matrix, build, file-reference, and documentation-index material.
+
+The established MAUI targets remain Android, iOS/iPadOS, Mac Catalyst, and Windows. The universal path adds Linux desktop and Web/PWA reach and an additional desktop host for Windows/macOS. ChromeOS is represented through Android and/or browser delivery paths, not a fabricated dedicated native ChromeOS project.
+
+### Defects found by hosted validation and corrected
+
+The first PR candidate exposed multiple concrete defects rather than a generic red status:
+
+1. the cross-platform manifest gate searched for an exact textual token and rejected the valid manifest path `./finora-icon.svg`;
+2. the repository placeholder scanner interpreted historical audit prose naming its own marker categories as unfinished work;
+3. the release-readiness merge-conflict scanner embedded the literal marker text it searched for, causing the checker and its own regression test to report themselves;
+4. strict .NET analyzers promoted `CA1859` in localization resource-manager storage and `CA1863` in repeated localized lockout formatting to build errors;
+5. Avalonia 12 compiled bindings required the universal `MainView` to declare a concrete binding data type, which the initial view omitted;
+6. the initial cross-platform solution omitted the existing performance harness.
+
+Those defects were corrected without disabling warnings, weakening repository QA, restoring hard-coded English, or enabling unsafe browser persistence.
+
+### Hardening commits added in this continuation
+
+The continuation added these granular commits after the initial cross-platform foundation:
+
+- `55925aee10d31eae3c46b5fe45887efa5bef186c` — `fix(cross-platform): validate PWA manifest semantically`;
+- `d92c028e54bc89e38f31257cc7231e169bc27f46` — `test(cross-platform): cover valid relative PWA icon paths`;
+- `f1a5d8e62d5060f82f4d5ed966c60e00d18b8211` — `fix(qa): prevent conflict scanner from matching itself`;
+- `d05802f2eff63b0fc60dfea11e64c7a2338e9415` — `test(qa): construct conflict fixtures without self-triggering`;
+- `006bb2c877b394ca5e0c019933425d449a704bfe` — `docs(qa): avoid audit prose triggering placeholder gate`;
+- `611ccabf968de800d5bf2be9678d930140ad2a42` — `perf(localization): keep resource manager storage concrete`;
+- `e46ba6d61c445bf48c1f0d65b00cb2ecd75cbe68` — `perf(localization): cache parsed localized format templates`;
+- `42c708ff2796ed9cccce2a7841bb5f251f2b763c` — `perf(security): reuse localized composite lockout format`;
+- `d1c16112e4dc4f89a7ab0002cbbf31e6fba09e3f` — `test(localization): guard cached localized formatting path`;
+- `20da6edf75a1931d88597db6344bb1670f435081` — `fix(universal): declare compiled binding data type`;
+- `72cd64bbaad5f651d172142c7e073b744f955ffc` — `build(universal): make compiled binding policy explicit`;
+- `c746d7947a537b4331e29c87474a1317a16f8857` — `testability(cross-platform): enforce compiled binding contract`;
+- `050dec3bdd1e2e9c3e7ddbb55fd614ad17f05e36` — `test(cross-platform): guard Avalonia compiled bindings`;
+- `937eb45224b653dfd7275572ab4a0dff2643cc84` — `docs(linux): define X11 and Wayland support boundary`;
+- `4b3049bb350e821dad2855943f158389aac4af59` — `build(cross-platform): include performance harness in solution`;
+- `0240f69c8c7eb8284a7b31974d8e1a943f2556d7` — `qa(cross-platform): enforce complete solution project set`;
+- `68dd5b37767fb7c3fe0a7bbe8a38ac2ad793a661` — `test(cross-platform): guard complete solution inventory`;
+- `5011e1f16f3f5d1b306f30ba6f66598a1e861dad` — `docs(web): add publish and runtime validation workflow`.
+
+### Linux and browser honesty boundaries
+
+Linux documentation now distinguishes the stable X11 baseline used by the normal Avalonia platform-detection path from a separate native-Wayland opt-in/validation decision. Finora does not claim native-Wayland release validation merely because the desktop project targets Linux.
+
+Web documentation now separates build, optimized publish output, HTTP(S) runtime validation, PWA installation metadata, and actual finance-persistence readiness. The current manifest does not imply that service-worker-backed offline finance, background sync, or durable browser finance storage is complete.
+
+### Exact validation evidence boundary
+
+The pre-ledger branch head was:
+
+`5011e1f16f3f5d1b306f30ba6f66598a1e861dad`
+
+GitHub created these exact-head runs at the recorded checkpoint:
+
+- Finora Cross-Platform — run `32352968779` — queued;
+- Repository release readiness — run `32352968897` — queued;
+- CodeQL — run `32352968766` — queued;
+- Finora CI — run `32352968828` — queued;
+- Dependency Review — run `32352968819` — queued.
+
+No queued run is represented as passed. This ledger commit advances the branch again and therefore requires new exact-head evidence before merge/release claims are strengthened. The earlier verified candidate `8a8e7e51a2bacecdc58405d3d5301e79f3d78c8b` remains historical evidence for 319/319 automated tests, four MAUI Release source builds, CodeQL, and Dependency Review; it is not reused as proof for the universal-host branch.
+
+GitHub still reports `main` as unprotected, and open issue #28 tracks that host-administration action. The repository connector used in this continuation does not expose a safe branch-protection/ruleset mutation, so that issue remains open rather than being falsely marked complete.
+
+Remaining cross-platform release work is intentionally explicit: complete Linux feature/UI parity, native Linux packaging/runtime/accessibility validation, browser-local encrypted persistence design and recovery testing, real browser/PWA validation, ChromeOS-path validation, and the existing signing/device/store evidence for MAUI platforms.
+
+---
+
+## 178. Public-entry alignment and canonical performance-path correction
+
+A post-ledger consistency pass compared the new cross-platform solution against the actual repository layout and public README.
+
+The pass found one concrete path mistake introduced during this continuation: the performance harness was initially added to `Finora.CrossPlatform.slnx` and the cross-platform checker under `tests/Finora.Performance`, but the canonical project is `tools/Finora.Performance/Finora.Performance.csproj`. The incorrect path was never treated as validated; it was verified against the repository and corrected immediately in the solution, checker, and checker regression test.
+
+The same pass updated the root `README.md` so the public repository entry point no longer describes Finora as MAUI-only. It now distinguishes:
+
+- the established MAUI application for Android, iOS/iPadOS, Mac Catalyst, and Windows;
+- the Avalonia universal desktop host for Linux/Windows/macOS;
+- the WebAssembly/PWA host with finance persistence disabled by design;
+- ChromeOS delivery through Android and/or Web/PWA rather than a fabricated dedicated native target;
+- X11 as the current Linux baseline and native Wayland as a separate opt-in validation decision;
+- universal build/check commands and exact evidence boundaries;
+- the canonical `tools/Finora.Performance` harness location.
+
+The cross-platform file-reference documentation was also tightened so the `.slnx` inventory and checker responsibilities match the actual project set.
+
+Post-ledger commits before this section were:
+
+- `6075a1202f14ba9481df753def9e9d8e4e260da2` — `docs(ledger): record cross-platform hardening continuation`;
+- `aeaf2fbf1fab17936bca4d567d545f3fff3b7be7` — `fix(cross-platform): use canonical performance project path`;
+- `42a6be873a929cb0d56b17428c436cd7ca6d62c4` — `fix(cross-platform): validate canonical performance harness path`;
+- `0595926f389022247f17c2c673e3f743abf8e1cc` — `test(cross-platform): guard canonical performance path`;
+- `c4005e357838df19ed1d6e4647e93b2462436715` — `docs(readme): align public overview with universal hosts`;
+- `b12627539cabbd8690a292417baff4a49c8e95a7` — `docs(cross-platform): document complete solution inventory`.
+
+The pre-ledger head for this final consistency checkpoint was `b12627539cabbd8690a292417baff4a49c8e95a7`. GitHub created these runs for that exact head and all were still queued at the recorded observation:
+
+- Finora CI — run `32353419856`;
+- Dependency Review — run `32353419884`;
+- CodeQL — run `32353419916`;
+- Repository release readiness — run `32353419907`;
+- Finora Cross-Platform — run `32353419863`.
+
+This section advances the branch once more. Therefore those queued runs remain historical pending evidence and are not claimed to validate the final ledger head.
 
 ---
 
