@@ -102,6 +102,37 @@ Inline `not-a-table-entry.md` is intentionally ignored.
             with self.assertRaisesRegex(RuntimeError, "not a repo"):
                 coverage.tracked_files(Path("/repo"))
 
+    def test_reference_files_adds_default_companion_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            canonical = root / "reference.md"
+            companion = root / "cross-platform.md"
+            canonical.write_text("canonical", encoding="utf-8")
+            companion.write_text("companion", encoding="utf-8")
+
+            with mock.patch.object(coverage, "DEFAULT_REFERENCE", canonical), mock.patch.object(
+                coverage, "DEFAULT_COMPANION_REFERENCES", (companion,)
+            ):
+                self.assertEqual(
+                    [canonical, companion],
+                    coverage.reference_files(canonical),
+                )
+
+    def test_reference_files_does_not_extend_explicit_custom_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            canonical = root / "canonical.md"
+            custom = root / "custom.md"
+            companion = root / "cross-platform.md"
+            canonical.write_text("canonical", encoding="utf-8")
+            custom.write_text("custom", encoding="utf-8")
+            companion.write_text("companion", encoding="utf-8")
+
+            with mock.patch.object(coverage, "DEFAULT_REFERENCE", canonical), mock.patch.object(
+                coverage, "DEFAULT_COMPANION_REFERENCES", (companion,)
+            ):
+                self.assertEqual([custom], coverage.reference_files(custom))
+
     def test_main_succeeds_for_exact_and_directory_inventory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             reference = Path(directory) / "reference.md"
