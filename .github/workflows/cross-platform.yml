@@ -1,0 +1,82 @@
+name: Finora Cross-Platform
+
+on:
+  push:
+    paths:
+      - 'src/Finora.Universal/**'
+      - 'src/Finora.Universal.Desktop/**'
+      - 'src/Finora.Universal.Browser/**'
+      - 'src/Finora.Shared/**'
+      - 'src/Finora.Domain/**'
+      - 'src/Finora.Application/**'
+      - 'src/Finora.Infrastructure/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'Finora.CrossPlatform.slnx'
+      - '.github/workflows/cross-platform.yml'
+  pull_request:
+    paths:
+      - 'src/Finora.Universal/**'
+      - 'src/Finora.Universal.Desktop/**'
+      - 'src/Finora.Universal.Browser/**'
+      - 'src/Finora.Shared/**'
+      - 'src/Finora.Domain/**'
+      - 'src/Finora.Application/**'
+      - 'src/Finora.Infrastructure/**'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - 'Finora.CrossPlatform.slnx'
+      - '.github/workflows/cross-platform.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-platform-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: Universal desktop (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore desktop host
+        run: dotnet restore src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj
+
+      - name: Build desktop host
+        run: dotnet build src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj -c Release --no-restore
+
+  browser:
+    name: Universal WebAssembly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install WebAssembly workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore browser host
+        run: dotnet restore src/Finora.Universal.Browser/Finora.Universal.Browser.csproj
+
+      - name: Build browser host
+        run: dotnet build src/Finora.Universal.Browser/Finora.Universal.Browser.csproj -c Release --no-restore
