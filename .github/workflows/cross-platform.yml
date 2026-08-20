@@ -10,6 +10,10 @@ on:
       - 'src/Finora.Domain/**'
       - 'src/Finora.Application/**'
       - 'src/Finora.Infrastructure/**'
+      - 'docs/platforms/**'
+      - 'docs/development/CROSS_PLATFORM_FILE_REFERENCE.md'
+      - 'scripts/check_cross_platform.py'
+      - 'scripts/tests/test_check_cross_platform.py'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'global.json'
@@ -24,6 +28,10 @@ on:
       - 'src/Finora.Domain/**'
       - 'src/Finora.Application/**'
       - 'src/Finora.Infrastructure/**'
+      - 'docs/platforms/**'
+      - 'docs/development/CROSS_PLATFORM_FILE_REFERENCE.md'
+      - 'scripts/check_cross_platform.py'
+      - 'scripts/tests/test_check_cross_platform.py'
       - 'Directory.Build.props'
       - 'Directory.Packages.props'
       - 'global.json'
@@ -38,8 +46,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  preflight:
+    name: Cross-platform contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+
+      - name: Validate cross-platform source contract
+        run: python scripts/check_cross_platform.py
+
+      - name: Test cross-platform checker
+        run: python -m unittest scripts.tests.test_check_cross_platform
+
   desktop:
     name: Universal desktop (${{ matrix.os }})
+    needs: preflight
     strategy:
       fail-fast: false
       matrix:
@@ -62,6 +89,7 @@ jobs:
 
   browser:
     name: Universal WebAssembly
+    needs: preflight
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
