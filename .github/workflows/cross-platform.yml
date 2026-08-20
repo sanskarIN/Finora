@@ -62,7 +62,7 @@ jobs:
         run: python scripts/check_cross_platform.py
 
       - name: Test cross-platform checker
-        run: python -m unittest scripts.tests.test_check_cross_platform
+        run: python -m unittest discover -s scripts/tests -p 'test_check_cross_platform.py' -v
 
   desktop:
     name: Universal desktop (${{ matrix.os }})
