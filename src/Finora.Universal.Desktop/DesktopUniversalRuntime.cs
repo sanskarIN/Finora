@@ -22,14 +22,12 @@ internal sealed class DesktopUniversalRuntime : IUniversalRuntime
         IFinanceStore store = new FinanceStore(factory, initializer);
 
         await store.InitializeAsync(cancellationToken).ConfigureAwait(false);
-        var accounts = await store.GetAccountsAsync(cancellationToken).ConfigureAwait(false);
 
         return new UniversalRuntimeState(
             GetPlatformName(),
             true,
             "Private SQLite data is stored in the operating system's local application-data directory.",
-            accounts.Count,
-            "Native desktop storage is initialized. Finora finance data remains local to this device unless the user explicitly exports or backs it up.");
+            "Native desktop storage is initialized. The universal landing surface does not read or display finance records while lock, privacy, and feature-parity work remains incomplete.");
     }
 
     private static string GetPlatformName()
