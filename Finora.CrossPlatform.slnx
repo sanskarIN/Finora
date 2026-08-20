@@ -10,5 +10,5 @@
   <Project Path="tests/Finora.UnitTests/Finora.UnitTests.csproj" />
   <Project Path="tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj" />
   <Project Path="tests/Finora.UiTests/Finora.UiTests.csproj" />
-  <Project Path="tests/Finora.Performance/Finora.Performance.csproj" />
+  <Project Path="tools/Finora.Performance/Finora.Performance.csproj" />
 </Solution>
