@@ -25,6 +25,7 @@ REQUIRED_PATHS = (
     "src/Finora.Universal/Finora.Universal.csproj",
     "src/Finora.Universal/App.axaml",
     "src/Finora.Universal/UniversalRuntime.cs",
+    "src/Finora.Universal/Views/MainView.axaml",
     "src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj",
     "src/Finora.Universal.Desktop/DesktopUniversalRuntime.cs",
     "src/Finora.Universal.Browser/Finora.Universal.Browser.csproj",
@@ -58,10 +59,14 @@ def package_versions() -> dict[str, str]:
     return versions
 
 
-def project_target_framework(relative: str) -> str | None:
+def project_property(relative: str, name: str) -> str | None:
     tree = ET.parse(ROOT / relative)
-    node = tree.find(".//TargetFramework")
+    node = tree.find(f".//{name}")
     return node.text.strip() if node is not None and node.text else None
+
+
+def project_target_framework(relative: str) -> str | None:
+    return project_property(relative, "TargetFramework")
 
 
 def project_sdk(relative: str) -> str | None:
@@ -129,6 +134,10 @@ def validate() -> list[str]:
         "src/Finora.Universal.Browser/Finora.Universal.Browser.csproj"
     )
     browser_sdk = project_sdk("src/Finora.Universal.Browser/Finora.Universal.Browser.csproj")
+    compiled_bindings = project_property(
+        "src/Finora.Universal/Finora.Universal.csproj",
+        "AvaloniaUseCompiledBindingsByDefault",
+    )
 
     if universal_tfm != "net10.0":
         errors.append(f"universal presentation target must be net10.0; found {universal_tfm!r}")
@@ -143,6 +152,14 @@ def validate() -> list[str]:
             "universal browser project must use Microsoft.NET.Sdk.WebAssembly; "
             f"found {browser_sdk!r}"
         )
+    if compiled_bindings != "true":
+        errors.append(
+            "universal presentation project must explicitly enable Avalonia compiled bindings"
+        )
+
+    main_view = read("src/Finora.Universal/Views/MainView.axaml")
+    if 'x:DataType="vm:MainViewModel"' not in main_view:
+        errors.append("universal main view must declare its compiled-binding MainViewModel type")
 
     desktop_runtime = read("src/Finora.Universal.Desktop/DesktopUniversalRuntime.cs")
     for required in ("OperatingSystem.IsLinux()", "OperatingSystem.IsWindows()", "OperatingSystem.IsMacOS()"):
@@ -195,7 +212,8 @@ def main() -> int:
 
     print(
         "Finora cross-platform contract OK: MAUI preservation, universal desktop hosts, "
-        "WebAssembly/PWA wiring, browser persistence boundary, package pins, and platform docs are present."
+        "WebAssembly/PWA wiring, compiled bindings, browser persistence boundary, package pins, "
+        "and platform docs are present."
     )
     return 0
 
