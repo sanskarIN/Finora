@@ -24,6 +24,7 @@ REQUIRED_PATHS = (
     "docs/development/CROSS_PLATFORM_FILE_REFERENCE.md",
     "src/Finora.Universal/Finora.Universal.csproj",
     "src/Finora.Universal/App.axaml",
+    "src/Finora.Universal/App.axaml.cs",
     "src/Finora.Universal/UniversalRuntime.cs",
     "src/Finora.Universal/Views/MainView.axaml",
     "src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj",
@@ -192,6 +193,12 @@ def validate() -> list[str]:
     if compiled_bindings != "true":
         errors.append(
             "universal presentation project must explicitly enable Avalonia compiled bindings"
+        )
+
+    app_code = read("src/Finora.Universal/App.axaml.cs")
+    if "public partial class App : Avalonia.Application" not in app_code:
+        errors.append(
+            "universal App must explicitly inherit Avalonia.Application to avoid namespace/type ambiguity"
         )
 
     main_view = read("src/Finora.Universal/Views/MainView.axaml")
