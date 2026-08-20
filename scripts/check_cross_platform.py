@@ -33,6 +33,22 @@ REQUIRED_PATHS = (
     "src/Finora.Universal.Browser/wwwroot/index.html",
     "src/Finora.Universal.Browser/wwwroot/manifest.webmanifest",
     "src/Finora.Universal.Browser/wwwroot/finora-icon.svg",
+    "tests/Finora.Performance/Finora.Performance.csproj",
+)
+
+EXPECTED_SOLUTION_PROJECTS = (
+    "src/Finora.Shared/Finora.Shared.csproj",
+    "src/Finora.Domain/Finora.Domain.csproj",
+    "src/Finora.Application/Finora.Application.csproj",
+    "src/Finora.Infrastructure/Finora.Infrastructure.csproj",
+    "src/Finora.App/Finora.App.csproj",
+    "src/Finora.Universal/Finora.Universal.csproj",
+    "src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj",
+    "src/Finora.Universal.Browser/Finora.Universal.Browser.csproj",
+    "tests/Finora.UnitTests/Finora.UnitTests.csproj",
+    "tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj",
+    "tests/Finora.UiTests/Finora.UiTests.csproj",
+    "tests/Finora.Performance/Finora.Performance.csproj",
 )
 
 AVALONIA_PACKAGES = (
@@ -72,6 +88,16 @@ def project_target_framework(relative: str) -> str | None:
 def project_sdk(relative: str) -> str | None:
     tree = ET.parse(ROOT / relative)
     return tree.getroot().attrib.get("Sdk")
+
+
+def solution_projects(relative: str) -> tuple[str, ...]:
+    tree = ET.parse(ROOT / relative)
+    projects = []
+    for node in tree.findall(".//Project"):
+        path = node.attrib.get("Path")
+        if path:
+            projects.append(path.replace("\\", "/"))
+    return tuple(projects)
 
 
 def validate_pwa_manifest(relative: str) -> list[str]:
@@ -125,6 +151,17 @@ def validate() -> list[str]:
             errors.append(
                 f"{package} must be centrally pinned to {AVALONIA_VERSION}; found {actual!r}"
             )
+
+    solution = solution_projects("Finora.CrossPlatform.slnx")
+    if solution != EXPECTED_SOLUTION_PROJECTS:
+        missing = [item for item in EXPECTED_SOLUTION_PROJECTS if item not in solution]
+        unexpected = [item for item in solution if item not in EXPECTED_SOLUTION_PROJECTS]
+        if missing:
+            errors.append(f"cross-platform solution is missing projects: {', '.join(missing)}")
+        if unexpected:
+            errors.append(f"cross-platform solution has unexpected projects: {', '.join(unexpected)}")
+        if not missing and not unexpected:
+            errors.append("cross-platform solution project order does not match the documented contract")
 
     universal_tfm = project_target_framework("src/Finora.Universal/Finora.Universal.csproj")
     desktop_tfm = project_target_framework(
@@ -211,9 +248,9 @@ def main() -> int:
         return 1
 
     print(
-        "Finora cross-platform contract OK: MAUI preservation, universal desktop hosts, "
-        "WebAssembly/PWA wiring, compiled bindings, browser persistence boundary, package pins, "
-        "and platform docs are present."
+        "Finora cross-platform contract OK: complete solution wiring, MAUI preservation, "
+        "universal desktop hosts, WebAssembly/PWA wiring, compiled bindings, browser persistence "
+        "boundary, package pins, and platform docs are present."
     )
     return 0
 
