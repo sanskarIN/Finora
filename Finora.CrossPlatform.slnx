@@ -1,0 +1,13 @@
+<Solution>
+  <Project Path="src/Finora.Shared/Finora.Shared.csproj" />
+  <Project Path="src/Finora.Domain/Finora.Domain.csproj" />
+  <Project Path="src/Finora.Application/Finora.Application.csproj" />
+  <Project Path="src/Finora.Infrastructure/Finora.Infrastructure.csproj" />
+  <Project Path="src/Finora.App/Finora.App.csproj" />
+  <Project Path="src/Finora.Universal/Finora.Universal.csproj" />
+  <Project Path="src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj" />
+  <Project Path="src/Finora.Universal.Browser/Finora.Universal.Browser.csproj" />
+  <Project Path="tests/Finora.UnitTests/Finora.UnitTests.csproj" />
+  <Project Path="tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj" />
+  <Project Path="tests/Finora.UiTests/Finora.UiTests.csproj" />
+</Solution>
