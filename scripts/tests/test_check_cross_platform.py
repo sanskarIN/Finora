@@ -36,6 +36,16 @@ class CrossPlatformContractTests(unittest.TestCase):
             ),
         )
 
+    def test_cross_platform_solution_contains_complete_project_inventory(self) -> None:
+        self.assertEqual(
+            checker.EXPECTED_SOLUTION_PROJECTS,
+            checker.solution_projects("Finora.CrossPlatform.slnx"),
+        )
+        self.assertIn(
+            "tests/Finora.Performance/Finora.Performance.csproj",
+            checker.EXPECTED_SOLUTION_PROJECTS,
+        )
+
     def test_avalonia_packages_are_centrally_pinned(self) -> None:
         versions = checker.package_versions()
         for package in checker.AVALONIA_PACKAGES:
