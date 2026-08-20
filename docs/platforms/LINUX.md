@@ -28,6 +28,12 @@ Run during development:
 dotnet run --project src/Finora.Universal.Desktop/Finora.Universal.Desktop.csproj
 ```
 
+## Linux display-backend boundary
+
+The current Finora desktop host uses Avalonia's normal `UsePlatformDetect()` path and does not opt into a separate native-Wayland backend. The stable Linux baseline for this source line is therefore the standard Avalonia X11 path; on Wayland desktops, XWayland behavior depends on the user's environment and still requires runtime validation.
+
+Native Wayland must not be described as a validated Finora release target merely because the desktop project compiles. If a later Finora release deliberately enables Avalonia's opt-in native-Wayland path, that candidate must receive its own input, IME, scaling, windowing, clipboard, file-dialog, accessibility, packaging, and desktop-environment validation before the support matrix is expanded.
+
 ## Distribution targets
 
 The source can be published for the desired Linux runtime identifier after native validation, for example x64 or Arm64. Packaging formats such as AppImage, Flatpak, Snap, `.deb`, or `.rpm` are distribution decisions and are not represented as signed/release-tested artifacts merely because the application builds.
@@ -43,7 +49,7 @@ Linux currently has the native runtime/storage foundation, not a claim that ever
 - notification integration or an explicitly documented no-notification mode;
 - sensitive-screen/privacy limitations under common desktop environments;
 - keyboard navigation, screen readers, scaling, high contrast and reduced motion;
-- X11 and supported Wayland behavior;
+- X11 behavior and, where applicable, XWayland behavior; native Wayland remains a separate opt-in validation decision;
 - packaging, upgrades, uninstall/data-retention behavior and signing where applicable.
 
 See [`CROSS_PLATFORM.md`](CROSS_PLATFORM.md) for the repository-wide support matrix.
