@@ -10,7 +10,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _platformName = "Detecting…";
     private string _storageDescription = "Checking local storage…";
     private string _statusMessage = "Initializing Finora…";
-    private string _accountSummary = "Accounts: —";
     private bool _persistentFinanceAvailable;
 
     public MainViewModel(IUniversalRuntime runtime)
@@ -44,12 +43,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetField(ref _statusMessage, value);
     }
 
-    public string AccountSummary
-    {
-        get => _accountSummary;
-        private set => SetField(ref _accountSummary, value);
-    }
-
     public bool PersistentFinanceAvailable
     {
         get => _persistentFinanceAvailable;
@@ -66,7 +59,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PlatformName = state.PlatformName;
             PersistentFinanceAvailable = state.PersistentFinanceAvailable;
             StorageDescription = state.StorageDescription;
-            AccountSummary = $"Accounts: {state.AccountCount}";
             StatusMessage = state.StatusMessage;
         }
         catch (Exception)
@@ -74,7 +66,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
             PlatformName = "Runtime error";
             PersistentFinanceAvailable = false;
             StorageDescription = "Local runtime initialization failed.";
-            AccountSummary = "Accounts: unavailable";
             StatusMessage = "Finora could not initialize this platform host. No private finance details were exposed.";
         }
     }
