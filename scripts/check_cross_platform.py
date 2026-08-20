@@ -33,7 +33,7 @@ REQUIRED_PATHS = (
     "src/Finora.Universal.Browser/wwwroot/index.html",
     "src/Finora.Universal.Browser/wwwroot/manifest.webmanifest",
     "src/Finora.Universal.Browser/wwwroot/finora-icon.svg",
-    "tests/Finora.Performance/Finora.Performance.csproj",
+    "tools/Finora.Performance/Finora.Performance.csproj",
 )
 
 EXPECTED_SOLUTION_PROJECTS = (
@@ -48,7 +48,7 @@ EXPECTED_SOLUTION_PROJECTS = (
     "tests/Finora.UnitTests/Finora.UnitTests.csproj",
     "tests/Finora.IntegrationTests/Finora.IntegrationTests.csproj",
     "tests/Finora.UiTests/Finora.UiTests.csproj",
-    "tests/Finora.Performance/Finora.Performance.csproj",
+    "tools/Finora.Performance/Finora.Performance.csproj",
 )
 
 AVALONIA_PACKAGES = (
