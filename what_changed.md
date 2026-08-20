@@ -504,6 +504,45 @@ Remaining cross-platform release work is intentionally explicit: complete Linux 
 
 ---
 
+## 178. Public-entry alignment and canonical performance-path correction
+
+A post-ledger consistency pass compared the new cross-platform solution against the actual repository layout and public README.
+
+The pass found one concrete path mistake introduced during this continuation: the performance harness was initially added to `Finora.CrossPlatform.slnx` and the cross-platform checker under `tests/Finora.Performance`, but the canonical project is `tools/Finora.Performance/Finora.Performance.csproj`. The incorrect path was never treated as validated; it was verified against the repository and corrected immediately in the solution, checker, and checker regression test.
+
+The same pass updated the root `README.md` so the public repository entry point no longer describes Finora as MAUI-only. It now distinguishes:
+
+- the established MAUI application for Android, iOS/iPadOS, Mac Catalyst, and Windows;
+- the Avalonia universal desktop host for Linux/Windows/macOS;
+- the WebAssembly/PWA host with finance persistence disabled by design;
+- ChromeOS delivery through Android and/or Web/PWA rather than a fabricated dedicated native target;
+- X11 as the current Linux baseline and native Wayland as a separate opt-in validation decision;
+- universal build/check commands and exact evidence boundaries;
+- the canonical `tools/Finora.Performance` harness location.
+
+The cross-platform file-reference documentation was also tightened so the `.slnx` inventory and checker responsibilities match the actual project set.
+
+Post-ledger commits before this section were:
+
+- `6075a1202f14ba9481df753def9e9d8e4e260da2` — `docs(ledger): record cross-platform hardening continuation`;
+- `aeaf2fbf1fab17936bca4d567d545f3fff3b7be7` — `fix(cross-platform): use canonical performance project path`;
+- `42a6be873a929cb0d56b17428c436cd7ca6d62c4` — `fix(cross-platform): validate canonical performance harness path`;
+- `0595926f389022247f17c2c673e3f743abf8e1cc` — `test(cross-platform): guard canonical performance path`;
+- `c4005e357838df19ed1d6e4647e93b2462436715` — `docs(readme): align public overview with universal hosts`;
+- `b12627539cabbd8690a292417baff4a49c8e95a7` — `docs(cross-platform): document complete solution inventory`.
+
+The pre-ledger head for this final consistency checkpoint was `b12627539cabbd8690a292417baff4a49c8e95a7`. GitHub created these runs for that exact head and all were still queued at the recorded observation:
+
+- Finora CI — run `32353419856`;
+- Dependency Review — run `32353419884`;
+- CodeQL — run `32353419916`;
+- Repository release readiness — run `32353419907`;
+- Finora Cross-Platform — run `32353419863`.
+
+This section advances the branch once more. Therefore those queued runs remain historical pending evidence and are not claimed to validate the final ledger head.
+
+---
+
 ## Historical ledger integrity
 
 Sections **1–163** remain available in full, unchanged form at `docs/history/what_changed_through_2026-08-18.md`. This split was performed only because the cumulative file was too large for a safe single contents-API append while GitHub-hosted runners were unavailable. No historical section was discarded.
