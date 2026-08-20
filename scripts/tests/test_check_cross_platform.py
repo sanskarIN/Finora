@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -58,6 +59,44 @@ class CrossPlatformContractTests(unittest.TestCase):
         )
         self.assertNotIn("Finora.Infrastructure", browser_project)
         self.assertNotIn("SQLite", browser_project)
+
+    def test_pwa_manifest_accepts_standard_relative_icon_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = root / "manifest.webmanifest"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "name": "Finora",
+                        "display": "standalone",
+                        "icons": [{"src": "./finora-icon.svg"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with mock.patch.object(checker, "ROOT", root):
+                errors = checker.validate_pwa_manifest("manifest.webmanifest")
+
+        self.assertEqual([], errors)
+
+    def test_pwa_manifest_rejects_missing_finora_icon(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest_path = root / "manifest.webmanifest"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "name": "Finora",
+                        "display": "standalone",
+                        "icons": [{"src": "./other.svg"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with mock.patch.object(checker, "ROOT", root):
+                errors = checker.validate_pwa_manifest("manifest.webmanifest")
+
+        self.assertIn("PWA manifest must reference finora-icon.svg", errors)
 
     def test_web_docs_preserve_persistence_boundary(self) -> None:
         web_docs = checker.read("docs/platforms/WEB.md")
