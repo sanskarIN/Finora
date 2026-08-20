@@ -6,6 +6,7 @@ native-device, browser-runtime, packaging, signing, accessibility, or store vali
 """
 from __future__ import annotations
 
+import json
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -30,6 +31,7 @@ REQUIRED_PATHS = (
     "src/Finora.Universal.Browser/BrowserUniversalRuntime.cs",
     "src/Finora.Universal.Browser/wwwroot/index.html",
     "src/Finora.Universal.Browser/wwwroot/manifest.webmanifest",
+    "src/Finora.Universal.Browser/wwwroot/finora-icon.svg",
 )
 
 AVALONIA_PACKAGES = (
@@ -65,6 +67,37 @@ def project_target_framework(relative: str) -> str | None:
 def project_sdk(relative: str) -> str | None:
     tree = ET.parse(ROOT / relative)
     return tree.getroot().attrib.get("Sdk")
+
+
+def validate_pwa_manifest(relative: str) -> list[str]:
+    errors: list[str] = []
+    try:
+        manifest = json.loads(read(relative))
+    except json.JSONDecodeError as exc:
+        return [f"PWA manifest is not valid JSON: {exc.msg}"]
+
+    if not isinstance(manifest, dict):
+        return ["PWA manifest root must be a JSON object"]
+
+    if manifest.get("name") != "Finora":
+        errors.append("PWA manifest name must be Finora")
+    if manifest.get("display") != "standalone":
+        errors.append("PWA manifest display mode must be standalone")
+
+    icons = manifest.get("icons")
+    if not isinstance(icons, list):
+        errors.append("PWA manifest icons must be an array")
+        return errors
+
+    icon_sources = {
+        item.get("src")
+        for item in icons
+        if isinstance(item, dict) and isinstance(item.get("src"), str)
+    }
+    if not any(Path(source).name == "finora-icon.svg" for source in icon_sources):
+        errors.append("PWA manifest must reference finora-icon.svg")
+
+    return errors
 
 
 def validate() -> list[str]:
@@ -128,10 +161,9 @@ def validate() -> list[str]:
     if "Finora.Infrastructure" in browser_project or "SQLite" in browser_project:
         errors.append("browser host must not directly reference native Finora.Infrastructure/SQLite")
 
-    manifest = read("src/Finora.Universal.Browser/wwwroot/manifest.webmanifest")
-    for token in ('"name": "Finora"', '"display": "standalone"', '"finora-icon.svg"'):
-        if token not in manifest:
-            errors.append(f"PWA manifest is missing required token: {token}")
+    errors.extend(
+        validate_pwa_manifest("src/Finora.Universal.Browser/wwwroot/manifest.webmanifest")
+    )
 
     workflow = read(".github/workflows/cross-platform.yml")
     for token in ("ubuntu-latest", "windows-latest", "macos-latest", "wasm-tools"):
