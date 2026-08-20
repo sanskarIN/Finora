@@ -7,5 +7,13 @@
   "display": "standalone",
   "background_color": "#111827",
   "theme_color": "#111827",
-  "categories": ["finance", "productivity"]
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "./finora-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
