@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,7 @@ SCRIPT_PATH = Path(__file__).resolve().parents[1] / "validate_localization.py"
 SPEC = importlib.util.spec_from_file_location("validate_localization", SCRIPT_PATH)
 assert SPEC is not None and SPEC.loader is not None
 validate_localization = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = validate_localization
 SPEC.loader.exec_module(validate_localization)
 
 
