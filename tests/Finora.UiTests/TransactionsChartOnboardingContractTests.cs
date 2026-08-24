@@ -58,7 +58,7 @@ public sealed class TransactionsChartOnboardingContractTests
     private static string ReadContract(string fileName)
         => File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Contracts", fileName));
 
-    private static IReadOnlyDictionary<string, string> ReadResx(string fileName)
+    private static Dictionary<string, string> ReadResx(string fileName)
         => XDocument.Load(Path.Combine(AppContext.BaseDirectory, "Contracts", fileName))
             .Root!
             .Elements("data")
