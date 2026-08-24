@@ -1,4 +1,3 @@
-using Finora.Application;
 using Finora.Infrastructure;
 using Finora.Shared;
 using Finora.Universal;
@@ -19,7 +18,7 @@ internal sealed class DesktopUniversalRuntime : IUniversalRuntime
             .Options;
         var factory = new DesktopDbContextFactory(options);
         var initializer = new DatabaseInitializer(factory);
-        IFinanceStore store = new FinanceStore(factory, initializer);
+        var store = new FinanceStore(factory, initializer);
 
         await store.InitializeAsync(cancellationToken).ConfigureAwait(false);
 
