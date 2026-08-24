@@ -38,6 +38,24 @@ public sealed class LocalizationContractTests
         Assert.Contains("LocalizationResources.Apply(resources)", settings, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void LocalizedFormatting_CachesCompositeTemplates_AndLockoutUsesSharedFormatter()
+    {
+        var localization = ReadContract("LocalizationResources.cs");
+        var lockViewModel = ReadContract("LockViewModel.cs");
+
+        Assert.Contains("CompositeFormat", localization, StringComparison.Ordinal);
+        Assert.Contains("FormatCache.GetOrAdd", localization, StringComparison.Ordinal);
+        Assert.Contains(
+            "LocalizationResources.Format(\"LockoutMinutes\"",
+            lockViewModel,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "string.Format(CultureInfo.CurrentCulture, LocalizationResources.Get(\"LockoutMinutes\")",
+            lockViewModel,
+            StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("AppShell.xaml", "Text.Dashboard")]
     [InlineData("DashboardPage.xaml", "Text.Dashboard")]

@@ -1,6 +1,8 @@
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Resources;
+using System.Text;
 
 namespace Finora.App;
 
@@ -10,7 +12,10 @@ public static class LocalizationResources
 
     private const string ResourceNamespacePrefix = "Finora.App.Resources.Strings.";
     private const string CompiledResourceSuffix = ".resources";
-    private static readonly IReadOnlyList<ResourceManager> Managers = CreateManagers();
+    private static readonly ResourceManager[] Managers = CreateManagers();
+    private static readonly ConcurrentDictionary<
+        (string UiCulture, string Key, string Template),
+        CompositeFormat> FormatCache = new();
 
     public static string Get(string key)
     {
@@ -24,6 +29,20 @@ public static class LocalizationResources
         }
 
         return key;
+    }
+
+    public static string Format(string key, params object?[] args)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(args);
+
+        var uiCulture = CultureInfo.CurrentUICulture;
+        var template = Get(key);
+        var format = FormatCache.GetOrAdd(
+            (uiCulture.Name, key, template),
+            static item => CompositeFormat.Parse(item.Template));
+
+        return string.Format(CultureInfo.CurrentCulture, format, args);
     }
 
     public static void Apply(ResourceDictionary target)
@@ -49,7 +68,7 @@ public static class LocalizationResources
         }
     }
 
-    private static IReadOnlyList<ResourceManager> CreateManagers()
+    private static ResourceManager[] CreateManagers()
     {
         var assembly = typeof(LocalizationResources).Assembly;
         var baseNames = assembly.GetManifestResourceNames()

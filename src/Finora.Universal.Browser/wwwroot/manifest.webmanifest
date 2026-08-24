@@ -1,0 +1,19 @@
+{
+  "name": "Finora",
+  "short_name": "Finora",
+  "description": "Local-first personal finance universal web host",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "./finora-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

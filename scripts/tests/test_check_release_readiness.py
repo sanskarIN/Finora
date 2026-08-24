@@ -144,7 +144,12 @@ class ReleaseReadinessGuardTests(unittest.TestCase):
             create_required_tree(root)
             source = root / "src" / "Feature.cs"
             source.parent.mkdir(parents=True)
-            source.write_text("<<<<<<< HEAD\nclass A {}\n>>>>>>> other\n", encoding="utf-8")
+            opening = "<" * 7 + " HEAD"
+            closing = ">" * 7 + " other"
+            source.write_text(
+                f"{opening}\nclass A {{}}\n{closing}\n",
+                encoding="utf-8",
+            )
             with mock.patch.object(checker, "git_tracked_files", return_value=["src/Feature.cs"]):
                 report = checker.check_release_readiness(root)
 

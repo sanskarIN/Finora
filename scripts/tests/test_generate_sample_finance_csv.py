@@ -72,25 +72,51 @@ class SampleFinanceCsvGeneratorTests(unittest.TestCase):
             self.assertEqual(first["Account"], second["CounterpartyAccount"])
             self.assertEqual(second["Account"], first["CounterpartyAccount"])
 
-    def test_minor_unit_format_respects_currency_decimal_places(self) -> None:
+    def test_amount_format_respects_currency_decimal_places(self) -> None:
         amount = generator.Decimal("12.3456")
 
-        self.assertEqual(
-            "1235",
-            generator.format_amount(amount, currency="INR", minor_units=True),
+        expectations = (
+            ("JPY", 0, "12", "12"),
+            ("INR", 2, "12.35", "1235"),
+            ("BHD", 3, "12.346", "12346"),
+            ("CLF", 4, "12.3456", "123456"),
         )
-        self.assertEqual(
-            "12",
-            generator.format_amount(amount, currency="JPY", minor_units=True),
-        )
-        self.assertEqual(
-            "12346",
-            generator.format_amount(amount, currency="BHD", minor_units=True),
-        )
-        self.assertEqual(
-            "123456",
-            generator.format_amount(amount, currency="CLF", minor_units=True),
-        )
+        for currency, places, major, minor in expectations:
+            with self.subTest(currency=currency):
+                self.assertEqual(places, generator.currency_decimal_places(currency))
+                self.assertEqual(
+                    major,
+                    generator.format_amount(
+                        amount,
+                        currency=currency,
+                        minor_units=False,
+                    ),
+                )
+                self.assertEqual(
+                    minor,
+                    generator.format_amount(
+                        amount,
+                        currency=currency,
+                        minor_units=True,
+                    ),
+                )
+
+    def test_generated_rows_use_selected_currency_precision(self) -> None:
+        for currency, expected_places in (("JPY", 0), ("INR", 2), ("BHD", 3), ("CLF", 4)):
+            with self.subTest(currency=currency):
+                rows = generator.generate_rows(
+                    generator.SampleOptions(
+                        rows=50,
+                        seed=42,
+                        start_date=date(2024, 1, 1),
+                        currency=currency,
+                    )
+                )
+                for row in rows:
+                    amount = row["Amount"]
+                    actual_places = len(amount.partition(".")[2]) if "." in amount else 0
+                    self.assertEqual(expected_places, actual_places)
+                    self.assertEqual(currency, row["Currency"])
 
     def test_default_fixture_window_is_entirely_historical_for_2026_release(self) -> None:
         options = generator.SampleOptions(
@@ -122,6 +148,8 @@ class SampleFinanceCsvGeneratorTests(unittest.TestCase):
                     currency="RUPEES",
                 )
             )
+        with self.assertRaises(ValueError):
+            generator.currency_decimal_places("12")
 
 
 if __name__ == "__main__":

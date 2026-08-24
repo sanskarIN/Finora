@@ -118,8 +118,16 @@ class ExportArtifactVerifierTests(unittest.TestCase):
             path = Path(directory) / "export.csv"
             path.write_bytes(content)
 
-            matching = verifier.inspect_export(path, expected_sha256=expected)
-            mismatching = verifier.inspect_export(path, expected_sha256="0" * 64)
+            matching = verifier.inspect_export(
+                path,
+                min_size=1,
+                expected_sha256=expected,
+            )
+            mismatching = verifier.inspect_export(
+                path,
+                min_size=1,
+                expected_sha256="0" * 64,
+            )
 
         self.assertTrue(matching.passed)
         self.assertFalse(mismatching.passed)

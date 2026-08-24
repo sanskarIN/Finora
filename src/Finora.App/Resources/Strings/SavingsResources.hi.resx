@@ -2,7 +2,6 @@
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
-  <data name="SavingsGoals" xml:space="preserve"><value>बचत लक्ष्य</value></data>
   <data name="CreateSavingsGoalBelow" xml:space="preserve"><value>नीचे एक बचत लक्ष्य बनाएँ।</value></data>
   <data name="Saved" xml:space="preserve"><value>बचत:</value></data>
   <data name="Target" xml:space="preserve"><value>लक्ष्य:</value></data>

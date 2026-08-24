@@ -22,13 +22,13 @@ Guide: `docs/testing/REPOSITORY_QA.md`
 
 ### `check_documentation_coverage.py`
 
-Compares `docs/development/REPOSITORY_FILE_REFERENCE.md` with the exact tracked-file set returned by `git ls-files`.
+Compares the canonical repository inventory plus approved narrow companion inventories with the exact tracked-file set returned by `git ls-files`.
 
 It fails when:
 
 - a tracked file has no documented responsibility;
 - an inventory entry no longer covers a tracked file; or
-- the reference uses an overly broad one-component directory catch-all such as `src/`, `docs/`, or `tests/`.
+- a reference uses an overly broad one-component directory catch-all such as `src/`, `docs/`, or `tests/`.
 
 ```bash
 python scripts/check_documentation_coverage.py
@@ -40,7 +40,27 @@ Print only uncovered paths:
 python scripts/check_documentation_coverage.py --list-missing
 ```
 
-Reference: `docs/development/REPOSITORY_FILE_REFERENCE.md`
+References: `docs/development/REPOSITORY_FILE_REFERENCE.md` and `docs/development/CROSS_PLATFORM_FILE_REFERENCE.md`.
+
+### `check_cross_platform.py`
+
+Validates the dependency-free repository contract for Finora's complete platform-family wiring before expensive native/WebAssembly builds. It checks:
+
+- the shared Avalonia universal project;
+- Linux/Windows/macOS universal desktop host target and native SQLite initialization path;
+- WebAssembly host SDK/TFM and PWA manifest;
+- the explicit browser persistence safety boundary;
+- centrally pinned Avalonia packages;
+- cross-platform CI coverage for Ubuntu, Windows, macOS, and `wasm-tools`;
+- Android, iOS/iPadOS, Windows, macOS, Linux, Web, and ChromeOS documentation coverage.
+
+```bash
+python scripts/check_cross_platform.py
+```
+
+A passing result proves source/build wiring only. It does not convert browser persistence, native packaging, signing, or device testing into completed evidence.
+
+Guide: `docs/platforms/CROSS_PLATFORM.md`.
 
 ### `check_release_readiness.py`
 
@@ -160,7 +180,7 @@ All Python tool tests live under `scripts/tests/` and can be run together:
 python -m unittest discover -s scripts/tests -p "test_*.py" -v
 ```
 
-Each tool also has focused workflow coverage under `.github/workflows/` where appropriate. The primary Finora CI structural-preflight job also runs `scripts/run_repo_qa.py`, which includes the tracked-file documentation coverage check.
+The cross-platform checker has a focused test module at `scripts/tests/test_check_cross_platform.py`. Each tool also has focused workflow coverage under `.github/workflows/` where appropriate. The primary Finora CI structural-preflight job runs `scripts/run_repo_qa.py`, while `.github/workflows/cross-platform.yml` runs the dedicated cross-platform contract before the universal platform builds.
 
 ## Privacy rules for developer tooling
 
@@ -170,7 +190,8 @@ Each tool also has focused workflow coverage under `.github/workflows/` where ap
 - Artifact validators intentionally report structural metadata rather than contents.
 - Native smoke harnesses intentionally avoid screenshots/full hierarchy dumps by default.
 - Documentation coverage reads tracked path names only; it does not open or publish user finance artifacts.
+- Cross-platform validation inspects source/build metadata only and does not read any finance database.
 
 ## Scope boundary
 
-These tools do not prove native packaging/signing, biometric behavior, notification delivery, accessibility-tool behavior, store submission readiness, or financial correctness by themselves. Combine them with `dotnet test`, target-platform builds, native/manual QA, and the release checklists under `docs/`.
+These tools do not prove native packaging/signing, biometric behavior, notification delivery, accessibility-tool behavior, browser-storage durability, store submission readiness, or financial correctness by themselves. Combine them with `dotnet test`, target-platform builds, WebAssembly/browser runtime tests, native/manual QA, and the release checklists under `docs/`.

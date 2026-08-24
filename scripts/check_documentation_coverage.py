@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Verify that Finora's repository file reference covers every tracked file.
+"""Verify that Finora's repository file references cover every tracked file.
 
 The canonical inventory lives in docs/development/REPOSITORY_FILE_REFERENCE.md.
-The first cell of each inventory table row is either an exact tracked file path
-or a granular directory prefix ending in `/`. Directory prefixes deliberately
-must contain at least two path components, preventing broad declarations such as
-`src/` or `docs/` from making the coverage check meaningless.
+Optional narrowly scoped companion inventories may extend it without weakening the
+coverage model. The first cell of each inventory table row is either an exact
+tracked file path or a granular directory prefix ending in `/`. Directory
+prefixes deliberately must contain at least two path components, preventing broad
+declarations such as `src/` or `docs/` from making the coverage check meaningless.
 
 The check is dependency-free and uses `git ls-files`, so ignored or untracked
 local files never become part of the public documentation contract.
@@ -21,6 +22,9 @@ from typing import Iterable, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_REFERENCE = REPO_ROOT / "docs" / "development" / "REPOSITORY_FILE_REFERENCE.md"
+DEFAULT_COMPANION_REFERENCES = (
+    REPO_ROOT / "docs" / "development" / "CROSS_PLATFORM_FILE_REFERENCE.md",
+)
 TABLE_PATH_PATTERN = re.compile(r"^\|\s*`([^`]+)`\s*\|", re.MULTILINE)
 
 
@@ -111,7 +115,7 @@ def render_failure(
         lines.append("\nReference entries that cover no tracked file:")
         lines.extend(f"  - {path}" for path in stale)
     lines.append(
-        "\nUpdate docs/development/REPOSITORY_FILE_REFERENCE.md in the same change."
+        "\nUpdate the canonical repository inventory or an approved scoped companion in the same change."
     )
     return "\n".join(lines)
 
@@ -142,6 +146,19 @@ def display_reference_path(reference: Path) -> str:
         return str(reference)
 
 
+def reference_files(reference: Path) -> list[Path]:
+    """Return the requested inventory plus default scoped companions when applicable."""
+    references = [reference]
+    try:
+        is_default = reference.resolve() == DEFAULT_REFERENCE.resolve()
+    except OSError:
+        is_default = reference == DEFAULT_REFERENCE
+
+    if is_default:
+        references.extend(path for path in DEFAULT_COMPANION_REFERENCES if path.is_file())
+    return references
+
+
 def main() -> int:
     args = parse_args()
     reference = args.reference
@@ -158,7 +175,8 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 2
 
-    markdown = reference.read_text(encoding="utf-8-sig")
+    references = reference_files(reference)
+    markdown = "\n".join(path.read_text(encoding="utf-8-sig") for path in references)
     entries = documented_entries(markdown)
     invalid = validate_entries(entries)
     missing, stale = compare_coverage(tracked, entries)
@@ -172,10 +190,10 @@ def main() -> int:
         print(render_failure(missing, stale, invalid), file=sys.stderr)
         return 1
 
+    reference_display = ", ".join(display_reference_path(path) for path in references)
     print(
         f"Documentation coverage OK: {len(tracked)} tracked files are covered by "
-        f"{len(entries)} reference entries in "
-        f"{display_reference_path(reference)}."
+        f"{len(entries)} reference entries in {reference_display}."
     )
     return 0
 
