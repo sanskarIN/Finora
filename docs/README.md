@@ -89,6 +89,7 @@ Finora is a local-first personal-finance application with a mature .NET MAUI app
 
 ## Release documentation
 
+- [Finora 0.3.0 Release Preparation Plan](releases/0.3.0_PLAN.md) — proposed next semantic-minor release scope, version-cut checklist, dependency baseline, and automated/native/browser evidence gates.
 - [Release Checklist](releases/RELEASE_CHECKLIST.md)
 - [Store Readiness](releases/STORE_READINESS.md)
 - [Versioning and Migration Policy](releases/VERSIONING_AND_MIGRATIONS.md)
